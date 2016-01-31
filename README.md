@@ -1,2 +1,2 @@
 # HASE
-High Dimensional Association Studies made Efiicient 
+Framework for efficient high-dimensional association analyses. 
