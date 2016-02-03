@@ -1,0 +1,11 @@
+sklearn
+bitarray
+argparse
+cython
+h5py
+pandas
+numpy
+matplotlib
+scipy
+tables
+scikit-learn

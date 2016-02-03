@@ -1,2 +1,3 @@
-# HASE
-Framework for efficient high-dimensional association analyses. 
+#HASE
+Framework for efficient high-dimensional association analyses.
+

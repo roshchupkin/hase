@@ -1,0 +1,209 @@
+import os
+import tables
+import h5py
+from numpy import genfromtxt
+import bitarray as ba
+import numpy as np
+import gc
+import subprocess
+from tools import Timer
+import pandas as pd
+from data import MINIMACHDF5Folder
+
+
+class Genotype(object):
+	def __init__(self):
+		self.file_name = None
+		self.reader=None
+		self.probes = None
+		self.individuals = None
+		self.genotype = None
+		self.out=None
+
+
+class GenotypeHDF5(Genotype):
+	def __init__(self, name,force=True):
+		super(GenotypeHDF5, self).__init__()
+		self.h5_name = '%s.h5' % name
+		self.file_name = name
+		self.pytable_filters = tables.Filters(complevel=9, complib='zlib')
+		self.h5_gen_file = None
+		self.h5_ind_file = None
+		self.h5_pr_file = None
+		self.gen_iter=0
+
+
+	def write_data(self, type, overwrite=True):
+
+		type_dic={'gen':['genotype',self.h5_gen_file],
+				  'ind':['individuals',self.h5_ind_file],
+				  'pr':['probes',self.h5_pr_file]}
+
+		if (not overwrite) and os.path.isfile( os.path.join(self.out,type_dic[type][0],self.h5_name) ):
+			print('File %s found. Please remove manually.' % self.h5_name)
+			return
+		else:
+			if type=='pr':
+				self.h5_pr_file = tables.openFile(os.path.join(self.out,type_dic[type][0],self.h5_name), 'w',
+												  title=self.file_name)
+				self.h5_pr_file.close() #need to close file before join data
+			elif type=='ind':
+				self.h5_ind_file = tables.openFile(os.path.join(self.out,type_dic[type][0],self.h5_name), 'w',
+												   title=self.file_name)
+			elif type=='gen':
+				self.h5_gen_file = tables.openFile(os.path.join(self.out,type_dic[type][0],str(self.gen_iter)+'_'+self.h5_name),
+												   'w', title=self.file_name)
+				self.gen_iter+=1
+
+	def close(self):
+		self.h5_gen_file.close()
+		self.h5_ind_file.close()
+		self.h5_pr_file.close()
+
+	def summary(self):
+		raise (NotImplementedError)
+
+
+class GenotypePLINK(GenotypeHDF5):
+
+	def __init__(self, name, reader=None):
+		super(GenotypePLINK, self).__init__(name)
+		self.reader=reader
+		self.split_size=None
+
+
+	def convert_individuals(self):
+
+		individuals=self.reader.folder.get_fam()
+
+		self.h5_ind_file.createTable(self.h5_ind_file.root, 'individuals', individuals,
+									 title='Individuals', filters=self.pytable_filters)
+		self.h5_ind_file.root.individuals[:] = individuals
+		self.individuals = self.h5_ind_file.root.individuals[:]
+		self.n_ind=len(individuals)
+
+
+	#@profile
+	def convert_probes(self, chunk_size=100000):
+
+		i=0
+		chunk=np.array([])
+		while True:
+			chunk=self.reader.folder.get_bim(chunk_size)
+			if isinstance(chunk,type(None)):
+				break
+			print i
+
+			chunk['ID'].to_hdf(os.path.join(self.out,'probes','ID.h5'), key='RSID',format='table', append=True,
+			                   min_itemsize = 25, complib='zlib',complevel=9 ) # WARNING!!! doesn't work on windows
+
+			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes_{}'.format(i), append=True,
+						 names=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
+						 complib='zlib',complevel=9, min_itemsize = 25)
+			gc.collect()
+			i+=1
+		print('Number of Probes {} converted'.format(self.reader.folder.N_probes))
+
+	#@profile
+	def convert_genotypes(self):
+
+		chunk_size=self.split_size
+		if chunk_size is None:
+			raise ValueError('CONVERTER_SPLIT_SIZE does not define in config file!')
+		G=np.array([])
+		while True:
+			with Timer() as t:
+				G=self.reader.folder.get_bed(chunk_size)
+				if isinstance(G,type(None)):
+					break
+
+			print ('Time to read {} SNPs is {} s'.format(G.shape[0], t.secs))
+
+			self.write_data('gen')
+			atom = tables.Int8Atom()
+			self.genotype = self.h5_gen_file.createCArray(self.h5_gen_file.root, 'genotype', atom,
+														  (G.shape),
+														  title='Genotype', filters=self.pytable_filters)
+			with Timer() as t:
+				self.genotype[:] = G
+
+			print ('Time to write {} SNPs is {} s'.format(chunk_size, t.secs))
+
+			self.h5_gen_file.close()
+			G=None
+			gc.collect()
+			break
+
+
+	def plink2hdf5(self,out, force=True):
+
+		if not force:
+			try:
+				os.mkdir(os.path.join(out,'genotype') )
+				os.mkdir(os.path.join(out,'individuals') )
+				os.mkdir(os.path.join(out,'probes') )
+			except:
+				print('Directories "genotype","probes","individuals" are already exist in {}...'.format(self.out))
+
+		self.out=out
+		self.write_data('ind')
+		self.convert_individuals()
+		self.h5_ind_file.close()
+
+		self.write_data('pr')
+		self.convert_probes()
+
+		self.convert_genotypes()
+
+
+	def _summary(self, head=10):
+		pass #TODO (low) rewrite to get statistic not load to memory
+
+		print('Number of Probes: %d' % None)
+		print('Number of Individuals: %d' % None)
+		print('The genotype matrix is of size %d by %d' % None)
+
+class GenotypeMINIMAC(object):
+
+	def __init__(self, name, reader=None):
+		self.reader=reader
+		self.study_name=name
+		self.split_size=None
+		self.hdf5_iter=0
+		self.pytable_filter=tables.Filters(complevel=9, complib='zlib')
+
+	def save_hdf5_chunk(self,out,data,name):
+		h5_gen_file = tables.openFile(
+				os.path.join(out,str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
+
+		atom = tables.Int8Atom()  # TODO (low) check data format
+		genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
+											(data.shape),
+											title='Genotype',
+											filters=self.pytable_filter)
+		genotype[:] = data
+		h5_gen_file.close()
+		genotype=None
+		data=None
+		gc.collect()
+		self.hdf5_iter+=1
+
+	def MACH2hdf5(self, out):
+		subprocess.call([os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'), self.reader.folder.path, out , os.environ['HASEDIR'] ])
+		subprocess.call([os.path.join( out,'id_convert.sh' ) ])
+		self.folder=MINIMACHDF5Folder(out,self.study_name)
+		self.folder.pool.split_size=self.split_size
+		self.folder.pool.chunk_size=self.split_size
+		print('Start to convert id files to chunk files...')
+		while True:
+			data=self.folder.get_next()
+			if data is None:
+				break
+			self.save_hdf5_chunk(data,out,self.study_name)
+			gc.collect()
+		print('Finished')
+		self.folder.pool.remove(type='all')
+
+	def summary(self):
+		pass
+
