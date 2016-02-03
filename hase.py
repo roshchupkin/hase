@@ -154,7 +154,6 @@ if __name__=='__main__':
 		e.study_name=args.study_name
 
 		row_index, ids =  study_indexes(phenotype=phen.folder._data,genotype=gen.folder._data)
-
 		with Timer() as t:
 
 			e.matrix(len(ids),save=True)
