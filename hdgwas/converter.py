@@ -132,12 +132,12 @@ class GenotypePLINK(GenotypeHDF5):
 			self.h5_gen_file.close()
 			G=None
 			gc.collect()
-			break
+
 
 
 	def plink2hdf5(self,out, force=True):
 
-		if not force:
+		if force:
 			try:
 				os.mkdir(os.path.join(out,'genotype') )
 				os.mkdir(os.path.join(out,'individuals') )
@@ -150,9 +150,11 @@ class GenotypePLINK(GenotypeHDF5):
 		self.convert_individuals()
 		self.h5_ind_file.close()
 
+		self.reader.folder.processed=0
 		self.write_data('pr')
 		self.convert_probes()
 
+		self.reader.folder.processed=0
 		self.convert_genotypes()
 
 

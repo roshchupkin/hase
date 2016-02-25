@@ -121,7 +121,7 @@ if __name__=='__main__':
 		#ARG_CHECKER.check(args,mode='converting')
 
 		R=Reader('genotype')
-		R.start(args.genotype)
+		R.start(args.genotype[0])
 
 		with Timer() as t:
 			if R.format=='PLINK':
