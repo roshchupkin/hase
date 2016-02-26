@@ -807,7 +807,7 @@ class PLINKFolder(Folder):
 		if self._currentSNP + b > self.n_probes:
 			b=(self.n_probes-self._currentSNP)
 
-		print('next {} SNPs, from {}, need to convert {}'.format(b, self.n_probes, (self.n_probes-b)))
+		print('next {} SNPs, from {}, need to convert {}'.format(b, self.n_probes, (self.n_probes-self._currentSNP-b)))
 
 		c = self._currentSNP
 		n = self.n_ind
