@@ -32,7 +32,7 @@ files_order=`for i in $(ls | grep info); do echo ${i%.info*}; done`
 for i in $files_order;
 do
 zcat $i.info.gz | awk '{if($1!="SNP"){print $1}}' >> ${SAVE_DIR}/${SNPs_INFO}
-#TODO (low) save Rsq data
+#TODO (low) save Freq and Rsq data
 echo $i >> ${SAVE_DIR}/files_order.txt
 done
 
@@ -48,6 +48,8 @@ for id in $( cat ${SAVE_DIR}/${SUBJECT_ID_FILE} );
 do
 echo "sh ${HASEDIR}/tools/id2hdf5.sh ${id} ${GENOTYPE_DIR} ${SAVE_DIR} ${HASEDIR}" >> ${SAVE_DIR}/id_convert.sh
 done
+
+chmod +x ${SAVE_DIR}/id_convert.sh
 
 python ${HASE_DIR}/tools/minimac2hdf5.py -flag probes  -data ${SAVE_DIR}/SNPs_info.txt -out ${SAVE_DIR}
 python ${HASE_DIR}/tools/minimac2hdf5.py -flag individuals  -data ${SAVE_DIR}/${SUBJECT_ID_FILE} -out ${SAVE_DIR}
