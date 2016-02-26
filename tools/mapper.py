@@ -37,7 +37,7 @@ if __name__=='__main__':
 	for i in args.genotype:
 		with Timer() as t:
 			ID=pd.read_hdf(os.path.join(i,'probes', 'ID.h5'),'RSID')
-			mapper.push(ID, genotype_name=i.split('/')[-1])
+			mapper.push(ID, name=i.split('/')[-1])
 		print ('time to add ID {}s'.format(t.secs))
 
 	print ('Saving results to {} ...'.format(args.out))

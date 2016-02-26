@@ -178,7 +178,7 @@ class GenotypeMINIMAC(object):
 		h5_gen_file = tables.openFile(
 				os.path.join(out,str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
 
-		atom = tables.Int8Atom()  # TODO (low) check data format
+		atom = tables.Float16Atom()  # TODO (low) check data format
 		genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
 											(data.shape),
 											title='Genotype',

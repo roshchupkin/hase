@@ -408,7 +408,7 @@ class Mapper(object):
 				np.save(os.path.join(path, name), values[:,i] )
 			n+=1
 
-		#TODO (low) to do though Log class
+		#TODO (low) to do through Log class
 		f=open(os.path.join(path,'mapper_log.txt'))
 		f.write('##############################\n')
 		f.write(self.reference.reference_name + '\n')
@@ -596,23 +596,26 @@ class Reference(object):
 
 
 	def load(self):
-		if self.reference_nameis is not None:
+		if self.reference_name is not None:
 			if self.path.get(self.reference_name) is not None:
-				self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ')
+				try:
+					self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ')
+				except:
+					self.dataframe=pd.read_csv(self.path[self.reference_name], sep=' ')
 				self.loaded=True
 			else:
 				raise ValueError('Unknown reference!')
 		else:
-			raise ValueError('Reference name si not define!')
+			raise ValueError('Reference name is not define!')
 
 	def open(self):
-		if self.reference_nameis is not None:
+		if self.reference_name is not None:
 			if self.path.get(self.reference_name) is not None:
 				self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ', iterator =True)
 			else:
 				raise ValueError('Unknown reference!')
 		else:
-			raise ValueError('Reference name si not define!')
+			raise ValueError('Reference name is not define!')
 
 	def next(self):
 		df=self.dataframe.get_chunk(self.chunk)
