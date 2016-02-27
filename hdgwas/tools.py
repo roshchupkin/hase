@@ -699,6 +699,8 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 		index_c=np.array([np.where(id_c==i)[0][0] for i in common_id])
 
 	print ('There are {} common ids'.format(len(common_id)))
+	if len(common_id)==0:
+		exit(0)
 
 	return [index_g,index_p,index_c], np.array(common_id)
 

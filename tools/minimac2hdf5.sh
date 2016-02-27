@@ -1,10 +1,9 @@
-#!/usr/bin/env bash
-
-
+#@IgnoreInspection BashAddShebang
 ### in this directory should be only dose and info files
 GENOTYPE_DIR=$1
 SAVE_DIR=$2
 HASEDIR=$3
+STUDYNAME=$4
 
 SUBJECT_ID_FILE='SUB_ID.txt'
 SUBJECT_FAM_FILE='SUB_FAM.txt'
@@ -46,13 +45,13 @@ echo "There are ${N_SNPs} variance in this genotype data"
 
 for id in $( cat ${SAVE_DIR}/${SUBJECT_ID_FILE} );
 do
-echo "sh ${HASEDIR}/tools/id2hdf5.sh ${id} ${GENOTYPE_DIR} ${SAVE_DIR} ${HASEDIR}" >> ${SAVE_DIR}/id_convert.sh
+echo "sh ${HASEDIR}/tools/id2hdf5.sh ${id} ${GENOTYPE_DIR} ${SAVE_DIR} ${HASEDIR} ${STUDYNAME}" >> ${SAVE_DIR}/id_convert.sh
 done
 
 chmod +x ${SAVE_DIR}/id_convert.sh
 
-python ${HASE_DIR}/tools/minimac2hdf5.py -flag probes  -data ${SAVE_DIR}/SNPs_info.txt -out ${SAVE_DIR}
-python ${HASE_DIR}/tools/minimac2hdf5.py -flag individuals  -data ${SAVE_DIR}/${SUBJECT_ID_FILE} -out ${SAVE_DIR}
+python ${HASEDIR}/tools/minimac2hdf5.py -flag probes  -data ${SAVE_DIR}/SNPs_info.txt -out ${SAVE_DIR} -study_name ${STUDYNAME}
+python ${HASEDIR}/tools/minimac2hdf5.py -flag individuals  -data ${SAVE_DIR}/${SUBJECT_ID_FILE} -out ${SAVE_DIR} -study_name ${STUDYNAME}
 
 
 rm ${SAVE_DIR}/SNPs_info.txt

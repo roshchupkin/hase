@@ -12,7 +12,7 @@ import bitarray as ba
 import subprocess
 from hdgwas.tools import Mapper
 import glob
-
+import shutil
 
 class MINIMACPool(object):
 
@@ -33,20 +33,24 @@ class MINIMACPool(object):
 			sample=h5py.File(self.paths[self.id[0]], 'r')[self.id[0]][...]
 			self.max_index=np.max(sample.shape)
 
+		print self.finish
 		result=[]
 		if indices is None:
 			if self.finish!=self.max_index:
 				n=range(self.finish, self.finish + self.chunk_size) if (self.finish + self.chunk_size)<self.max_index else range(self.finish,self.max_index)
+				n=np.array(n)
+				n_s=np.argsort(n)
+				n_s_s=np.argsort(n_s)
+				self.finish=np.max(n) + 1
+
 			else:
 				return None
 		else:
-			#indices=np.array(indices)
-			#n=indices[:,0]*self.split_size+indices[:,1]
 			n_s=np.argsort(indices)
 			n_s_s=np.argsort(n_s)
 
 		for k in self.id:
-			d=h5py.File(self.paths[k], 'r')[k][n[n_s]]
+			d=h5py.File(self.paths[k], 'r')[k][ list(n[n_s]) ]
 			result.append(d[n_s_s])
 		result=np.array(result)
 		result=result.T
@@ -59,7 +63,17 @@ class MINIMACPool(object):
 			print ('WARNING! Removing files before fully read them!')
 		print ('Start to remove MINIMAChdf5 id files...')
 		for i in self.id:
-			os.remove(self.path[i])
+			os.remove(self.paths[i])
+		print ('Finished')
+
+	def move(self,dst,type=None):
+		if type is None:
+			raise ValueError('Need to set type to pool move type')
+		if self.finish!=self.max_index:
+			print ('WARNING! Moving files before fully read them!')
+		print ('Start to move MINIMAChdf5 id files to id_genotype folder...')
+		for i in self.id:
+			shutil.move(self.paths[i], os.path.join(dst,i+'.h5') )
 		print ('Finished')
 
 
@@ -200,18 +214,19 @@ class Data(object):
 
 
 class Hdf5Data(Data):
-	def __init__(self, data_path , name):
+	def __init__(self, data_path , name, type='PLINK'):
 		super(Hdf5Data, self).__init__()
 		self.name=name
 		self.names=np.array([]) #TODO (low) in case of usage hdf5 for phenotypes, need to use real names self._data.names=pd.read_hdf(os.path.join(path,'probes','ID.h5'),'RSID')
 		self.id=np.array(pd.read_hdf(os.path.join(data_path,'individuals',self.name+'.h5'),'individuals').individual.tolist())
 		self.shape=(len(self.id), len(self.names))
-		l=os.listdir(os.path.join(data_path,'genotype'))
-		a,b=h5py.File(os.path.join(data_path,'genotype',l[0]), 'r')['genotype'][...].shape
-		c,d=h5py.File(os.path.join(data_path,'genotype',l[1]), 'r')['genotype'][...].shape
-		self.gen_split_size=np.max((a,c))
+		if type=='PLINK':
+			l=os.listdir(os.path.join(data_path,'genotype'))
+			a,b=h5py.File(os.path.join(data_path,'genotype',l[0]), 'r')['genotype'][...].shape
+			c,d=h5py.File(os.path.join(data_path,'genotype',l[1]), 'r')['genotype'][...].shape
+			self.gen_split_size=np.max((a,c)) #TODO (middle) not efficient
 
-		print ('There are %d samples' %(self.shape[0]))
+		print ('There are %d ids' %(self.shape[0]))
 
 
 class ParData(Data):
@@ -475,12 +490,13 @@ class MINIMACHDF5Folder(HDF5Folder):
 		self.path=path
 		self.format='.h5'
 		self.pool=MINIMACPool()
+		self.pool.path=self.path
 		self.f_names=os.listdir(os.path.join(self.path,'genotype'))
 		self.n_files=len(self.f_names)
-		self._data=Hdf5Data(self.path,self.name)
+		self._data=Hdf5Data(self.path,self.name, type='MINIMAC')
 		self._id=self._data.id
 		self.pool.id=self._id
-		self.pool.paths={i:os.path.join(self.path,'genotype',i + '.h5') for i in self.id}
+		self.pool.paths={i:os.path.join(self.path,'genotype',i + '.h5') for i in self._id}
 
 
 
@@ -546,7 +562,7 @@ class CSVFolder(Folder):
 			if self.folder_cache_flag and len(self.folder_cache)<self.cache_buffer_size:
 				self.folder_cache[file]=self._data
 
-			print ('There are %d samples and %d columns ' %(self._data.shape))
+			print ('There are %d ids and %d columns ' %(self._data.shape))
 
 class NPFolder(Folder):
 
@@ -852,7 +868,7 @@ class Reader(object):
 		self.name=name
 		self.path=None
 		self._data=None
-		self.ext=['.npy', '.csv', '.txt','.h5', 'PLINK','gz']
+		self.ext=['.npy', '.csv', '.txt','.h5', 'PLINK','.gz']
 		self.pool=None
 		self.folder=None
 		self.processed=0
@@ -871,7 +887,7 @@ class Reader(object):
 
 			self.format=self.folder.format
 
-			if self.name=='genotype' and self.format!='PLINK':
+			if self.name=='genotype' and self.format!='PLINK' and self.format!='.gz':
 				self.format='.h5'
 
 			if self.format not in self.ext:
@@ -894,7 +910,7 @@ class Reader(object):
 			elif self.format=='PLINK':
 				self.folder=PLINKFolder(path)
 
-			elif self.format=='gz':
+			elif self.format=='.gz':
 				self.folder=MINIMACFolder(path)
 				self.format="MINIMAC"
 

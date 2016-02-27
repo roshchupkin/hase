@@ -5,6 +5,7 @@ import os
 import sys
 import argparse
 import h5py
+import pandas as pd
 
 def probes_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
@@ -13,10 +14,10 @@ def probes_minimac2hdf5(data_path, save_path,study_name):
 		n.append((j[:-1]))
 	f.close()
 	n=np.array(n)
-	store=h5py.File(os.path.join(save_path,'probes','ID.h5'), 'w')
-	store.create_dataset('RSID',data=n,compression='gzip',compression_opts=9 )
-	store.close()
+	chunk=pd.DataFrame.from_dict({"ID":n})
 
+	chunk['ID'].to_hdf(os.path.join(save_path,'probes','ID.h5'), key='RSID',format='table',
+			                   min_itemsize = 25, complib='zlib',complevel=9 )
 
 def ind_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
@@ -25,9 +26,9 @@ def ind_minimac2hdf5(data_path, save_path,study_name):
 		n.append((j[:-1]))
 	f.close()
 	n=np.array(n)
-	store=h5py.File(os.path.join(save_path,'individuals',study_name+'.h5'), 'w')
-	store.create_dataset('individuals',data=n,compression='gzip',compression_opts=9 )
-	store.close()
+	chunk=pd.DataFrame.from_dict({"individual":n})
+	chunk.to_hdf(os.path.join(save_path,'individuals',study_name+'.h5'), key='individuals',format='table',
+			                   min_itemsize = 25, complib='zlib',complevel=9 )
 
 def id_minimac2hdf5(data_path,id, save_path):
 

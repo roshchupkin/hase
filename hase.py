@@ -130,7 +130,7 @@ if __name__=='__main__':
 				G.plink2hdf5(out=args.out)
 
 			elif R.format=='MINIMAC':
-				G=GenotypeMINIMAC(args.study_name,reader=R)
+				G=GenotypeMINIMAC(args.study_name[0],reader=R)
 				G.split_size=CONVERTER_SPLIT_SIZE
 				G.MACH2hdf5(args.out)
 			else:
@@ -147,11 +147,11 @@ if __name__=='__main__':
 		phen.start(args.phenotype)
 
 		gen=Reader('genotype')
-		gen.start(args.genotype, hdf5=args.hdf5, study_name=args.study_name, ID=False)
+		gen.start(args.genotype, hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
 
 		e=Encoder()
 		e.out=args.out
-		e.study_name=args.study_name
+		e.study_name=args.study_name[0]
 
 		row_index, ids =  study_indexes(phenotype=phen.folder._data,genotype=gen.folder._data)
 		with Timer() as t:
@@ -205,12 +205,12 @@ if __name__=='__main__':
 			raise ValueError('In covariates folder should be only one file!')
 
 		gen=Reader('genotype')
-		gen.start(args.genotype, hdf5=args.hdf5, study_name=args.study_name, ID=False)
+		gen.start(args.genotype, hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
 
 		with Timer() as t:
 			partial_derivatives(save_path=args.out,COV=cov,PHEN=phen, GEN=gen,
 								MAP=None, MAF=args.maf, R2=None, B4_flag=args.pd_full,
-								study_name=args.study_name, intercept=args.intercept)
+								study_name=args.study_name[0], intercept=args.intercept)
 		print ('Time to compute partial derivatives : {} sec'.format(t.secs))
 
 	################################### MULTI META STAGE ##############################

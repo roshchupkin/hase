@@ -1,4 +1,4 @@
-#!/bin/sh
+#@IgnoreInspection BashAddShebang
 
 CWD=`pwd`
 
@@ -6,6 +6,7 @@ id=$1
 GENOTYPE_DIR=$2
 SAVE_DIR=$3
 HASE_DIR=$4
+STUDYNAME=$5
 
 cd $GENOTYPE_DIR
 
@@ -17,7 +18,7 @@ cat ${SAVE_DIR}/${id}_row.txt | gawk 'BEGIN{ind=1}{for(i=1;i<=NF;i+=1){SNPs[ind]
 
 rm ${SAVE_DIR}/${id}_row.txt
 
-python ${HASE_DIR}/tools/minimac2hdf5.py -flag genotype -id ${id} -data ${SAVE_DIR}/${id}.txt -out ${SAVE_DIR}
+python ${HASE_DIR}/tools/minimac2hdf5.py -flag genotype -id ${id} -data ${SAVE_DIR}/${id}.txt -out ${SAVE_DIR} -study_name ${STUDYNAME}
 
 rm ${SAVE_DIR}/${id}.txt
 

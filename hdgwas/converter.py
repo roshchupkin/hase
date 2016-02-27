@@ -9,7 +9,7 @@ import subprocess
 from tools import Timer
 import pandas as pd
 from data import MINIMACHDF5Folder
-
+import shutil
 
 class Genotype(object):
 	def __init__(self):
@@ -174,9 +174,10 @@ class GenotypeMINIMAC(object):
 		self.hdf5_iter=0
 		self.pytable_filter=tables.Filters(complevel=9, complib='zlib')
 
-	def save_hdf5_chunk(self,out,data,name):
+	def save_hdf5_chunk(self,data,out,name):
+		print 'Saving chunk...{}'.format(os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'))
 		h5_gen_file = tables.openFile(
-				os.path.join(out,str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
+				os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
 
 		atom = tables.Float16Atom()  # TODO (low) check data format
 		genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
@@ -190,9 +191,11 @@ class GenotypeMINIMAC(object):
 		gc.collect()
 		self.hdf5_iter+=1
 
-	def MACH2hdf5(self, out):
-		subprocess.call([os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'), self.reader.folder.path, out , os.environ['HASEDIR'] ])
-		subprocess.call([os.path.join( out,'id_convert.sh' ) ])
+	def MACH2hdf5(self, out, remove_id=False):
+		subprocess.call(['sh',os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'),
+						 self.reader.folder.path, out , 'G:/share_VB/Ubuntu/Git_projects/hase/', self.study_name ], shell=True)
+
+		subprocess.call(['sh',os.path.join( out,'id_convert.sh' ),self.study_name ], shell=True)
 		self.folder=MINIMACHDF5Folder(out,self.study_name)
 		self.folder.pool.split_size=self.split_size
 		self.folder.pool.chunk_size=self.split_size
@@ -204,7 +207,20 @@ class GenotypeMINIMAC(object):
 			self.save_hdf5_chunk(data,out,self.study_name)
 			gc.collect()
 		print('Finished')
-		self.folder.pool.remove(type='all')
+		if remove_id:
+			self.folder.pool.remove(type='all')
+		else:
+			try:
+				os.mkdir(os.path.join(out,'id_genotype') )
+			except:
+				print 'id_genotype folder already exist'
+
+			self.folder.pool.move(os.path.join(out,'id_genotype'),type='all')
+
+		os.remove(os.path.join(out,'id_convert.sh'))
+		os.remove(os.path.join(out,'files_order.txt'))
+		shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'id_genotype','SUB_FAM.txt') )
+		shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'id_genotype','SUB_ID.txt') )
 
 	def summary(self):
 		pass
