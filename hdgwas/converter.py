@@ -207,6 +207,7 @@ class GenotypeMINIMAC(object):
 				break
 			self.save_hdf5_chunk(data,out,self.study_name)
 			gc.collect()
+
 		print('Finished')
 		if remove_id:
 			self.folder.pool.remove(type='all')
