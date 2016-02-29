@@ -1,11 +1,9 @@
-sklearn
 bitarray
 argparse
 cython
-h5py
-pandas
-numpy
 matplotlib
 scipy
+numpy
+pandas
+h5py
 tables
-scikit-learn
