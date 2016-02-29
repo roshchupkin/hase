@@ -3,7 +3,7 @@ Framework for efficient high-dimensional association analyses.
 
 ## Installation HASE
 
-1. Navigate to directory where do you want to install HASE.
+1. Navigate to directory where you want to install HASE.
  ```
  git clone https://github.com/roshchupkin/hase.git
  ```
@@ -21,62 +21,62 @@ cd ~/hdf5-1.8.16/
 make 
 make install
 ```
-Then you need to add one line to your `.bachrc` or `.bash_profile` in your home directory.
+Then you need to add one line to your `.bachrc` or `.bash_profile` file in your home directory.
 
-```
-export HDF5_DIR=~/hdf5-1.8.16/hdf5/
-```
+    ```
+    export HDF5_DIR=~/hdf5-1.8.16/hdf5/
+    ```
 
 2. BLAS and LAPACK linear algebra libraries for `scipy` and `numpy`. 
- ```
- sudo apt-get install gfortran libopenblas-dev liblapack-dev
- ```
- If this does not work ot raise errors, then you might need to follow instruction from [scipy](http://www.scipy.org/scipylib/building/index.html) website. 
+     ```
+     sudo apt-get install gfortran libopenblas-dev liblapack-dev
+     ```
+    If this does not work ot raise errors, then you might need to follow instruction from [scipy](http://www.scipy.org/scipylib/building/index.html) website. 
 
 3. You need to install python. You can download python from official website [python](https://www.python.org/) 
 or install one of the python distribution for scientific research, such as [Anaconda](https://store.continuum.io/cshop/anaconda/).
 And then you need to install (or first uninstall) `scipy` and `numpy` python libraries.
- ```
- pip install scipy 
- pip install numpy
- ```
+     ```
+     pip install scipy 
+     pip install numpy
+     ```
  
- To check linkage in numpy:
-  ```
-  python
-  >>> import numpy as np
-  >>> np.__config__.show()
-  ```
+    To check linkage in numpy:
+      ```
+      python
+      >>> import numpy as np
+      >>> np.__config__.show()
+      ```
   
-  And you should see something like this:
+    And you should see something like this:
   
-  ```
-  lapack_opt_info:
-    libraries = ['openblas', 'openblas']
-    library_dirs = ['/cm/shared/apps/openblas/0.2.9-rc2/lib']
-    language = f77
-blas_opt_info:
-    libraries = ['openblas', 'openblas']
-    library_dirs = ['/cm/shared/apps/openblas/0.2.9-rc2/lib']
-    language = f77
-openblas_info:
-    libraries = ['openblas', 'openblas']
-    library_dirs = ['/cm/shared/apps/openblas/0.2.9-rc2/lib']
-    language = f77
-blas_mkl_info:
-  NOT AVAILABLE
-  ```  
- 
+      ```
+      lapack_opt_info:
+        libraries = ['openblas', 'openblas']
+        library_dirs = ['/cm/shared/apps/openblas/0.2.9-rc2/lib']
+        language = f77
+    blas_opt_info:
+        libraries = ['openblas', 'openblas']
+        library_dirs = ['/cm/shared/apps/openblas/0.2.9-rc2/lib']
+        language = f77
+    openblas_info:
+        libraries = ['openblas', 'openblas']
+        library_dirs = ['/cm/shared/apps/openblas/0.2.9-rc2/lib']
+        language = f77
+    blas_mkl_info:
+      NOT AVAILABLE
+      ```  
+     
 4. Install python packages listed in `requirements.txt` file. (you can use package manager which comes with your python `pip` or `conda` to install packages):
-* bitarray
-* argparse
-* cython
-* matplotlib
-* scipy
-* numpy
-* pandas
-* h5py
-* tables
+    * bitarray
+    * argparse
+    * cython
+    * matplotlib
+    * scipy
+    * numpy
+    * pandas
+    * h5py
+    * tables
 
 ## Testing
 
