@@ -14,14 +14,14 @@ Your system might already satisfied requirements, we suggest first try to run te
 
 1. HDF5 software (python packages `tables` and `h5py` require this installation). If it is not installed on you system, 
 you can download to your home directory the latest source code [hdf5](https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/).
-```
-tar -xf ~/hdf5-1.8.16.tar.gz
-cd ~/hdf5-1.8.16/
-./configure 
-make 
-make install
-```
-Then you need to add one line to your `.bachrc` or `.bash_profile` file in your home directory.
+    ```
+    tar -xf ~/hdf5-1.8.16.tar.gz
+    cd ~/hdf5-1.8.16/
+    ./configure 
+    make 
+    make install
+    ```
+    Then you need to add one line to your `.bachrc` or `.bash_profile` file in your home directory.
 
     ```
     export HDF5_DIR=~/hdf5-1.8.16/hdf5/
