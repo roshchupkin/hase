@@ -86,6 +86,8 @@ class GenotypePLINK(GenotypeHDF5):
 	#@profile
 	def convert_probes(self, chunk_size=100000):
 
+		os.remove(os.path.join(self.out,'probes',self.h5_name))
+
 		i=0
 		chunk=np.array([])
 		while True:
@@ -93,11 +95,8 @@ class GenotypePLINK(GenotypeHDF5):
 			if isinstance(chunk,type(None)):
 				break
 			print i
-
-			chunk['ID'].to_hdf(os.path.join(self.out,'probes','ID.h5'), key='RSID',format='table', append=True,
-			                   min_itemsize = 25, complib='zlib',complevel=9 ) # WARNING!!! doesn't work on windows
-
-			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes_{}'.format(i), append=True,
+			# WARNING!!! doesn't work on windows
+			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes'.format(i), append=True,
 						 names=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
 						 complib='zlib',complevel=9, min_itemsize = 25)
 			gc.collect()

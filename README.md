@@ -3,10 +3,10 @@ Framework for efficient high-dimensional association analyses.
 
 ## Installation HASE
 
-1. Navigate to directory where you want to install HASE.
- ```
- git clone https://github.com/roshchupkin/hase.git
- ```
+1. Navigate to directory where you want to install HASE and clone this repository:
+     ```
+     git clone https://github.com/roshchupkin/hase.git
+     ```
 
 ## Installation requirements
 
@@ -31,10 +31,11 @@ you can download to your home directory the latest source code [hdf5](https://ww
      ```
      sudo apt-get install gfortran libopenblas-dev liblapack-dev
      ```
-    If this does not work ot raise errors, then you might need to follow instruction from [scipy](http://www.scipy.org/scipylib/building/index.html) website. 
+    If this does not work or raise errors, then you might need to follow instruction from [scipy](http://www.scipy.org/scipylib/building/index.html) website. 
 
 3. You need to install python. You can download python from official website [python](https://www.python.org/) 
-or install one of the python distribution for scientific research, such as [Anaconda](https://store.continuum.io/cshop/anaconda/).
+or install one of the python distribution for scientific research, such as [Anaconda](https://store.continuum.io/cshop/anaconda/),
+[Enthought Canopy](https://www.enthought.com/products/canopy/) or [Python(x,y)](http://python-xy.github.io/).
 And then you need to install (or first uninstall) `scipy` and `numpy` python libraries.
      ```
      pip install scipy 

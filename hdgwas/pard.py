@@ -26,8 +26,8 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
     b4=[]
 
     covariates=COV.get_next(index=row_index[2])
-
-    metadata['names']=[ study_name+ '_' + i for i in COV.folder._data.get_names() ]
+    metadata['names'].append(study_name+ '_intercept')
+    metadata['names']=metadata['names']+[ study_name+ '_' + i for i in COV.folder._data.get_names() ]
 
     a_cov=A_covariates(covariates,intercept=intercept)
     np.save(os.path.join(save_path,study_name+'_a_cov.npy'),a_cov)
@@ -40,11 +40,14 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
 
             phenotype=PHEN.get_next(index=row_index[1])
             if isinstance(phenotype, type(None)):
+                b_cov=np.concatenate(b_cov, axis=1)
+                C=np.concatenate(C, axis=1)
+                print b_cov.shape
                 np.save(os.path.join(save_path,study_name+'_b_cov.npy'),b_cov)
                 np.save(os.path.join(save_path,study_name+'_C.npy'),C)
                 break
 
-            metadata['phenotype'].append(PHEN.folder._data.get_names() )
+            metadata['phenotype']=metadata['phenotype']+ list(PHEN.folder._data.get_names())
             b_cov.append(B_covariates(covariates,phenotype,intercept=intercept))
             C.append(C_matrix(phenotype))
 
@@ -65,7 +68,7 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
 
             genotype=genotype[:,row_index[0]]
             maf=np.mean(genotype, axis=1)/2
-            metadata['MAF'].append(maf)
+            metadata['MAF']=metadata['MAF']+list(maf)
 
             #TODO (low) add interaction
             a_test.append(A_tests(covariates,genotype,intercept=intercept))
@@ -73,6 +76,10 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
             if B4_flag:
                 #works only when all phenotypes in one chunk, if not do not use this option!
                 #it would use to much disk space anyway
+                if len([f for f in PHEN.folder.files if f!='info_dic.npy' ])>1:
+                    print 'pd_full flag disabled!'
+                    B4_flag=False
+                    continue
                 PHEN.folder.processed=0
                 if isinstance(phenotype, type(None)):
                     phenotype=PHEN.get_next(index=row_index[1])

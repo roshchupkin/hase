@@ -3,7 +3,7 @@ import numpy as np
 import os
 import tables
 import gc
-
+import pandas as pd
 class Encoder(object):
 
 	def __init__(self):
@@ -20,6 +20,7 @@ class Encoder(object):
 		self.metadata=None
 		self.study_name=None
 		self.phen_info_dic={}
+		self.phen_info_dic['id']=None
 
 
 

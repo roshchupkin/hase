@@ -11,12 +11,12 @@ def probes_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
 	f=open(data_path,'r')
 	for i,j in enumerate(f):
-		n.append((j[:-1]))
+		n.append((j[:-1]).split(' '))
 	f.close()
 	n=np.array(n)
-	chunk=pd.DataFrame.from_dict({"ID":n})
+	chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
 
-	chunk['ID'].to_hdf(os.path.join(save_path,'probes','ID.h5'), key='RSID',format='table',
+	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',
 			                   min_itemsize = 25, complib='zlib',complevel=9 )
 
 def ind_minimac2hdf5(data_path, save_path,study_name):

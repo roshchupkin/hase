@@ -108,7 +108,7 @@ class HaseAnalyser(Analyser):
 		else:
 			self.results=None
 
-	def save_result(self ,phen_names):
+	def save_result(self , phen_names):
 
 		t_threshold=self.threshold
 		save_path=self.out
@@ -274,9 +274,9 @@ class Checker(object): #TODO (mid) finish or remove this class
 ########################################################################
 class Mapper(object):
 
-	def __init__(self,name):
+	def __init__(self):
 
-		self.name=name
+		self.name=None
 		self.genotype_names=[]
 		self.dic=OrderedDict()
 		self.n_study=0
@@ -333,7 +333,7 @@ class Mapper(object):
 			return None
 
 
-	def fill(self, keys, name ,repeats=False, reference=False):
+	def fill(self, keys, name ,repeats=False, reference=False):#TODO (middle) remove
 		self.reference=reference
 		self.reference_name=name
 		self.column_names.append(name)
@@ -349,16 +349,14 @@ class Mapper(object):
 		self.n_keys=l
 		if isinstance(self._limit, type(None)):
 			for i,j in enumerate(keys):
-				#self.dic[j]=[i]+[-1]*self.n_study
 				self.dic[j]=[i]
 		else:
 			for i,j in enumerate(keys):
 				if i==self._limit:
 					break
-				#self.dic[j]=[i]+[-1]*self.n_study
 				self.dic[j]=[i]
 
-	def push(self, new_keys,name=None, new_id=True):
+	def push(self, new_keys,name=None, new_id=True):#TODO (middle) remove
 		if not self.reference and len(self.dic)==0:
 			raise ValueError('You should fill mapper first with ref panel or your own rsids!')
 		self.n_study+=1
@@ -392,9 +390,8 @@ class Mapper(object):
 					self.dic[j]=[-1]*(self.n_study+1)
 					self.dic[j][self.n_study]=i
 
-	def save(self,path):
+	def save(self,path): #TODO (middle) remove
 
-		np.save(os.path.join(path, 'keys_'+self.reference_name+'.npy'), self.dic.keys())
 		values=np.array(self.dic.values() )
 		n=1
 		for i in range(values.shape[1]):
@@ -418,13 +415,35 @@ class Mapper(object):
 		f.close()
 
 
+	def load_flip(self,folder):
+
+		if folder is None:
+			raise ValueError('Mapper is not defined!')
+		if not os.path.isdir(folder):
+			raise ValueError('{} is not a folder'.format(folder))
+
+		if self.reference_name is None:
+			raise ValueError('Reference name for mapper is not defined!')
+
+		if len(glob.glob(folder + 'flip_*'))==0:
+			raise ValueError('There is no flip mapper data in folder {}'.format(folder))
+
+		self.flip=np.load(os.path.join(folder, 'flip_'+self.reference_name+'_'+self.genotype_names+'.npy'))
+
 
 	def load (self, folder):
+		if folder is None:
+			raise ValueError('Mapper is not defined!')
+		if not os.path.isdir(folder):
+			raise ValueError('{} is not a folder'.format(folder))
 
-		if len(glob.glob(folder + 'key_*'))==0:
+		if self.reference_name is None:
+			raise ValueError('Reference name for mapper is not defined!')
+
+		if len(glob.glob(folder + 'keys_*'))==0:
 			raise ValueError('There is no mapper data in folder {}'.format(folder))
 
-		keys=glob.glob(folder+ 'key_*')
+		keys=glob.glob(folder+ 'keys_*')
 		if len(keys)>1:
 			raise ValueError('There are more than one reference keys in folder {}'.format(folder))
 
@@ -442,7 +461,7 @@ class Mapper(object):
 			raise ValueError('Number of files in mapper folder {} is not equal to number of studies {}'.format(len(values),len(self.genotype_names)))
 
 		for i in self.genotype_names:
-			self.values.append(np.load(os.path.join(folder, 'values_'+i+'.npy')))
+			self.values.append(np.load(os.path.join(folder, 'values_'+self.reference_name+'_'+i+'.npy')))
 
 		self.values=np.array(self.values).T
 
@@ -483,9 +502,9 @@ class Mapper(object):
 			return [indexes[:,i] for i in range(self.n_study)], keys
 
 		elif self.include is not None: #TODO (mid) check for millions snps
-			ind=np.array([self.hash.get_index(i) for i in self.include])
+			ind=np.array([self.hash.get_index(i)[0] for i in self.include])
 			if self.exclude is not None:
-				ind_exc=np.array([self.hash.get_index(i) for i in self.exclude])
+				ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
 				ind=np.setxor1d(ind,ind_exc)
 			if ind.shape[0]==0:
 				raise ValueError('No rsid for test!')
@@ -498,7 +517,7 @@ class Mapper(object):
 			#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 			return [indexes[:,i] for i in range(self.n_study)], keys
 		elif self.exclude is not None:
-			ind_exc=np.array([self.hash.get_index(i) for i in self.include])
+			ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
 			start=chunk_number[0]
 			finish=chunk_number[1]
 			ind=np.setxor1d(np.arange(start,finish),ind_exc)
@@ -536,9 +555,9 @@ class Mapper(object):
 				#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 				return [indexes[:,i] for i in range(self.n_study)], keys
 			elif self.include is not None:
-				ind=np.array([self.hash.get_index(i) for i in self.include])
+				ind=np.array([self.hash.get_index(i)[0] for i in self.include])
 				if self.exclude is not None:
-					ind_exc=np.array([self.hash.get_index(i) for i in self.exclude])
+					ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
 					ind=np.setxor1d(ind,ind_exc)
 				if ind.shape[0]==0:
 					raise ValueError('No rsid for test!')
@@ -552,7 +571,7 @@ class Mapper(object):
 				return [indexes[:,i] for i in range(self.n_study)], keys
 
 			elif self.exclude is not None:
-				ind_exc=np.array([self.hash.get_index(i) for i in self.include])
+				ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
 				start=self.processed
 				finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
 				self.processed=finish
@@ -583,11 +602,11 @@ class Mapper(object):
 
 class Reference(object):
 
-	def __init__(self, name):
-		self.name=name
+	def __init__(self):
+		self.name=None
 		self.reference_name=None
 		self.path={
-			'1000Gp1v3_20101123_ALL_impute_legend':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.20101123.ALL.impute.legend.final.gz')
+			'1000Gp1v3_ref':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz')
 				  }
 		self.dataframe=None
 		self.loaded=False
@@ -602,16 +621,8 @@ class Reference(object):
 					self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ')
 				except:
 					self.dataframe=pd.read_csv(self.path[self.reference_name], sep=' ')
+				self.dataframe=self.dataframe[['ID','A1','A2']]
 				self.loaded=True
-			else:
-				raise ValueError('Unknown reference!')
-		else:
-			raise ValueError('Reference name is not define!')
-
-	def open(self):
-		if self.reference_name is not None:
-			if self.path.get(self.reference_name) is not None:
-				self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ', iterator =True)
 			else:
 				raise ValueError('Unknown reference!')
 		else:
@@ -665,7 +676,9 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 				id_c=np.append(id_c,i['id'])
 		else:
 			id_c=covariates.get_id()
-
+	id_g=range(10)
+	id_c=range(10)
+	id_p=range(10)
 	index_g=np.array([])
 	index_p=np.array([])
 	index_c=np.array([])

@@ -30,8 +30,7 @@ files_order=`for i in $(ls | grep info); do echo ${i%.info*}; done`
 
 for i in $files_order;
 do
-zcat $i.info.gz | awk '{if($1!="SNP"){print $1}}' >> ${SAVE_DIR}/${SNPs_INFO}
-#TODO (low) save Freq and Rsq data
+zcat $i.info.gz | awk '{if($1!="SNP"){print $1,$2,$3,$5,$7}}' >> ${SAVE_DIR}/${SNPs_INFO}
 echo $i >> ${SAVE_DIR}/files_order.txt
 done
 

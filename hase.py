@@ -68,14 +68,15 @@ if __name__=='__main__':
 	parser.add_argument("-cov", "--covariates", type=str, help="path to covariates data folder")
 
 
-	parser.add_argument( "--derivatives", nargs='+', type=str, help="path to derivatives data folder")
+	parser.add_argument( "-derivatives", nargs='+', type=str, help="path to derivatives data folder")
 
 	parser.add_argument("-protocol", type=str, help="path to study protocol file")
 
 	parser.add_argument('-study_name', type=str, required=True,nargs='+', help=' Name for saved genotype data, without ext')
 
 	parser.add_argument('-mapper', type=str, help='Mapper data folder')
-	parser.add_argument('-mapper_name', type=str, help='Mapper name')
+
+	parser.add_argument('-ref_name', type=str, default='1000Gp1v3_ref', help='Reference panel name')
 
 	#ADDITIONAL SETTINGS
 	parser.add_argument("-snp_id_inc", type=str, help="path to file with SNPs id to include to analysis")
@@ -147,7 +148,7 @@ if __name__=='__main__':
 		phen.start(args.phenotype)
 
 		gen=Reader('genotype')
-		gen.start(args.genotype, hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
+		gen.start(args.genotype[0], hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
 
 		e=Encoder()
 		e.out=args.out
@@ -161,15 +162,15 @@ if __name__=='__main__':
 			while True:
 				with Timer() as t_gen:
 					genotype = gen.get_next()
-					genotype=genotype[:,row_index[0]]
 					if isinstance(genotype, type(None)):
 						break
+					genotype=genotype[:,row_index[0]]
 					encode_genotype=e.encode(genotype, data_type='genotype')
 					e.save_hdf5(encode_genotype,os.path.join(args.out, 'encode_genotype' ) )
 					encode_genotype=None
 					gc.collect()
 
-				print ('Time to create fake genotype {} is {}sec'.format(genotype.shape,t_gen.secs))
+				print ('Time to create fake genotype is {}sec'.format(t_gen.secs))
 
 			while True:
 				with Timer() as t_phen:
@@ -185,7 +186,7 @@ if __name__=='__main__':
 					gc.collect()
 			if phen.folder.format=='.npy':
 				np.save(os.path.join(os.path.join(args.out, 'encode_phenotype', 'info_dic.npy')),e.phen_info_dic )
-			print ('Time to create fake genotype {} is {}sec'.format(phenotype.shape,t_phen.secs))
+			print ('Time to create fake phenotype is {}sec'.format(t_phen.secs))
 
 		print ('Time to encode all data: {} sec'.format(t.secs))
 
@@ -194,6 +195,11 @@ if __name__=='__main__':
 	elif args.mode=='single-meta':
 
 		#ARG_CHECKER.check(args,mode='single-meta')
+		#mapper=Mapper()
+		#mapper.genotype_names=args.genotype[0]
+		#mapper.reference_name=args.ref_name
+		#mapper.load_flip(args.mapper)
+
 
 		phen=Reader('phenotype')
 		phen.start(args.phenotype)
@@ -205,7 +211,7 @@ if __name__=='__main__':
 			raise ValueError('In covariates folder should be only one file!')
 
 		gen=Reader('genotype')
-		gen.start(args.genotype, hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
+		gen.start(args.genotype[0], hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
 
 		with Timer() as t:
 			partial_derivatives(save_path=args.out,COV=cov,PHEN=phen, GEN=gen,
@@ -221,9 +227,10 @@ if __name__=='__main__':
 
 		##### Init data readers #####
 
-		mapper=Mapper(args.mapper_name)
+		mapper=Mapper()
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
-		mapper.genotype_names=args.genotype
+		mapper.genotype_names=args.study_name
+		mapper.reference_name=args.ref_name
 		mapper.load(args.mapper)
 		mapper.cluster=args.cluster
 		mapper.node=args.node
@@ -239,7 +246,7 @@ if __name__=='__main__':
 			pard[i].folder.load()
 
 
-		PD=[False if isinstance(i.folder.data.b4,None ) else True for i in pard]
+		PD=[False if isinstance(i.folder._data.b4, type(None) ) else True for i in pard]
 
 		if np.sum(PD)!=len(pard) and np.sum(PD)!=0:
 			raise ValueError('All study should have b4 data for partial derivatives!')
@@ -262,9 +269,9 @@ if __name__=='__main__':
 				gen.append(Reader('genotype'))
 				gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
 
-			for i in gen:
-				i._data.link()
-			row_index, ids =  study_indexes(phenotype=phen.folder._data,genotype=(i.folder._data for i in gen),covariates=(i.metadata for i in pard))
+			#for i in gen:
+			#	i._data.link()
+			row_index, ids =  study_indexes(phenotype=phen.folder._data,genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
 
 		while True:
 			if mapper.cluster=='n':
@@ -283,7 +290,7 @@ if __name__=='__main__':
 			Analyser.rsid=keys
 			if np.sum(PD)==0:
 				genotype=np.array([])
-				genotype=merge_genotype(genotype, SNPs_index)
+				genotype=merge_genotype(gen, SNPs_index)
 				genotype=genotype[:,row_index[0]]
 
 			#TODO (low) add interaction
@@ -294,8 +301,9 @@ if __name__=='__main__':
 			a_cov=np.array([])
 			b4=np.array([])
 
-			if protocol.enable:
-				regression_model=protocol.regression_model()
+			if args.protocol is not None:
+				if protocol.enable:
+					regression_model=protocol.regression_model()
 			else:
 				regression_model=None
 
@@ -329,22 +337,29 @@ if __name__=='__main__':
 
 				while True:
 					phenotype=phen.get_next(index=row_index[1])
+
 					if isinstance(phenotype, type(None)):
 						phen.folder.processed=0
+						print 'All phenotypes processed!'
 						break
+					names=phen.folder._data.names
+					keys=meta_pard.phen_mapper.dic.keys()
+					phen_ind=np.intersect1d(keys, names)
+					C_test=C[phen_ind]
+					b_cov_test=b_cov[:,phen_ind]
 
 					b4 = B4(phenotype,genotype)
-
-					t_stat=HASE(b4, a_inv, b_cov, C, N_con, DF)
+					t_stat,SE =HASE(b4, a_inv, b_cov_test, C_test, N_con, DF)
 
 					if mapper.cluster=='y':
 						Analyser.cluster=True
 						Analyser.chunk=ch
 						Analyser.node=mapper.node[1]
 					Analyser.t_stat=t_stat
+					Analyser.SE=SE
 					Analyser.threshold=args.thr
 					Analyser.out=args.out
-					Analyser.save_result(  meta_pard.phen_names )
+					Analyser.save_result(  names[phen_ind] )
 
 					t_stat=None
 					Analyser.t_stat=None
@@ -357,7 +372,7 @@ if __name__=='__main__':
 				Analyser.SE=SE
 				Analyser.threshold=args.thr
 				Analyser.out=args.out
-				Analyser.save_result(  meta_pard.phen_names )
+				Analyser.save_result(  meta_pard.phen_mapper.dic.keys() )
 
 				t_stat=None
 				Analyser.t_stat=None
@@ -380,7 +395,7 @@ if __name__=='__main__':
 		cov=Reader('covariates')
 		cov.start(args.covariates)
 
-		if cov.folder.n_files>1:
+		if (cov.folder.n_files>1 and cov.folder.format!='.npy') or (cov.folder.n_files>2 and cov.folder.format=='.npy'): #TODO (middle) test
 			raise ValueError('In covariates folder should be only one file!')
 
 		gen=[]
@@ -389,10 +404,11 @@ if __name__=='__main__':
 			gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
 
 
-		if args.mapper_name is not None:
-			mapper=Mapper(args.mapper_name)
+		if args.mapper is not None:
+			mapper=Mapper()
 			mapper.chunk_size=MAPPER_CHUNK_SIZE
 			mapper.genotype_names=args.genotype
+			mapper.reference_name=args.ref_name
 			if args.snp_id_inc is not None:
 				mapper.include=np.array(pd.DataFrame.from_csv(args.snp_id_inc)['rsid'].tolist())
 			if args.snp_id_exc is not None:

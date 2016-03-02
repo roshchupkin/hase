@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from hdgwas.tools import Timer,HaseAnalyser, Reference
 import argparse
 import pandas as pd
@@ -9,7 +9,7 @@ import numpy as np
 
 if __name__=="__main__":
 
-	os.environ['HASEDIR']=os.path.dirname(os.getcwd())
+	os.environ['HASEDIR']=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 	parser = argparse.ArgumentParser(description='Script analyse results of HASE')
 	parser.add_argument("-r", required=True,help="path to hase results")
 	parser.add_argument("-o", "--out", type=str, required=True,help="path to save result folder")

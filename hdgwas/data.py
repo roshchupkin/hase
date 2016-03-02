@@ -238,15 +238,16 @@ class ParData(Data):
 		self.C=None
 		self.a_test=None
 		self.metadata=None
+		self.b4=None
 
 	def get(self,gen_order=None, phen_order=None,cov_order=None):
 
 		if gen_order is None or phen_order is None or cov_order is None:
 			raise ValueError('PD order is not define!')
 		if isinstance(self.a_inv, type(None)):
-			return self.a_test[gen_order,:], self.b_cov[:,cov_order,:], self.C[phen_order], self.a_cov[cov_order,cov_order]
+			return self.a_test[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[cov_order,:], self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
 		else:
-			return self.a_inv[gen_order,:], self.b_cov[:,cov_order,:], self.C[phen_order], self.a_cov[cov_order,cov_order]
+			return self.a_inv[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[cov_order,:], self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
 
 class MetaPhenotype(object):
 	pass
@@ -260,7 +261,7 @@ class MetaParData(object):
 			values=np.array(map.dic.values() )
 			result={}
 			r=(values==-1).any(axis=1)
-			if len(r)==values.shape[0]:
+			if np.sum(r)==values.shape[0]:
 				raise ValueError('There is no common names between studies')
 			for i,k in enumerate(keys):
 				result[k]=values[~r,i]
@@ -290,7 +291,7 @@ class MetaParData(object):
 
 	def get(self, SNPs_index=None, B4=False, regression_model=None):
 
-		if self.pd is not None:
+		if self.pd is None:
 			raise ValueError('Data not defined!')
 		k=self.pd.keys()
 		if SNPs_index is not None:
@@ -320,22 +321,22 @@ class MetaParData(object):
 	def maf_pard(self,SNPs_index=None):
 
 		samples=0
-		maf=np.zeros( (SNPs_index[0]) )
+		maf=np.zeros( len(SNPs_index[0]) )
 
 		for j,i in enumerate(self.pd):
 			n=len(self.pd[i].folder._data.metadata['id'])
 			samples+=n
-			maf=maf+n*self.pd[i].folder._data.metadata['maf'][SNPs_index[j]]
+			maf=maf+n*np.array(self.pd[i].folder._data.metadata['MAF'])[SNPs_index[j]]
 		maf=maf/np.float(samples)
 		return maf
 
 	def get_n_id(self):
-		return np.sum([len(i.folder.data.metadata['id']) for i in self.pd  ])
+		return np.sum([len(self.pd[i].folder._data.metadata['id']) for i in self.pd  ])
 
 	def get_phenotype_names(self):
 		n={}
 		for i in self.pd:
-			n[i]=self.pd[i].folder.data.metadata['phenotype']
+			n[i]=self.pd[i].folder._data.metadata['phenotype']
 
 
 class Folder(object):
@@ -476,7 +477,8 @@ class PLINKHDF5Folder(HDF5Folder):
 	def get(self, index):
 		self.processed+=len(index)
 		result=[]
-		if self.pool.inmem==self.pool.limit:
+		if True:
+		#if self.pool.inmem==self.pool.limit:
 			result=self.pool.get_chunk(index)
 		else:
 			result=[self.pool.get_data(i,j) for i,j in index]
@@ -627,6 +629,7 @@ class PDFolder(Folder):
 			if i not in self.files:
 				raise ValueError('There is not {} file in directory {}'.format(i,self.path))
 		self._data=ParData()
+		self.loaded=False
 
 	def scan(self):
 		pass
@@ -655,11 +658,16 @@ class PDFolder(Folder):
 			self._data.a_inv=np.load(os.path.join(self.path,self.name+'_a_inv.npy'))
 
 		elif self.name+'_a_test.npy' in self.files:
-			self._data.a_test=np.load(os.path.join(self.path,self.name+'a_test.npy'))
+			self._data.a_test=np.load(os.path.join(self.path,self.name+'_a_test.npy'))
 
 		else:
 			raise ValueError('There is not a_inv.npy or a_test.npy file in directory {}'.format(self.path))
 
+		self.loaded=True
+
+	def summary(self):
+		if not self.loaded:
+			raise ValueError('call summary PD before load data!')
 
 
 
@@ -879,7 +887,8 @@ class Reader(object):
 	def start(self, path, **kwargs):
 
 		self.kwargs=kwargs
-
+		if path is None:
+			raise ValueError('Not defined path for {}'.format(self.name))
 		if os.path.isdir(path):
 
 			self.folder=Folder(path)

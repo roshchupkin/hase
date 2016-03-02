@@ -26,3 +26,6 @@ class Protocol: #TODO (mid) write class
 
 	def parse(self):
 		print('Not implemented!')
+
+	def regression_model(self):
+		pass
