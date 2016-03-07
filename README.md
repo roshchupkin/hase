@@ -9,11 +9,10 @@ Framework for efficient high-dimensional association analyses.
      ```
 ## Update HASE 
 
-You can update HASE to newest version using `git`. Navigate to your HASE folder (where you cloned git repository):
-    
-    ```
-    git pull
-    ```
+You can update HASE to newest version using `git`. Navigate to your HASE folder (where you cloned git repository):    
+     ```
+     git pull
+     ```
 
 ## Installation requirements
 
