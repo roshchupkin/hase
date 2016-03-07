@@ -110,6 +110,7 @@ class GenotypePLINK(GenotypeHDF5):
 		if chunk_size is None:
 			raise ValueError('CONVERTER_SPLIT_SIZE does not define in config file!')
 		G=np.array([])
+		#self.reader.folder.processed=0
 		while True:
 			with Timer() as t:
 				G=self.reader.folder.get_bed(chunk_size)
@@ -126,7 +127,7 @@ class GenotypePLINK(GenotypeHDF5):
 			with Timer() as t:
 				self.genotype[:] = G
 
-			print ('Time to write {} SNPs is {} s'.format(chunk_size, t.secs))
+			print ('Time to write {} SNPs is {} s'.format(G.shape[0], t.secs))
 
 			self.h5_gen_file.close()
 			G=None

@@ -345,6 +345,9 @@ if __name__=='__main__':
 					names=phen.folder._data.names
 					keys=meta_pard.phen_mapper.dic.keys()
 					phen_ind=np.intersect1d(keys, names)
+					if len(phen_ind)==0:
+						print 'There is no common ids in phenotype file {} and PD data!'.format((phen.folder._data.filename))
+						break
 					C_test=C[phen_ind]
 					b_cov_test=b_cov[:,phen_ind]
 

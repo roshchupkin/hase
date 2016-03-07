@@ -289,7 +289,7 @@ class MetaParData(object):
 			if not protocol.enable:
 				protocol.parse()
 
-	def get(self, SNPs_index=None, B4=False, regression_model=None):
+	def get(self, SNPs_index=None, B4=False, regression_model=None,random_effect_intercept=False ):
 
 		if self.pd is None:
 			raise ValueError('Data not defined!')
@@ -298,6 +298,10 @@ class MetaParData(object):
 			if len(self.pd)!=len(SNPs_index):
 				raise ValueError('There are not equal number od PD and SNPs indexes {}!={}'.format(len(self.pd), len(SNPs_index)))
 			a_test, b_cov, C, a_cov = self.pd[k[0]].get(gen_order=SNPs_index[0], phen_order=self.phen_order[k[0]], cov_order=self.cov_order[k[0]] )
+			if random_effect_intercept: #TODO (high)
+				a_test_effect=a_test[:,0:1]
+				b_cov_effect=b_cov[0:1,:]
+				a_cov_effect=a_cov[0:1,:]
 		else:
 			raise ValueError('Indexes are not defined!')
 
@@ -310,8 +314,18 @@ class MetaParData(object):
 			b_cov=b_cov + b
 			C=C+c
 			a_cov=a_cov + a_c
+			if random_effect_intercept:
+				a_test_effect=np.hstack((a_test_effect,a[:,0:1]))
+				b_cov_effect=np.vstack((b_cov_effect,b[0:1,:]))
+				a_cov_effect=np.vstack((a_cov_effect,a_c[0:1,:]))
 			if B4:
 				b4=b4+self.pd[i].folder.data.b4[:,  self.phen_order[k[i]]	]
+
+		if random_effect_intercept:
+				a_test=np.hstack((a_test_effect,a_test))
+				b_cov=np.vstack((b_cov_effect,b_cov))
+				a_cov=np.vstack((a_cov_effect,a_cov))
+
 		if B4:
 			return a_test, b_cov, C, a_cov, b4
 		else:
@@ -665,7 +679,7 @@ class PDFolder(Folder):
 
 		self.loaded=True
 
-	def summary(self):
+	def summary(self): #TODO (middle) write function
 		if not self.loaded:
 			raise ValueError('call summary PD before load data!')
 
@@ -684,7 +698,9 @@ class PLINKFolder(Folder):
 		self.N_probes=0
 		self.n_probes=0
 		self.n_probes_dic={}
+		self.n_ind_dic={}
 		self.n_ind=0
+		self.N_ind=0
 		self._currentSNP = 0
 
 		self._bedcode = {
@@ -731,9 +747,9 @@ class PLINKFolder(Folder):
 
 			else:
 				individuals=np.append(individuals,ind)
-
-		self.n_ind=len(individuals)
-		print('Number of Individuals: %d' % self.n_ind)
+			self.n_ind_dic[i]=len(ind)
+		self.N_ind=len(individuals)
+		print('Number of Individuals: %d' % self.N_ind)
 
 		return individuals
 
@@ -793,9 +809,10 @@ class PLINKFolder(Folder):
 
 	def read_bed(self,file):
 
-		n=self.n_ind
+		self._currentSNP=0
+		self.n_ind=self.n_ind_dic[file]
 		self.n_probes=self.n_probes_dic[file]
-
+		n=self.n_ind
 		self.bed = open(os.path.join(self.path,file +'.bed'), 'rb')
 		magicNumber = ba.bitarray(endian="little")
 		magicNumber.fromfile(self.bed, 2)

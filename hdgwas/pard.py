@@ -26,7 +26,8 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
     b4=[]
 
     covariates=COV.get_next(index=row_index[2])
-    metadata['names'].append(study_name+ '_intercept')
+    if intercept:
+        metadata['names'].append(study_name+ '_intercept')
     metadata['names']=metadata['names']+[ study_name+ '_' + i for i in COV.folder._data.get_names() ]
 
     a_cov=A_covariates(covariates,intercept=intercept)
@@ -42,7 +43,6 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
             if isinstance(phenotype, type(None)):
                 b_cov=np.concatenate(b_cov, axis=1)
                 C=np.concatenate(C, axis=1)
-                print b_cov.shape
                 np.save(os.path.join(save_path,study_name+'_b_cov.npy'),b_cov)
                 np.save(os.path.join(save_path,study_name+'_C.npy'),C)
                 break

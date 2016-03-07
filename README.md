@@ -7,6 +7,13 @@ Framework for efficient high-dimensional association analyses.
      ```
      git clone https://github.com/roshchupkin/hase.git
      ```
+## Update HASE 
+
+You can update HASE to newest version using `git`. Navigate to your HASE folder (where you cloned git repository):
+    
+    ```
+    git pull
+    ```
 
 ## Installation requirements
 
