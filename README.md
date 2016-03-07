@@ -3,7 +3,7 @@ Framework for efficient high-dimensional association analyses.
 
 ## Installation HASE
 
-1. Navigate to directory where you want to install HASE and clone this repository:
+Navigate to directory where you want to install HASE and clone this repository:
      ```
      git clone https://github.com/roshchupkin/hase.git
      ```
