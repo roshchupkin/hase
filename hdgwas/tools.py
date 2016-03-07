@@ -676,9 +676,7 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 				id_c=np.append(id_c,i['id'])
 		else:
 			id_c=covariates.get_id()
-	id_g=range(10)
-	id_c=range(10)
-	id_p=range(10)
+
 	index_g=np.array([])
 	index_p=np.array([])
 	index_c=np.array([])
