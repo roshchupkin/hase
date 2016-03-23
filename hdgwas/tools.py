@@ -294,6 +294,7 @@ class Mapper(object):
 		self.chunk_pool=None
 		self.chunk_size=None
 		self.column_names=[]
+		self.flip=[]
 
 
 	def chunk_pop(self):
@@ -428,8 +429,14 @@ class Mapper(object):
 		if len(glob.glob(folder + 'flip_*'))==0:
 			raise ValueError('There is no flip mapper data in folder {}'.format(folder))
 
-		self.flip=np.load(os.path.join(folder, 'flip_'+self.reference_name+'_'+self.genotype_names+'.npy'))
-
+		for j,i in enumerate(self.genotype_names):
+			self.flip.append(np.load(os.path.join(folder, 'flip_'+self.reference_name+'_'+i+'.npy')))
+			if j==0:
+				len_flip=self.flip[0].shape[0]
+			else:
+				if len_flip!=self.flip[j].shape[0]:
+					raise ValueError('Different length of flip array between studies; used different ref panel!')
+		self.flip=np.array(self.flip).T
 
 	def load (self, folder):
 		if folder is None:
@@ -460,8 +467,13 @@ class Mapper(object):
 		if len(values)!=len(self.genotype_names):
 			raise ValueError('Number of files in mapper folder {} is not equal to number of studies {}'.format(len(values),len(self.genotype_names)))
 
-		for i in self.genotype_names:
+		for j,i in enumerate(self.genotype_names):
 			self.values.append(np.load(os.path.join(folder, 'values_'+self.reference_name+'_'+i+'.npy')))
+			if j==0:
+				len_value=self.values[0].shape[0]
+			else:
+				if len_value!=self.values[j].shape[0]:
+					raise ValueError('Different length of values array between studies; used different ref panel!')
 
 		self.values=np.array(self.values).T
 
@@ -680,6 +692,9 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 	index_g=np.array([])
 	index_p=np.array([])
 	index_c=np.array([])
+	id_g=range(10)
+	id_p=range(10)
+	id_c=range(10)
 
 	if args is not None:
 		if not isinstance(args.ind_id_inc,type(None)) or not isinstance(args.ind_id_exc,type(None)):
@@ -767,7 +782,7 @@ def merge_genotype(genotype, SNPs_index):
 		return gen
 	else:
 		if len(genotype)!=len(SNPs_index):
-			raise ValueError('There are not equal number od genotypes and SNPs indexes {}!={}'.format(len(genotype), len(SNPs_index)))
+			raise ValueError('There are not equal number of genotypes and SNPs indexes {}!={}'.format(len(genotype), len(SNPs_index)))
 		gen=genotype[0].get(SNPs_index[0])
 		for i in range(1, len(genotype)):
 			gen=np.hstack( (gen,genotype[i].get(SNPs_index[i]) ) )

@@ -56,9 +56,11 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
     while True:
 
         with Timer() as t_gen:
-
-            genotype=GEN.get_next()
-
+            SNPs_index, keys=MAP.get_next()
+            if isinstance(SNPs_index, type(None)):
+                break
+            #genotype=GEN.get_next()
+            genotype=GEN.get(SNPs_index[0])
             if isinstance(genotype, type(None)):
                 np.save(os.path.join(save_path,study_name+'_a_test.npy'), np.concatenate(a_test) )
                 np.save(os.path.join(save_path,study_name+'_metadata.npy'),metadata)

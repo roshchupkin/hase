@@ -217,7 +217,7 @@ class Hdf5Data(Data):
 	def __init__(self, data_path , name, type='PLINK'):
 		super(Hdf5Data, self).__init__()
 		self.name=name
-		self.names=np.array([]) #TODO (low) in case of usage hdf5 for phenotypes, need to use real names self._data.names=pd.read_hdf(os.path.join(path,'probes','ID.h5'),'RSID')
+		self.names=pd.read_hdf(os.path.join(data_path,'probes', self.name +'.h5'),'probes', where='columns=[ID]').ID
 		self.id=np.array(pd.read_hdf(os.path.join(data_path,'individuals',self.name+'.h5'),'individuals').individual.tolist())
 		self.shape=(len(self.id), len(self.names))
 		if type=='PLINK':

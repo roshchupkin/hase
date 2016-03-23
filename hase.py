@@ -195,10 +195,12 @@ if __name__=='__main__':
 	elif args.mode=='single-meta':
 
 		#ARG_CHECKER.check(args,mode='single-meta')
-		#mapper=Mapper()
-		#mapper.genotype_names=args.genotype[0]
-		#mapper.reference_name=args.ref_name
-		#mapper.load_flip(args.mapper)
+		mapper=Mapper()
+		mapper.genotype_names=args.study_name
+		mapper.chunk_size=MAPPER_CHUNK_SIZE
+		mapper.reference_name=args.ref_name
+		mapper.load_flip(args.mapper)
+		mapper.load(args.mapper)
 
 
 		phen=Reader('phenotype')
@@ -215,7 +217,7 @@ if __name__=='__main__':
 
 		with Timer() as t:
 			partial_derivatives(save_path=args.out,COV=cov,PHEN=phen, GEN=gen,
-								MAP=None, MAF=args.maf, R2=None, B4_flag=args.pd_full,
+								MAP=mapper, MAF=args.maf, R2=None, B4_flag=args.pd_full,
 								study_name=args.study_name[0], intercept=args.intercept)
 		print ('Time to compute partial derivatives : {} sec'.format(t.secs))
 
@@ -410,7 +412,7 @@ if __name__=='__main__':
 		if args.mapper is not None:
 			mapper=Mapper()
 			mapper.chunk_size=MAPPER_CHUNK_SIZE
-			mapper.genotype_names=args.genotype
+			mapper.genotype_names=args.study_name
 			mapper.reference_name=args.ref_name
 			if args.snp_id_inc is not None:
 				mapper.include=np.array(pd.DataFrame.from_csv(args.snp_id_inc)['rsid'].tolist())
@@ -420,7 +422,20 @@ if __name__=='__main__':
 			mapper.cluster=args.cluster
 			mapper.node=args.node
 		else:
-			mapper=None
+			if len(args.genotype)==1:
+				mapper=Mapper()
+				mapper.chunk_size=MAPPER_CHUNK_SIZE
+				mapper.genotype_names=args.study_name
+				mapper.reference_name=args.ref_name
+				mapper.cluster=args.cluster
+				mapper.node=args.node
+				mapper.n_study=1
+				mapper.n_keys=gen[0].folder._data.names.shape[0]
+				mapper.keys=np.array(gen[0].folder._data.names.tolist())
+				mapper.values=np.array(range(mapper.n_keys)).reshape(-1,1)
+			else:
+				raise ValueError('You can not run regression analysis with several genotype data without mapper!')
+			#mapper=None
 
 		Analyser=HaseAnalyser()
 		Analyser.threshold=args.thr

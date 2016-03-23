@@ -40,8 +40,8 @@ if __name__=='__main__':
 			with Timer() as t1:
 				mapper.hash.fill(df)
 			print ('time to fill hash {}s'.format(t1.secs))
-			#for k,l in enumerate(reference.dataframe.iterrows()):
-			for k,l in enumerate(df.iterrows()):
+			for k,l in enumerate(reference.dataframe.iterrows()):
+			#for k,l in enumerate(df.iterrows()): #TODO (high) remove
 				ind,fl=mapper.hash.get_map( l[1].tolist() )
 				index.append(ind)
 				flip.append(fl)

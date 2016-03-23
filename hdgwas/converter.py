@@ -96,7 +96,7 @@ class GenotypePLINK(GenotypeHDF5):
 				break
 			print i
 			# WARNING!!! doesn't work on windows
-			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes'.format(i), append=True,
+			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes',format='table', append=True,
 						 names=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
 						 complib='zlib',complevel=9, min_itemsize = 25)
 			gc.collect()
