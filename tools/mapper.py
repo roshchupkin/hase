@@ -40,8 +40,8 @@ if __name__=='__main__':
 			with Timer() as t1:
 				mapper.hash.fill(df)
 			print ('time to fill hash {}s'.format(t1.secs))
-			for k,l in enumerate(reference.dataframe.iterrows()):
-			#for k,l in enumerate(df.iterrows()): #TODO (high) remove
+			#for k,l in enumerate(reference.dataframe.iterrows()):
+			for k,l in enumerate(df.iterrows()): #TODO (high) remove
 				ind,fl=mapper.hash.get_map( l[1].tolist() )
 				index.append(ind)
 				flip.append(fl)
@@ -51,8 +51,21 @@ if __name__=='__main__':
 		np.save(os.path.join(args.out,'flip_'+args.ref_name+'_'+args.study_name[j]+'.npy'),flip)
 
 	#np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),reference.dataframe['ID'].tolist())
-	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),df['ID'].tolist())
+	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),df['ID'].tolist()) #TODO (high) remove
 	print ('Data successfully saved')
+
+
+	overlap=np.where(index==1)
+	not_overlap=np.where(index==-1)
+	flip_index=np.where(flip==-1)
+	print 'There are {} common variances with reference panel, which would be included in study'.format(len(overlap[0]))
+	print 'There are {} variances excluded from study (not found in reference panel)'.format(df['ID'].shape[0] -len(overlap[0])   )
+	if len(not_overlap[0])!=0:
+		print 'Examples not found in reference panel:', df['ID'][not_overlap[0][:10]]
+	print 'There are {} flipped variances',format(len(flip_index[0]))
+	if len(flip_index[0])!=0:
+		print 'Examples flipped:', df['ID'][flip_index[0][:10]]
+
 
 
 

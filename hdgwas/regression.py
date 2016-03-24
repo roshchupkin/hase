@@ -52,7 +52,7 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True):
 			SNPs_index=None
 
 		with Timer() as t:
-			genotype=merge_genotype(gen, SNPs_index)
+			genotype=merge_genotype(gen, SNPs_index, mapper)
 		print ('time to read and merge genotype {}s'.format(t.secs))
 		gc.collect()
 		if genotype is None:

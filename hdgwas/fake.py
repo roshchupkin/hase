@@ -15,7 +15,6 @@ class Encoder(object):
 		self.hdf5_iter=0
 		self.npy_iter=0
 		self.pytable_filters = tables.Filters(complevel=9, complib='zlib')
-		self.h5_name='encode_genotype.h5' #TODO (mid) link to study name
 		self.out=None
 		self.metadata=None
 		self.study_name=None
@@ -61,7 +60,7 @@ class Encoder(object):
 		#only for phenotype
 		if isinstance(save_path,type(None)) or  not os.path.isdir(save_path):
 			raise ValueError('There is no such path or directory {}'.format(save_path))
-		np.save(os.path.join(save_path,str(self.npy_iter)+'_'+ 'phenotype.npy'),data )
+		np.save(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '_encoded_phenotype.npy'),data )
 		if self.phen_info_dic['id'] is None:
 			self.phen_info_dic['id']=info._data.id
 		self.phen_info_dic[str(self.npy_iter)+'_'+ 'phenotype.npy']=info._data.names[info._data.start:info._data.finish]
@@ -73,23 +72,23 @@ class Encoder(object):
 		df=pd.DataFrame(data)
 		df.columns=info._data.names[info._data.start:info._data.finish]
 		df.insert(0,'id',info._data.id)
-		df.to_csv(os.path.join(save_path,str(self.npy_iter)+'_'+ 'phenotype.csv'), sep='\t', index_col=None)
+		df.to_csv(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '_encoded_phenotype.csv'), sep='\t', index_col=None)
 		self.npy_iter+=1
 
 
 
 	def save_hdf5(self,data, save_path=None):
 		#only for genetics data
-		print ('Saving data to ... {}'.format(os.path.join(save_path,str(self.hdf5_iter)+'_'+self.h5_name)))
+		print ('Saving data to ... {}'.format(os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name+'_encoded.h5')))
 
 		if isinstance(save_path,type(None)) or  not os.path.isdir(save_path):
 			raise ValueError('There is no such path or directory {}'.format(save_path))
 
 		self.h5_gen_file = tables.openFile(
-			os.path.join(save_path,str(self.hdf5_iter)+'_'+self.h5_name), 'w', title='encode_genotype')
+			os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name +'_encoded.h5'), 'w', title='encode_genotype')
 		self.hdf5_iter+=1
 
-		atom = tables.Int8Atom()  # TODO (mid) check data format, works only for best guess, minimac needs Float16
+		atom = tables.Float16Atom() # TODO (mid) check data format, Int8Atom works only for best guess, minimac needs Float16
 		self.genotype = self.h5_gen_file.createCArray(self.h5_gen_file.root, 'genotype', atom,
 													  (data.shape),
 													  title='Genotype', filters=self.pytable_filters)

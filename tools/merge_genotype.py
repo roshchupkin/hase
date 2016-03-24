@@ -64,7 +64,7 @@ if __name__ == '__main__':
 			break
 		RSID.append(keys)
 
-		data=merge_genotype(gen, SNPs_index)
+		data=merge_genotype(gen, SNPs_index) #TODO (high) add mapper
 		print data.shape
 		if args.cluster=='n':
 			h5_gen_file = tables.openFile(

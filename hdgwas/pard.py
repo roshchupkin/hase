@@ -67,7 +67,9 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
                 if B4_flag:
                     np.save(os.path.join(save_path,study_name+'_b4.npy'),b4)
                 break
-
+            flip=MAP.flip[SNPs_index[0],0]
+            flip_index=(flip==-1)
+            genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
             genotype=genotype[:,row_index[0]]
             maf=np.mean(genotype, axis=1)/2
             metadata['MAF']=metadata['MAF']+list(maf)

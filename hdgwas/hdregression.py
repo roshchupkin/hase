@@ -77,7 +77,10 @@ def A_inverse(a_covariates, a_test): #TODO (low) extend for any number of tests 
 		inv[ 0:k-1,0:k-1 ]=a_covariates
 		inv[k-1,:]=a_test[i,:]
 		inv[0:k,k-1]=a_test[i,0:k]
-		A_inv.append(np.linalg.inv(inv))
+		try:
+			A_inv.append(np.linalg.inv(inv))
+		except:
+			A_inv.append(np.zeros(k*k).reshape(k,k)) #TODO (high) test; check influence on results; warning;
 
 	return np.array(A_inv)
 

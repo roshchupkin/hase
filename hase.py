@@ -96,6 +96,7 @@ if __name__=='__main__':
 	#FLAGS
 	parser.add_argument('-hdf5', type=bool,default=True, help='flag for genotype data format')
 	parser.add_argument('-pd_full', type=bool, default=False, help='For not HD association study')
+	parser.add_argument('-effect_intercept', type=bool, default=False, help='Flag for add study effect to PD regression model')
 	parser.add_argument('-permute_ph', type=bool, default=False, help='Flag for phenotype permutation')
 	#TODO (low) save genotype after MAF
 	###
@@ -234,6 +235,7 @@ if __name__=='__main__':
 		mapper.genotype_names=args.study_name
 		mapper.reference_name=args.ref_name
 		mapper.load(args.mapper)
+		mapper.load_flip(args.mapper)
 		mapper.cluster=args.cluster
 		mapper.node=args.node
 
@@ -292,7 +294,7 @@ if __name__=='__main__':
 			Analyser.rsid=keys
 			if np.sum(PD)==0:
 				genotype=np.array([])
-				genotype=merge_genotype(gen, SNPs_index)
+				genotype=merge_genotype(gen, SNPs_index, mapper)
 				genotype=genotype[:,row_index[0]]
 
 			#TODO (low) add interaction
@@ -310,9 +312,9 @@ if __name__=='__main__':
 				regression_model=None
 
 			if np.sum(PD)==0:
-				a_test, b_cov, C, a_cov = meta_pard.get( SNPs_index=SNPs_index, regression_model=regression_model)
+				a_test, b_cov, C, a_cov = meta_pard.get( SNPs_index=SNPs_index, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
 			else:
-				a_test, b_cov, C, a_cov, b4 = meta_pard.get( SNPs_index=SNPs_index, B4=True, regression_model=regression_model)
+				a_test, b_cov, C, a_cov, b4 = meta_pard.get( SNPs_index=SNPs_index, B4=True, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
 
 			MAF=meta_pard.maf_pard(SNPs_index=SNPs_index)
 
@@ -419,6 +421,7 @@ if __name__=='__main__':
 			if args.snp_id_exc is not None:
 				mapper.exclude=np.array(pd.DataFrame.from_csv(args.snp_id_exc)['rsid'].tolist())
 			mapper.load(args.mapper)
+			mapper.load_flip(args.mapper)
 			mapper.cluster=args.cluster
 			mapper.node=args.node
 		else:
@@ -433,6 +436,7 @@ if __name__=='__main__':
 				mapper.n_keys=gen[0].folder._data.names.shape[0]
 				mapper.keys=np.array(gen[0].folder._data.names.tolist())
 				mapper.values=np.array(range(mapper.n_keys)).reshape(-1,1)
+				mapper.flip=np.array([1]*mapper.n_keys).reshape(-1,1)
 			else:
 				raise ValueError('You can not run regression analysis with several genotype data without mapper!')
 			#mapper=None

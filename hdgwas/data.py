@@ -298,7 +298,7 @@ class MetaParData(object):
 			if len(self.pd)!=len(SNPs_index):
 				raise ValueError('There are not equal number od PD and SNPs indexes {}!={}'.format(len(self.pd), len(SNPs_index)))
 			a_test, b_cov, C, a_cov = self.pd[k[0]].get(gen_order=SNPs_index[0], phen_order=self.phen_order[k[0]], cov_order=self.cov_order[k[0]] )
-			if random_effect_intercept: #TODO (high)
+			if random_effect_intercept and len(self.pd)>1: #TODO (high)
 				a_test_effect=a_test[:,0:1]
 				b_cov_effect=b_cov[0:1,:]
 				a_cov_effect=a_cov[0:1,:]
@@ -314,17 +314,21 @@ class MetaParData(object):
 			b_cov=b_cov + b
 			C=C+c
 			a_cov=a_cov + a_c
-			if random_effect_intercept:
+			if random_effect_intercept and len(self.pd)>1:# TODO (high) check -> and i<len(self.pd)-1:
 				a_test_effect=np.hstack((a_test_effect,a[:,0:1]))
 				b_cov_effect=np.vstack((b_cov_effect,b[0:1,:]))
 				a_cov_effect=np.vstack((a_cov_effect,a_c[0:1,:]))
 			if B4:
 				b4=b4+self.pd[i].folder.data.b4[:,  self.phen_order[k[i]]	]
 
-		if random_effect_intercept:
+		if random_effect_intercept and len(self.pd)>1:
+				a_cov_I=np.zeros((len(self.pd),len(self.pd)))
+				np.fill_diagonal(a_cov_I,a_cov_effect[:,0])
+				a_effect=np.hstack((a_cov_I,a_cov_effect))
 				a_test=np.hstack((a_test_effect,a_test))
 				b_cov=np.vstack((b_cov_effect,b_cov))
 				a_cov=np.vstack((a_cov_effect,a_cov))
+				a_cov=np.hstack((a_effect.T,a_cov))
 
 		if B4:
 			return a_test, b_cov, C, a_cov, b4
