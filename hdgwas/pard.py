@@ -58,15 +58,13 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
         with Timer() as t_gen:
             SNPs_index, keys=MAP.get_next()
             if isinstance(SNPs_index, type(None)):
-                break
-            #genotype=GEN.get_next()
-            genotype=GEN.get(SNPs_index[0])
-            if isinstance(genotype, type(None)):
                 np.save(os.path.join(save_path,study_name+'_a_test.npy'), np.concatenate(a_test) )
                 np.save(os.path.join(save_path,study_name+'_metadata.npy'),metadata)
                 if B4_flag:
                     np.save(os.path.join(save_path,study_name+'_b4.npy'),b4)
                 break
+            #genotype=GEN.get_next()
+            genotype=GEN.get(SNPs_index[0])
             flip=MAP.flip[SNPs_index[0],0]
             flip_index=(flip==-1)
             genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
@@ -78,7 +76,7 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
             a_test.append(A_tests(covariates,genotype,intercept=intercept))
 
             if B4_flag:
-                #works only when all phenotypes in one chunk, if not do not use this option!
+                #works only when all phenotypes in one chunk, if not, do not use this option!
                 #it would use to much disk space anyway
                 if len([f for f in PHEN.folder.files if f!='info_dic.npy' ])>1:
                     print 'pd_full flag disabled!'
@@ -87,7 +85,6 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
                 PHEN.folder.processed=0
                 if isinstance(phenotype, type(None)):
                     phenotype=PHEN.get_next(index=row_index[1])
-
                 b4.append(B4(phenotype,genotype))
 
         print ('Time to PD genotype {} is {} s'.format(genotype.shape, t_gen.secs))

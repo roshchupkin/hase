@@ -22,7 +22,7 @@ class Protocol: #TODO (mid) write class
 		self.path=path
 		if os.path.isfile(self.path):
 			self.enable=True
-			#self.parse()
+			self.parse()
 
 	def parse(self):
 		print('Not implemented!')

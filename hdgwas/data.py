@@ -77,6 +77,55 @@ class MINIMACPool(object):
 		print ('Finished')
 
 
+class PhenPool(object):
+
+	def __init__(self, folder):
+		self.paths={}
+		self.loaded={}
+		self.keys=[]
+		self.readed={}
+		self.inmem=0
+		self.limit=2
+		self.split_size=None
+		self.folder=folder
+		self.keys=self.folder.data_info.keys()
+
+	def link(self, n):
+		r=np.zeros((len(n),2),dtype=np.int)
+		for i,ind in enumerate(n):
+			N=ind
+			for j,k in enumerate(self.folder.data_info):
+				N=N-len(self.folder.data_info[k])
+				if N<0:
+					r[i,0]=j
+					r[i,1]=N+len(self.folder.data_info[k])
+					break
+		return r
+
+
+	def get_chunk(self,indices):
+		indices=self.link(indices)
+		indices=np.array(indices)
+		keys, ind = np.unique(indices[:,0], return_inverse=True)
+		result=None
+		gc.collect()
+		for i,k in enumerate(keys):
+			r=None
+			if k in self.loaded:
+				n=indices[(ind==i),1].flatten()
+				r=self.loaded[self.keys[k]][n,:]
+			else:
+				self.folder.read(self.keys[k])
+				r=self.folder._data._data
+				n=indices[(ind==i),1].flatten()
+				r=r[:,n]
+			l=r.shape[0]
+			if result is None:
+				result=np.empty((l,indices.shape[0]))
+			result[:,(ind==i)]=r
+		return result
+
+
 class Pool(object):
 
 	def __init__(self):
@@ -192,7 +241,7 @@ class Data(object):
 			raise ValueError('No names defined!')
 
 
-	def get_next(self, index=None):
+	def get_next(self, index=None, select_columns=None):
 
 		if isinstance(self._data,type(None)):
 			return None
@@ -200,17 +249,23 @@ class Data(object):
 		if self.processed==self.shape[1]:
 			return None
 		else:
-			start=self.processed
-			finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<=self.shape[1] else self.shape[1]
-			self.processed=finish
-			if not isinstance(index,type(None)):
-				self.start=start
-				self.finish=finish
-				return self._data[index,start:finish]
+			if select_columns is not None:
+				if not isinstance(index,type(None)):
+					return self._data[index,select_columns]
+				else:
+					return self._data[:,select_columns]
 			else:
-				self.start=start
-				self.finish=finish
-				return self._data[:,start:finish]
+				start=self.processed
+				finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<=self.shape[1] else self.shape[1]
+				self.processed=finish
+				if not isinstance(index,type(None)):
+					self.start=start
+					self.finish=finish
+					return self._data[index,start:finish]
+				else:
+					self.start=start
+					self.finish=finish
+					return self._data[:,start:finish]
 
 
 class Hdf5Data(Data):
@@ -250,8 +305,65 @@ class ParData(Data):
 			return self.a_inv[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[cov_order,:], self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
 
 class MetaPhenotype(object):
-	pass
 
+	def __init__(self, phen, protocol=None):
+
+		def _check(map,keys):
+			values=np.array(map.dic.values() )
+			result={}
+			r=(values==-1).any(axis=1)
+			if np.sum(r)==values.shape[0]:
+				raise ValueError('There is no common names between studies')
+			for i,k in enumerate(keys):
+				result[k]=values[~r,i]
+			return result, np.array(map.dic.keys())[~r]
+		self.chunk_size=1000
+		self.name=None
+		self.mapper=Mapper()
+		self.keys=[]
+		if protocol is None:
+			for i,k in enumerate(phen):
+				phen_names=[]
+				if i==0:
+					for j in k.folder.files:
+						if j!='info_dic.npy':
+							phen_names=phen_names+k.folder.data_info[j]
+					phen_names=range(7207)
+					self.mapper.fill(phen_names,i, reference=False)
+				else:
+					for j in k.folder.files:
+						if j!='info_dic.npy':
+							phen_names=phen_names+k.folder.data_info[j]
+					phen_names=range(7207)
+					self.mapper.push(phen_names,name=i)
+
+				self.keys.append(i)
+
+			self.order, self.phen_names =_check(self.mapper,self.keys)
+			self.n_phenotypes=len(self.order[self.keys[0]])
+			self.processed=0
+		else:
+			if not protocol.enable:
+				protocol.parse()
+
+		self.pool={i:PhenPool(j.folder) for i,j in enumerate(phen) }
+
+
+	def get(self):
+		if self.processed==self.n_phenotypes:
+			return None,None
+		else:
+			start=self.processed
+			finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<=self.n_phenotypes else self.n_phenotypes
+			self.processed=finish
+
+		for i,j in enumerate(self.keys):
+			if i==0:
+				phenotype=self.pool[j].get_chunk(self.order[j][start:finish])
+			else:
+				phenotype=np.vstack((phenotype,self.pool[j].get_chunk(self.order[j][start:finish])))
+
+		return phenotype, self.phen_names[start:finish]
 
 class MetaParData(object):
 
@@ -545,6 +657,10 @@ class CSVFolder(Folder):
 		except:
 			raise ValueError("Failed to init CSVFolder")
 		#self.processed-=1
+		self.data_info={}
+		for i in self.files:
+			df=pd.read_csv(os.path.join(self.path,i), sep='\t', index_col=None)
+			self.data_info[i]=np.array(df.columns[1:])
 
 
 	def read(self,file):

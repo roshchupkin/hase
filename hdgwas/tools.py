@@ -677,7 +677,12 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 	if isinstance(phenotype,type(None)):
 		id_p=np.array([])
 	else:
-		id_p=phenotype.get_id()
+		if isinstance(genotype,tuple):
+			id_p=np.array([])
+			for i in genotype:
+				id_p=np.append(id_p,i.get_id())
+		else:
+			id_p=phenotype.get_id()
 
 	if isinstance(covariates,type(None)):
 		id_c=np.array([])
@@ -692,9 +697,9 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 	index_g=np.array([])
 	index_p=np.array([])
 	index_c=np.array([])
-	id_g=range(10)
-	id_p=range(10)
-	id_c=range(10)
+	#id_g=range(10) #TODO (high) remove
+	#id_p=range(10)
+	#id_c=range(10)
 
 	if args is not None:
 		if not isinstance(args.ind_id_inc,type(None)) or not isinstance(args.ind_id_exc,type(None)):
@@ -758,7 +763,7 @@ def merge_pard(pard, SNPs_index,B4=False):
 		return a_test, b_cov, C, a_cov
 
 
-def maf_pard(pard,SNPs_index):
+def maf_pard(pard,SNPs_index): #TODO (middle) delete function
 
 	samples=0
 	maf=np.zeros( (SNPs_index[0]) )

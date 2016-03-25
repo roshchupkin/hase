@@ -6,7 +6,7 @@ import gc
 import pandas as pd
 class Encoder(object):
 
-	def __init__(self):
+	def __init__(self, out):
 		self.name='Encoder'
 		self.N_matrix=None
 		self.F=None
@@ -15,12 +15,18 @@ class Encoder(object):
 		self.hdf5_iter=0
 		self.npy_iter=0
 		self.pytable_filters = tables.Filters(complevel=9, complib='zlib')
-		self.out=None
+		self.out=out
 		self.metadata=None
 		self.study_name=None
 		self.phen_info_dic={}
 		self.phen_info_dic['id']=None
+		try:
+			print ('Creating directories...')
+			os.mkdir(os.path.join(self.out,'encode_genotype') )
+			os.mkdir(os.path.join(self.out,'encode_phenotype') )
 
+		except:
+			print('Directories "encode_genotype","encode_phenotype" are already exist in {}...'.format(self.out))
 
 
 	def matrix(self,N, save=False):
@@ -60,10 +66,10 @@ class Encoder(object):
 		#only for phenotype
 		if isinstance(save_path,type(None)) or  not os.path.isdir(save_path):
 			raise ValueError('There is no such path or directory {}'.format(save_path))
-		np.save(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '_encoded_phenotype.npy'),data )
+		np.save(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '.npy'),data )
 		if self.phen_info_dic['id'] is None:
 			self.phen_info_dic['id']=info._data.id
-		self.phen_info_dic[str(self.npy_iter)+'_'+ 'phenotype.npy']=info._data.names[info._data.start:info._data.finish]
+		self.phen_info_dic[str(self.npy_iter)+'_'+self.study_name+ '.npy']=info._data.names[info._data.start:info._data.finish]
 		self.npy_iter+=1
 
 	def save_csv(self,data,save_path=None, info=None):
@@ -72,7 +78,7 @@ class Encoder(object):
 		df=pd.DataFrame(data)
 		df.columns=info._data.names[info._data.start:info._data.finish]
 		df.insert(0,'id',info._data.id)
-		df.to_csv(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '_encoded_phenotype.csv'), sep='\t', index_col=None)
+		df.to_csv(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '.csv'), sep='\t', index_col=None)
 		self.npy_iter+=1
 
 
@@ -85,7 +91,7 @@ class Encoder(object):
 			raise ValueError('There is no such path or directory {}'.format(save_path))
 
 		self.h5_gen_file = tables.openFile(
-			os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name +'_encoded.h5'), 'w', title='encode_genotype')
+			os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name +'.h5'), 'w', title='encode_genotype')
 		self.hdf5_iter+=1
 
 		atom = tables.Float16Atom() # TODO (mid) check data format, Int8Atom works only for best guess, minimac needs Float16

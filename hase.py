@@ -1,22 +1,24 @@
+import sys
+import os
+from config import MAPPER_CHUNK_SIZE, basedir,CONVERTER_SPLIT_SIZE, PYTHON_PATH
+os.environ['HASEDIR']=basedir
+if PYTHON_PATH is not None:
+	for i in PYTHON_PATH: sys.path.insert(0,i)
 import h5py
 import tables
 from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_pard, merge_genotype, Reference, maf_pard
 from hdgwas.converter import  GenotypePLINK, GenotypeMINIMAC
-from hdgwas.data import Reader, MetaParData
+from hdgwas.data import Reader, MetaParData, MetaPhenotype
 from hdgwas.fake import Encoder
 from hdgwas.hdregression import HASE, A_covariates, A_tests, B_covariates, C_matrix, A_inverse,B4
 import argparse
 import numpy as np
 import gc
-import sys
-import os
 from hdgwas.pard import partial_derivatives
 from hdgwas.regression import haseregression
 import pandas as pd
 import time
 from hdgwas.protocol import Protocol
-from config import MAPPER_CHUNK_SIZE, basedir,CONVERTER_SPLIT_SIZE
-os.environ['HASEDIR']=basedir
 __version__ = '1.0.0'
 
 HEAD = "*********************************************************************\n"
@@ -64,7 +66,7 @@ if __name__=='__main__':
 						)
 
 	parser.add_argument("-g", "--genotype",nargs='+', type=str, help="path/paths to genotype data folder")
-	parser.add_argument("-ph", "--phenotype", type=str, help="path to phenotype data folder")
+	parser.add_argument("-ph", "--phenotype", nargs='+',type=str, help="path to phenotype data folder")
 	parser.add_argument("-cov", "--covariates", type=str, help="path to covariates data folder")
 
 
@@ -146,13 +148,12 @@ if __name__=='__main__':
 		#ARG_CHECKER.check(args,mode='encoding')
 
 		phen=Reader('phenotype')
-		phen.start(args.phenotype)
+		phen.start(args.phenotype[0])
 
 		gen=Reader('genotype')
 		gen.start(args.genotype[0], hdf5=args.hdf5, study_name=args.study_name[0], ID=False)
 
-		e=Encoder()
-		e.out=args.out
+		e=Encoder(args.out)
 		e.study_name=args.study_name[0]
 
 		row_index, ids =  study_indexes(phenotype=phen.folder._data,genotype=gen.folder._data)
@@ -205,7 +206,7 @@ if __name__=='__main__':
 
 
 		phen=Reader('phenotype')
-		phen.start(args.phenotype)
+		phen.start(args.phenotype[0])
 
 		cov=Reader('covariates')
 		cov.start(args.covariates)
@@ -263,9 +264,13 @@ if __name__=='__main__':
 		meta_pard=MetaParData(pard,protocol=protocol)
 
 		if np.sum(PD)==0:
-			phen=Reader('phenotype')
+			phen=[]
+			for i,j in enumerate(args.phenotype):
+				phen.append(Reader('phenotype'))
+				phen[i].start(j)
 
-			phen.start(args.phenotype)
+			meta_phen=MetaPhenotype(phen)
+
 			N_studies=len(args.genotype)
 
 			gen=[]
@@ -275,7 +280,7 @@ if __name__=='__main__':
 
 			#for i in gen:
 			#	i._data.link()
-			row_index, ids =  study_indexes(phenotype=phen.folder._data,genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
+			row_index, ids =  study_indexes(phenotype=tuple(i.folder._data for i in phen),genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
 
 		while True:
 			if mapper.cluster=='n':
@@ -340,16 +345,19 @@ if __name__=='__main__':
 			if np.sum(PD)==0:
 
 				while True:
-					phenotype=phen.get_next(index=row_index[1])
+					phenotype=np.array([])
+					phenotype, names = meta_phen.get()
 
 					if isinstance(phenotype, type(None)):
-						phen.folder.processed=0
+						meta_phen.processed=0
 						print 'All phenotypes processed!'
 						break
-					names=phen.folder._data.names
+					#TODO (middle) select phen from protocol
+					phenotype=phenotype[row_index[1],:]
 					keys=meta_pard.phen_mapper.dic.keys()
-					phen_ind=np.intersect1d(keys, names)
-					if len(phen_ind)==0:
+					phen_ind=np.in1d(keys, names)
+					phen_ind_inv=np.in1d(names,keys)
+					if np.sum(phen_ind)==0:
 						print 'There is no common ids in phenotype file {} and PD data!'.format((phen.folder._data.filename))
 						break
 					C_test=C[phen_ind]
@@ -366,7 +374,7 @@ if __name__=='__main__':
 					Analyser.SE=SE
 					Analyser.threshold=args.thr
 					Analyser.out=args.out
-					Analyser.save_result(  names[phen_ind] )
+					Analyser.save_result(  names[phen_ind_inv] )
 
 					t_stat=None
 					Analyser.t_stat=None
@@ -396,7 +404,7 @@ if __name__=='__main__':
 		print ('START regression mode...')
 
 		phen=Reader('phenotype')
-		phen.start(args.phenotype)
+		phen.start(args.phenotype[0])
 		phen.permutation=args.permute_ph
 
 		cov=Reader('covariates')

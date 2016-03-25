@@ -192,10 +192,11 @@ class GenotypeMINIMAC(object):
 		self.hdf5_iter+=1
 
 	def MACH2hdf5(self, out, remove_id=False):
+		FNULL = open(os.devnull, 'w')
 		subprocess.call(['sh',os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'),
-						 self.reader.folder.path, out , 'G:/share_VB/Ubuntu/Git_projects/hase/', self.study_name ], shell=True)
+						 self.reader.folder.path, out , os.environ['HASEDIR'], self.study_name ], shell=False,stderr=FNULL)
 
-		subprocess.call(['sh',os.path.join( out,'id_convert.sh' ),self.study_name ], shell=True)
+		subprocess.call(['sh',os.path.join( out,'id_convert.sh' ),self.study_name ], shell=False,stderr=FNULL)
 		self.folder=MINIMACHDF5Folder(out,self.study_name)
 		self.folder.pool.split_size=self.split_size
 		self.folder.pool.chunk_size=self.split_size
