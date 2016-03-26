@@ -63,7 +63,6 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
                 if B4_flag:
                     np.save(os.path.join(save_path,study_name+'_b4.npy'),b4)
                 break
-            #genotype=GEN.get_next()
             genotype=GEN.get(SNPs_index[0])
             flip=MAP.flip[SNPs_index[0],0]
             flip_index=(flip==-1)

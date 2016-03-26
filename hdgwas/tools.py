@@ -697,9 +697,6 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 	index_g=np.array([])
 	index_p=np.array([])
 	index_c=np.array([])
-	#id_g=range(10) #TODO (high) remove
-	#id_p=range(10)
-	#id_c=range(10)
 
 	if args is not None:
 		if not isinstance(args.ind_id_inc,type(None)) or not isinstance(args.ind_id_exc,type(None)):
@@ -777,7 +774,7 @@ def maf_pard(pard,SNPs_index): #TODO (middle) delete function
 
 
 
-def merge_genotype(genotype, SNPs_index , mapper):
+def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 
 	if SNPs_index is None:
 		gen=genotype[0].get_next()
@@ -789,14 +786,16 @@ def merge_genotype(genotype, SNPs_index , mapper):
 		if len(genotype)!=len(SNPs_index):
 			raise ValueError('There are not equal number of genotypes and SNPs indexes {}!={}'.format(len(genotype), len(SNPs_index)))
 		gen=genotype[0].get(SNPs_index[0])
-		flip=mapper.flip[SNPs_index[0],0]
-		flip_index=(flip==-1)
-		gen=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,gen)
+		if flip_flag:
+			flip=mapper.flip[SNPs_index[0],0]
+			flip_index=(flip==-1)
+			gen=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,gen)
 		for i in range(1, len(genotype)):
 			g=genotype[i].get(SNPs_index[i])
-			flip=mapper.flip[SNPs_index[i],i]
-			flip_index=(flip==-1)
-			g=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,g)
+			if flip_flag:
+				flip=mapper.flip[SNPs_index[i],i]
+				flip_index=(flip==-1)
+				g=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,g)
 			gen=np.hstack( (gen,g ) )
 		return gen
 

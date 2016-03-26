@@ -146,6 +146,14 @@ if __name__=='__main__':
 	elif args.mode=='encoding':
 
 		#ARG_CHECKER.check(args,mode='encoding')
+		mapper=Mapper()
+		mapper.genotype_names=args.study_name
+		mapper.chunk_size=MAPPER_CHUNK_SIZE
+		mapper.reference_name=args.ref_name
+		mapper.load_flip(args.mapper)
+		mapper.load(args.mapper)
+		index=np.argsort(mapper.values[:,0][mapper.values[:,0]!=-1])
+		mapper.flip=mapper.flip[index,:]
 
 		phen=Reader('phenotype')
 		phen.start(args.phenotype[0])
@@ -160,12 +168,17 @@ if __name__=='__main__':
 		with Timer() as t:
 
 			e.matrix(len(ids),save=True)
-
+			N_snps_read=0
 			while True:
 				with Timer() as t_gen:
 					genotype = gen.get_next()
 					if isinstance(genotype, type(None)):
 						break
+
+					flip=mapper.flip[N_snps_read:N_snps_read+genotype.shape[0],0]
+					N_snps_read+=genotype.shape[0]
+					flip_index=(flip==-1)
+					genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
 					genotype=genotype[:,row_index[0]]
 					encode_genotype=e.encode(genotype, data_type='genotype')
 					e.save_hdf5(encode_genotype,os.path.join(args.out, 'encode_genotype' ) )
@@ -299,7 +312,7 @@ if __name__=='__main__':
 			Analyser.rsid=keys
 			if np.sum(PD)==0:
 				genotype=np.array([])
-				genotype=merge_genotype(gen, SNPs_index, mapper)
+				genotype=merge_genotype(gen, SNPs_index, mapper, flip_flag=False)
 				genotype=genotype[:,row_index[0]]
 
 			#TODO (low) add interaction
