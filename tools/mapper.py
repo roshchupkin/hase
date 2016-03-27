@@ -49,8 +49,7 @@ if __name__=='__main__':
 		np.save(os.path.join(args.out,'values_'+args.ref_name+'_'+args.study_name[j]+'.npy'),index)
 		np.save(os.path.join(args.out,'flip_'+args.ref_name+'_'+args.study_name[j]+'.npy'),flip)
 
-
-	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),df['ID'].tolist()) #TODO (high) remove
+	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),reference.dataframe['ID'].tolist())
 	print ('Data successfully saved')
 
 
