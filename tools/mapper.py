@@ -40,8 +40,7 @@ if __name__=='__main__':
 			with Timer() as t1:
 				mapper.hash.fill(df)
 			print ('time to fill hash {}s'.format(t1.secs))
-			#for k,l in enumerate(reference.dataframe.iterrows()):
-			for k,l in enumerate(df.iterrows()): #TODO (high) remove
+			for k,l in enumerate(reference.dataframe.iterrows()):
 				ind,fl=mapper.hash.get_map( l[1].tolist() )
 				index.append(ind)
 				flip.append(fl)
@@ -50,7 +49,7 @@ if __name__=='__main__':
 		np.save(os.path.join(args.out,'values_'+args.ref_name+'_'+args.study_name[j]+'.npy'),index)
 		np.save(os.path.join(args.out,'flip_'+args.ref_name+'_'+args.study_name[j]+'.npy'),flip)
 
-	#np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),reference.dataframe['ID'].tolist())
+
 	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),df['ID'].tolist()) #TODO (high) remove
 	print ('Data successfully saved')
 
