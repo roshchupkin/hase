@@ -1,4 +1,4 @@
-#@IgnoreInspection BashAddShebang
+#!/usr/bin/env bash
 ### in this directory should be only dose and info files
 GENOTYPE_DIR=$1
 SAVE_DIR=$2

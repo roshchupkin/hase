@@ -1,6 +1,4 @@
 
-import numpy as np
-
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,6 +8,7 @@ if PYTHON_PATH is not None:
 import argparse
 import h5py
 import pandas as pd
+import numpy as np
 
 def probes_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
