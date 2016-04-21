@@ -205,7 +205,8 @@ class GenotypeMINIMAC(object):
 			print cmd
 			proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
 		else:
-			subprocess.call(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=FNULL)
+			proc=subprocess.Popen(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=FNULL)
+			print proc.communicate()
 		self.folder=MINIMACHDF5Folder(out,self.study_name)
 		self.folder.pool.split_size=self.split_size
 		self.folder.pool.chunk_size=self.split_size

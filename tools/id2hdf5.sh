@@ -12,12 +12,8 @@ STUDYNAME=$5
 cd $GENOTYPE_DIR
 
 for i in $(cat ${SAVE_DIR}/files_order.txt ); do
-zcat $i.dose.gz | awk "{if( match($1,${id}) ){\$1=\"\"; \$2=\"\"; printf \"%s \",\$0; exit}}" >>${SAVE_DIR}/${id}_row.txt
+zcat $i.dose.gz | gawk '{split($1,a,"->");if(a[2]=="'$id'"){$1="";$2="";gsub("  ","",$0);gsub(" ","\n",$0);print $0; exit}}' >>${SAVE_DIR}/${id}.txt
 done
-
-cat ${SAVE_DIR}/${id}_row.txt | gawk 'BEGIN{ind=1}{for(i=1;i<=NF;i+=1){SNPs[ind]=$i; ind+=1}}END{for (j=1;j<ind;j+=1){print SNPs[j]}}'>>${SAVE_DIR}/${id}.txt
-
-rm ${SAVE_DIR}/${id}_row.txt
 
 python ${HASE_DIR}/tools/minimac2hdf5.py -flag genotype -id ${id} -data ${SAVE_DIR}/${id}.txt -out ${SAVE_DIR} -study_name ${STUDYNAME}
 
