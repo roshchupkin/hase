@@ -135,6 +135,8 @@ if __name__=='__main__':
 
 			elif R.format=='MINIMAC':
 				G=GenotypeMINIMAC(args.study_name[0],reader=R)
+				if args.cluster=='y':
+					G.cluster=True
 				G.split_size=CONVERTER_SPLIT_SIZE
 				G.MACH2hdf5(args.out)
 			else:

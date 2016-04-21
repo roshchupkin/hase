@@ -49,7 +49,7 @@ done
 
 chmod +x ${SAVE_DIR}/id_convert.sh
 
-python ${HASEDIR}/tools/minimac2hdf5.py -flag probes  -data ${SAVE_DIR}/SNPs_info.txt -out ${SAVE_DIR} -study_name ${STUDYNAME}
+python ${HASEDIR}/tools/minimac2hdf5.py -flag probes  -data ${SAVE_DIR}/${SNPs_INFO} -out ${SAVE_DIR} -study_name ${STUDYNAME}
 python ${HASEDIR}/tools/minimac2hdf5.py -flag individuals  -data ${SAVE_DIR}/${SUBJECT_ID_FILE} -out ${SAVE_DIR} -study_name ${STUDYNAME}
 
 

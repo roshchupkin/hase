@@ -173,11 +173,12 @@ class GenotypeMINIMAC(object):
 		self.split_size=None
 		self.hdf5_iter=0
 		self.pytable_filter=tables.Filters(complevel=9, complib='zlib')
+		self.cluster=False
 
 	def save_hdf5_chunk(self,data,out,name):
 		print 'Saving chunk...{}'.format(os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'))
 		h5_gen_file = tables.openFile(
-				os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
+			os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
 
 		atom = tables.Float16Atom()  # TODO (low) check data format
 		genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
@@ -196,7 +197,15 @@ class GenotypeMINIMAC(object):
 		subprocess.call(['bash',os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'),
 						 self.reader.folder.path, out , os.environ['HASEDIR'], self.study_name ], shell=False,stderr=FNULL)
 
-		subprocess.call(['bash',os.path.join( out,'id_convert.sh' ),self.study_name ], shell=False,stderr=FNULL)
+		if self.cluster:
+			ind=pd.read_hdf(os.path.join(out,'individuals',self.study_name+'.h5'),'individuals').individual
+			N=ind.shape[0]
+			print 'Submit to cluster!'
+			cmd="qsub -sync y -t 1-{} {} {}".format(N,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'id_convert.sh' ))
+			print cmd
+			proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
+		else:
+			subprocess.call(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=FNULL)
 		self.folder=MINIMACHDF5Folder(out,self.study_name)
 		self.folder.pool.split_size=self.split_size
 		self.folder.pool.chunk_size=self.split_size
