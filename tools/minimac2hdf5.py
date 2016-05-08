@@ -9,6 +9,8 @@ import argparse
 import h5py
 import pandas as pd
 import numpy as np
+from hdgwas.tools import Timer
+import tables
 
 def probes_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
@@ -45,8 +47,67 @@ def id_minimac2hdf5(data_path,id, save_path):
 	n=np.array(n)
 	f.close()
 	store=h5py.File(os.path.join(save_path,'genotype',id+'.h5'), 'w')
-	store.create_dataset(id,data=n,compression='gzip',compression_opts=9 )
+	with Timer() as t:
+		store.create_dataset(id,data=n,compression='gzip',compression_opts=9 )
+	print 'standard save gzip 9...', t.secs
 	store.close()
+	store=h5py.File(os.path.join(save_path,'genotype',id+'.h5'), 'w')
+	with Timer() as t:
+		store.create_dataset(id,data=n,compression='gzip',compression_opts=1 )
+	print 'standard save gzip 1 ...', t.secs
+	store.close()
+
+
+
+def id_minimac2hdf5_pandas(data_path,id, save_path):
+
+	df=pd.read_csv(data_path, header=None, index_col=None)
+	df.columns=["genotype"]
+	#print df.head
+	n=df["genotype"].as_matrix()
+	#print n
+	store=h5py.File(os.path.join(save_path,'genotype',id+'_9.h5'), 'w')
+	with Timer() as t:
+		store.create_dataset(id,data=n,compression='gzip',compression_opts=9 )
+	print 'pandas save gzip 9...', t.secs
+	store.close()
+	store=h5py.File(os.path.join(save_path,'genotype',id+'_1.h5'), 'w')
+	with Timer() as t:
+		store.create_dataset(id,data=n,compression='gzip',compression_opts=1 )
+	print 'padnas save gzip 1 ...', t.secs
+	store.close()
+
+	n=np.array(n, dtype=np.int16)
+	store=h5py.File(os.path.join(save_path,'genotype',id+'int16_9.h5'), 'w')
+	with Timer() as t:
+		store.create_dataset(id,data=n,compression='gzip',compression_opts=9 )
+	print 'pandas save int16 gzip 9...', t.secs
+	store.close()
+	store=h5py.File(os.path.join(save_path,'genotype',id+'int16_1.h5'), 'w')
+	with Timer() as t:
+		store.create_dataset(id,data=n,compression='gzip',compression_opts=1 )
+	print 'padnas save int16 gzip 1 ...', t.secs
+	store.close()
+	df=None
+
+def genotype_minimac2hdf5(data_path,id, save_path, study_name):
+
+	df=pd.read_csv(data_path, header=None, index_col=None,sep='\t', dtype=np.float16)
+	data=df.as_matrix()
+	print data.shape
+	data=np.array(data*100,dtype=np.int16)
+	print 'Saving chunk...{}'.format(os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'))
+	h5_gen_file = tables.openFile(
+		os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'), 'w', title=study_name)
+
+	atom = tables.Int16Atom()  # TODO (low) check data format
+	genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
+										(data.shape),
+										title='Genotype',
+										filters=tables.Filters(complevel=1, complib='zlib')) #TODO (high) change
+	genotype[:] = data
+	h5_gen_file.close()
+	os.remove(data_path)
 
 
 if __name__=="__main__":
@@ -56,7 +117,7 @@ if __name__=="__main__":
 	parser.add_argument("-id", type=str, help="subject id")
 	parser.add_argument("-data",required=True, type=str, help="path to file")
 	parser.add_argument("-out",required=True, type=str, help="path to results save folder")
-	parser.add_argument("-flag",required=True,type=str,choices=['genotype','individuals','probes'], help="path to file with SNPs info")
+	parser.add_argument("-flag",required=True,type=str,choices=['genotype','individuals','probes','chunk'], help="path to file with SNPs info")
 
 
 	args = parser.parse_args()
@@ -71,9 +132,18 @@ if __name__=="__main__":
 		print('Directories "genotype","probes","individuals" are already exist in {}...'.format(args.out))
 
 	if args.id is not None and args.flag=='genotype':
-		id_minimac2hdf5(args.data, args.id, args.out)
+		# with Timer() as t:
+		# 	id_minimac2hdf5(args.data, args.id, args.out)
+		# print 'time... read file', t.secs
+		with Timer() as t:
+			id_minimac2hdf5_pandas(args.data, args.id, args.out)
+		print 'time pandas...',t.secs
 	elif args.flag=='probes':
 		probes_minimac2hdf5(args.data, args.out, args.study_name)
 	elif args.flag=='individuals':
 		ind_minimac2hdf5(args.data, args.out,args.study_name)
+	elif args.flag=='chunk':
+		genotype_minimac2hdf5(args.data,args.id, args.out,args.study_name)
+
+
 
