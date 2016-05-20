@@ -19,9 +19,11 @@ get_minimac_chunk(){
         file=`ls ${GENOTYPE_DIR} | grep ${i}.dose`
         file_ind=$(($file_ind + 1))
         SNPs=`awk "{print NF; exit}" <( zcat ${GENOTYPE_DIR}/${file} )`
-        SNPs=$(($SNPs - 2 ))
-        echo ${SNPs}, ${file}
-        iter=$(($iter + $SNPs))
+        if [ ! $SNPs -eq 0 ]; then
+            SNPs=$(($SNPs - 2 ))
+            echo ${SNPs}, ${file}
+            iter=$(($iter + $SNPs))
+        fi
         if [ ${iter} -ge ${1} ]; then
 
             if [ ${iter} -ge ${2} ]; then
@@ -54,7 +56,7 @@ get_minimac_chunk(){
                 return 0
             fi
         fi
-
+    echo ${iter}
     done
 }
 

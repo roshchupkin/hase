@@ -192,47 +192,92 @@ class GenotypeMINIMAC(object):
 		gc.collect()
 		self.hdf5_iter+=1
 
-	def MACH2hdf5(self, out, remove_id=False):
+	def MACH2hdf5(self, out, id=False,remove_id=False):
 		FNULL = open(os.devnull, 'w')
 		subprocess.call(['bash',os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'),
 						 self.reader.folder.path, out , os.environ['HASEDIR'], self.study_name ], shell=False,stderr=FNULL)
 
-		if self.cluster:
-			ind=pd.read_hdf(os.path.join(out,'individuals',self.study_name+'.h5'),'individuals').individual
-			N=ind.shape[0]
-			print 'Submit to cluster!'
-			cmd="qsub -sync y -t 1-{} {} {}".format(N,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'id_convert.sh' ))
-			print cmd
-			proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
+		if id:
+			if self.cluster:
+				ind=pd.read_hdf(os.path.join(out,'individuals',self.study_name+'.h5'),'individuals').individual
+				N=ind.shape[0]
+				print 'Submit to cluster!'
+				cmd="qsub -sync y -t 1-{} {} {}".format(N,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'id_convert.sh' ))
+				print cmd
+				proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
+			else:
+				proc=subprocess.Popen(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=FNULL)
+				print proc.communicate()
+			self.folder=MINIMACHDF5Folder(out,self.study_name)
+			self.folder.pool.split_size=self.split_size
+			self.folder.pool.chunk_size=self.split_size
+			print('Start to convert id files to chunk files...')
+			while True:
+				data=self.folder.get_next()
+				if data is None:
+					break
+				self.save_hdf5_chunk(data,out,self.study_name)
+				gc.collect()
+
+			print('Finished')
+			if remove_id:
+				self.folder.pool.remove(type='all')
+			else:
+				try:
+					os.mkdir(os.path.join(out,'id_genotype') )
+				except:
+					print 'id_genotype folder already exist'
+
+				self.folder.pool.move(os.path.join(out,'id_genotype'),type='all')
+
+			os.remove(os.path.join(out,'id_convert.sh'))
+			shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'id_genotype','SUB_FAM.txt') )
+			shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'id_genotype','SUB_ID.txt') )
+
 		else:
-			proc=subprocess.Popen(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=FNULL)
-			print proc.communicate()
-		self.folder=MINIMACHDF5Folder(out,self.study_name)
-		self.folder.pool.split_size=self.split_size
-		self.folder.pool.chunk_size=self.split_size
-		print('Start to convert id files to chunk files...')
-		while True:
-			data=self.folder.get_next()
-			if data is None:
-				break
-			self.save_hdf5_chunk(data,out,self.study_name)
-			gc.collect()
+			f=open(os.path.join( out,'minimac_convert.sh' ), 'w')
+			N_probes=pd.read_hdf(os.path.join(out,'probes', self.study_name +'.h5'),'probes', where='columns=[ID]').ID.shape[0]
+			chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
+			for i_ch in range(chunk.shape[1]):
+				ch=chunk[:,i_ch]
+				print ch
+				l='bash {} {} {} {} {} {} {} {} \n'.format(
+					os.path.join(os.environ['HASEDIR'],'tools','minimacGenotype2hdf5.sh'),
+					self.reader.folder.path,
+					out,
+					os.environ['HASEDIR'],
+					self.study_name,
+					ch[0],
+					ch[1],
+					i_ch
+						)
+				f.write(l)
+			if ch[1]!=N_probes:
+				l='bash {} {} {} {} {} {} {} {} \n'.format(
+					os.path.join(os.environ['HASEDIR'],'tools','minimacGenotype2hdf5.sh'),
+					self.reader.folder.path,
+					out,
+					os.environ['HASEDIR'],
+					self.study_name,
+					ch[1]+1,
+					N_probes,
+					i_ch+1
+						)
+				f.write(l)
+			f.close()
+			if self.cluster:
+				print 'Submit to cluster!'
+				cmd="qsub -sync y -t 1-{} {} {}".format(len(chunk),os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'minimac_convert.sh' ))
+				print cmd
+				proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
+			else:
+				proc=subprocess.Popen(['bash',os.path.join( out,'minimac_convert.sh' ) ], shell=False,stderr=FNULL)
+				print proc.communicate()
 
-		print('Finished')
-		if remove_id:
-			self.folder.pool.remove(type='all')
-		else:
-			try:
-				os.mkdir(os.path.join(out,'id_genotype') )
-			except:
-				print 'id_genotype folder already exist'
+			os.remove(os.path.join(out,'minimac_convert.sh'))
 
-			self.folder.pool.move(os.path.join(out,'id_genotype'),type='all')
-
-		os.remove(os.path.join(out,'id_convert.sh'))
 		os.remove(os.path.join(out,'files_order.txt'))
-		shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'id_genotype','SUB_FAM.txt') )
-		shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'id_genotype','SUB_ID.txt') )
+
 
 	def summary(self):
 		pass
