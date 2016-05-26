@@ -1,9 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import *
+if PYTHON_PATH is not None:
+	for i in PYTHON_PATH: sys.path.insert(0,i)
+import h5py
 import pandas as pd
 import numpy as np
 import argparse
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from hdgwas.tools import Reference, Mapper, Timer
 from hdgwas.hash import *
 import gc
@@ -30,18 +34,41 @@ if __name__=='__main__':
 
 	for j,i in enumerate(args.genotype):
 		mapper.hash=None
-		index=[]
-		flip=[]
 		gc.collect()
-		mapper.hash=HashTableRSID()
 		with Timer() as t:
-			df=pd.read_hdf(os.path.join(i,'probes', args.study_name[j] +'.h5'),'probes', where='columns=[ID,allele1,allele2]')
-			df=df[['ID','allele1','allele2']]
+			df=pd.read_hdf(os.path.join(i,'probes', args.study_name[j]+'.h5'),'probes')
+			print df.head()
+			print df.info()
+			if "CHR" in df.columns and 'bp' in df.columns:
+				mapper.hash=HashTablePOS()
+			else:
+				if ':' in df.ID.iloc[0] and ':' in df.ID.iloc[1]:
+					CHR=[]
+					bp=[]
+					for i in df.ID:
+						s=i.split(":")
+						CHR.append(s[0])
+						bp.append(s[1])
+					CHR=np.array(CHR,dtype=np.int8)
+					bp=np.array(bp)
+					if np.max(CHR)<23 and np.min(CHR)>0:
+						df['CHR']=CHR
+						df['bp']=bp
+						mapper.hash=HashTablePOS()
+					else:
+						print 'No CHR and pb info...'
+						mapper.hash=HashTableRSID()
+				else:
+					print 'No CHR and pb info...'
+					mapper.hash=HashTableRSID()
+
 			with Timer() as t1:
 				mapper.hash.fill(df)
 			print ('time to fill hash {}s'.format(t1.secs))
-			for k,l in enumerate(reference.dataframe.iterrows()):
-				ind,fl=mapper.hash.get_map( l[1].tolist() )
+			index=[]
+			flip=[]
+			for l in reference.dataframe.iterrows():
+				ind,fl=mapper.hash.get_map( l[1])
 				index.append(ind)
 				flip.append(fl)
 		print ('time to add ID {}s'.format(t.secs))
@@ -52,17 +79,15 @@ if __name__=='__main__':
 	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),reference.dataframe['ID'].tolist())
 	print ('Data successfully saved')
 
-
-	overlap=np.where(index==1)
+	index=np.array(index)
+	flip=np.array(flip)
+	overlap=np.where(index!=-1)
 	not_overlap=np.where(index==-1)
 	flip_index=np.where(flip==-1)
-	print 'There are {} common variances with reference panel, which would be included in study'.format(len(overlap[0]))
-	print 'There are {} variances excluded from study (not found in reference panel)'.format(df['ID'].shape[0] -len(overlap[0])   )
-	if len(not_overlap[0])!=0:
-		print 'Examples not found in reference panel:', df['ID'][not_overlap[0][:10]]
-	print 'There are {} flipped variances',format(len(flip_index[0]))
-	if len(flip_index[0])!=0:
-		print 'Examples flipped:', df['ID'][flip_index[0][:10]]
+	print 'There are {} common variances with reference panel, which would be included in study'.format(overlap[0].shape[0] )
+	print 'There are {} variances excluded from study (not found in reference panel)'.format( df.ID.shape[0]-overlap[0].shape[0]  )
+	print 'There are {} flipped variances'.format(len(flip_index[0]))
+
 
 
 

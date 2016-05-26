@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 
 GENOTYPE_DIR=$1
 SAVE_DIR=$2

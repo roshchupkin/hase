@@ -237,10 +237,12 @@ class GenotypeMINIMAC(object):
 		else:
 			f=open(os.path.join( out,'minimac_convert.sh' ), 'w')
 			N_probes=pd.read_hdf(os.path.join(out,'probes', self.study_name +'.h5'),'probes', where='columns=[ID]').ID.shape[0]
+			print 'There are {} probes'.format(N_probes)
 			chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
+			N_jobs=chunk.shape[1]
 			for i_ch in range(chunk.shape[1]):
 				ch=chunk[:,i_ch]
-				print ch
+				#print ch
 				l='bash {} {} {} {} {} {} {} {} \n'.format(
 					os.path.join(os.environ['HASEDIR'],'tools','minimacGenotype2hdf5.sh'),
 					self.reader.folder.path,
@@ -264,17 +266,18 @@ class GenotypeMINIMAC(object):
 					i_ch+1
 						)
 				f.write(l)
+				N_jobs+=1
 			f.close()
 			if self.cluster:
 				print 'Submit to cluster!'
-				cmd="qsub -sync y -t 1-{} {} {}".format(len(chunk),os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'minimac_convert.sh' ))
+				cmd="qsub -sync y -t 1-{} {} {}".format(N_jobs,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'minimac_convert.sh' ))
 				print cmd
 				proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
 			else:
 				proc=subprocess.Popen(['bash',os.path.join( out,'minimac_convert.sh' ) ], shell=False,stderr=FNULL)
 				print proc.communicate()
 
-			os.remove(os.path.join(out,'minimac_convert.sh'))
+			#os.remove(os.path.join(out,'minimac_convert.sh'))
 
 		os.remove(os.path.join(out,'files_order.txt'))
 

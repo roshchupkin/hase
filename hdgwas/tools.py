@@ -454,7 +454,7 @@ class Mapper(object):
 		if len(keys)>1:
 			raise ValueError('There are more than one reference keys in folder {}'.format(folder))
 
-		self.keys=np.load(os.path.join(keys[0]) )
+		self.keys=np.load(os.path.join(keys[0]) )#TODO (middle) not safety to load only one file
 		self.n_keys=self.keys.shape[0]
 
 		values=glob.glob(folder+ 'values_*')
@@ -618,7 +618,8 @@ class Reference(object):
 		self.name=None
 		self.reference_name=None
 		self.path={
-			'1000Gp1v3_ref':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz')
+			'1000Gp1v3_ref':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz'),
+			'1000Gp1v3_ref_test':os.path.join(os.environ['HASEDIR'], 'test','Ref', '1000Gp1v3.ref.test.gz')
 				  }
 		self.dataframe=None
 		self.loaded=False
@@ -633,10 +634,10 @@ class Reference(object):
 					self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ')
 				except:
 					self.dataframe=pd.read_csv(self.path[self.reference_name], sep=' ')
-				self.dataframe=self.dataframe[['ID','A1','A2']]
+				self.dataframe=self.dataframe[['ID','A1','A2','CHR','bp']]
 				self.loaded=True
 			else:
-				raise ValueError('Unknown reference!')
+				raise ValueError('Unknown reference {}!'.format((self.reference_name)))
 		else:
 			raise ValueError('Reference name is not define!')
 

@@ -70,6 +70,7 @@ def genotype_minimac2hdf5(data_path,id, save_path, study_name):
 
 	df=pd.read_csv(data_path, header=None, index_col=None,sep='\t', dtype=np.float16)
 	data=df.as_matrix()
+	print data.shape
 	print 'Saving chunk...{}'.format(os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'))
 	h5_gen_file = tables.openFile(
 		os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'), 'w', title=study_name)
