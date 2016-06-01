@@ -230,9 +230,9 @@ class GenotypeMINIMAC(object):
 
 				self.folder.pool.move(os.path.join(out,'id_genotype'),type='all')
 
-			os.remove(os.path.join(out,'id_convert.sh'))
-			shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'id_genotype','SUB_FAM.txt') )
-			shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'id_genotype','SUB_ID.txt') )
+			shutil.move(os.path.join(out,'id_convert.sh'), os.path.join(out,'tmp_files','id_convert.sh') )
+			shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'tmp_files','SUB_FAM.txt') )
+			shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )
 
 		else:
 			f=open(os.path.join( out,'minimac_convert.sh' ), 'w')
@@ -277,7 +277,10 @@ class GenotypeMINIMAC(object):
 				proc=subprocess.Popen(['bash',os.path.join( out,'minimac_convert.sh' ) ], shell=False,stderr=FNULL)
 				print proc.communicate()
 
-			#os.remove(os.path.join(out,'minimac_convert.sh'))
+			shutil.move(os.path.join(out,'minimac_convert.sh'), os.path.join(out,'tmp_files','minimac_convert.sh') )
+			shutil.move(os.path.join(out,'id_convert.sh'), os.path.join(out,'tmp_files','id_convert.sh') )
+			shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'tmp_files','SUB_FAM.txt') )
+			shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )
 
 		os.remove(os.path.join(out,'files_order.txt'))
 

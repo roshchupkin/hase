@@ -42,7 +42,7 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
             phenotype=PHEN.get_next(index=row_index[1])
             if isinstance(phenotype, type(None)):
                 b_cov=np.concatenate(b_cov, axis=1)
-                C=np.concatenate(C, axis=1)
+                C=np.concatenate(C, axis=0)
                 np.save(os.path.join(save_path,study_name+'_b_cov.npy'),b_cov)
                 np.save(os.path.join(save_path,study_name+'_C.npy'),C)
                 break

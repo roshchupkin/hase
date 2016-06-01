@@ -59,7 +59,7 @@ def id_minimac2hdf5_pandas(data_path,id, save_path):
 	df=pd.read_csv(data_path, header=None, index_col=None)
 	df.columns=["genotype"]
 	n=df["genotype"].as_matrix()
-	store=h5py.File(os.path.join(save_path,'genotype',id+'_9.h5'), 'w')
+	store=h5py.File(os.path.join(save_path,'genotype',id+'.h5'), 'w')
 	with Timer() as t:
 		store.create_dataset(id,data=n,compression='gzip',compression_opts=9 )
 	print 'pandas save gzip 9...', t.secs
@@ -70,6 +70,7 @@ def genotype_minimac2hdf5(data_path,id, save_path, study_name):
 
 	df=pd.read_csv(data_path, header=None, index_col=None,sep='\t', dtype=np.float16)
 	data=df.as_matrix()
+	data=data.T
 	print data.shape
 	print 'Saving chunk...{}'.format(os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'))
 	h5_gen_file = tables.openFile(
@@ -103,6 +104,7 @@ if __name__=="__main__":
 		os.mkdir(os.path.join(args.out,'genotype') )
 		os.mkdir(os.path.join(args.out,'individuals') )
 		os.mkdir(os.path.join(args.out,'probes') )
+		os.mkdir(os.path.join(args.out,'tmp_files'))
 	except:
 		print('Directories "genotype","probes","individuals" are already exist in {}...'.format(args.out))
 

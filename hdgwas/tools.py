@@ -665,35 +665,21 @@ class Reference(object):
 
 def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 
-	if isinstance(genotype,type(None)):
-		id_g=np.array([])
-	else:
-		if isinstance(genotype,tuple):
-			id_g=np.array([])
-			for i in genotype:
-				id_g=np.append(id_g,i.get_id())
-		else:
-			id_g=genotype.get_id()
-
-	if isinstance(phenotype,type(None)):
-		id_p=np.array([])
-	else:
-		if isinstance(genotype,tuple):
+	def _get_id(notype):
+		if isinstance(notype,type(None)):
 			id_p=np.array([])
-			for i in genotype:
-				id_p=np.append(id_p,i.get_id())
 		else:
-			id_p=phenotype.get_id()
+			if isinstance(notype,tuple):
+				id_p=np.array([])
+				for i in notype:
+					id_p=np.append(id_p,i.get_id())
+			else:
+				id_p=notype.get_id()
+		return id_p.astype(np.str)
 
-	if isinstance(covariates,type(None)):
-		id_c=np.array([])
-	else:
-		if isinstance(covariates,tuple):
-			id_c=np.array([])
-			for i in covariates:
-				id_c=np.append(id_c,i['id'])
-		else:
-			id_c=covariates.get_id()
+	id_c=_get_id(covariates)
+	id_p=_get_id(phenotype)
+	id_g=_get_id(genotype)
 
 	index_g=np.array([])
 	index_p=np.array([])

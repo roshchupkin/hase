@@ -328,13 +328,11 @@ class MetaPhenotype(object):
 					for j in k.folder.files:
 						if j!='info_dic.npy':
 							phen_names=phen_names+k.folder.data_info[j]
-					phen_names=range(7207)
 					self.mapper.fill(phen_names,i, reference=False)
 				else:
 					for j in k.folder.files:
 						if j!='info_dic.npy':
 							phen_names=phen_names+k.folder.data_info[j]
-					phen_names=range(7207)
 					self.mapper.push(phen_names,name=i)
 
 				self.keys.append(i)
