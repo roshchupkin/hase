@@ -78,7 +78,7 @@ class Encoder(object):
 		df=pd.DataFrame(data)
 		df.columns=info._data.names[info._data.start:info._data.finish]
 		df.insert(0,'id',info._data.id)
-		df.to_csv(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '.csv'), sep='\t', index_col=None)
+		df.to_csv(os.path.join(save_path,str(self.npy_iter)+'_'+self.study_name+ '.csv'), sep='\t', index=False)
 		self.npy_iter+=1
 
 

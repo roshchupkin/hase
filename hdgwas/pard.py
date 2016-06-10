@@ -61,6 +61,7 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
                 np.save(os.path.join(save_path,study_name+'_a_test.npy'), np.concatenate(a_test) )
                 np.save(os.path.join(save_path,study_name+'_metadata.npy'),metadata)
                 if B4_flag:
+                    b4=np.concatenate(b4, axis=0)
                     np.save(os.path.join(save_path,study_name+'_b4.npy'),b4)
                 break
             genotype=GEN.get(SNPs_index[0])

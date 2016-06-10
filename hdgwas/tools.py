@@ -672,7 +672,10 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 			if isinstance(notype,tuple):
 				id_p=np.array([])
 				for i in notype:
-					id_p=np.append(id_p,i.get_id())
+					if isinstance(i,dict):
+						id_p=np.append(id_p,i['id'])
+					else:
+						id_p=np.append(id_p,i.get_id())
 			else:
 				id_p=notype.get_id()
 		return id_p.astype(np.str)

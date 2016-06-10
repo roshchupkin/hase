@@ -246,7 +246,8 @@ if __name__=='__main__':
 		#ARG_CHECKER.check(args,mode='meta-stage')
 
 		##### Init data readers #####
-
+		if args.derivatives is None:
+			raise ValueError('For meta-stage analysis partial derivatives data are required!')
 		mapper=Mapper()
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
 		mapper.genotype_names=args.study_name
@@ -356,6 +357,7 @@ if __name__=='__main__':
 
 			a_inv=A_inverse(a_cov, a_test)
 			N_con=a_inv.shape[1] - 1
+			print 'There are {} subjects in study.'.format(meta_pard.get_n_id())
 			DF=( meta_pard.get_n_id()- a_inv.shape[1]  )
 
 			if np.sum(PD)==0:
@@ -403,7 +405,7 @@ if __name__=='__main__':
 				Analyser.SE=SE
 				Analyser.threshold=args.thr
 				Analyser.out=args.out
-				Analyser.save_result(  meta_pard.phen_mapper.dic.keys() )
+				Analyser.save_result(  np.array(meta_pard.phen_mapper.dic.keys()) )
 
 				t_stat=None
 				Analyser.t_stat=None

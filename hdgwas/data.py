@@ -327,12 +327,12 @@ class MetaPhenotype(object):
 				if i==0:
 					for j in k.folder.files:
 						if j!='info_dic.npy':
-							phen_names=phen_names+k.folder.data_info[j]
+							phen_names=phen_names+list(k.folder.data_info[j])
 					self.mapper.fill(phen_names,i, reference=False)
 				else:
 					for j in k.folder.files:
 						if j!='info_dic.npy':
-							phen_names=phen_names+k.folder.data_info[j]
+							phen_names=phen_names+list(k.folder.data_info[j])
 					self.mapper.push(phen_names,name=i)
 
 				self.keys.append(i)
@@ -416,7 +416,8 @@ class MetaParData(object):
 			raise ValueError('Indexes are not defined!')
 
 		if B4:
-			b4=self.pd[k[0]].folder._data.b4[:,self.phen_order[k[0]]]
+			b4=self.pd[k[0]].folder._data.b4[SNPs_index[0],:]
+			b4=b4[:,self.phen_order[k[0]]]
 
 		for i in range(1, len(self.pd)):
 			a,b,c,a_c=self.pd[k[i]].get(gen_order=SNPs_index[i], phen_order=self.phen_order[k[i]], cov_order=self.cov_order[k[i]])
@@ -429,7 +430,8 @@ class MetaParData(object):
 				b_cov_effect=np.vstack((b_cov_effect,b[0:1,:]))
 				a_cov_effect=np.vstack((a_cov_effect,a_c[0:1,:]))
 			if B4:
-				b4=b4+self.pd[i].folder.data.b4[:,  self.phen_order[k[i]]	]
+				b4_tmp=self.pd[k[i]].folder._data.b4[SNPs_index[i], :	]
+				b4=b4+b4_tmp[:,  self.phen_order[k[i]]]
 
 		if random_effect_intercept and len(self.pd)>1:
 				a_cov_I=np.zeros((len(self.pd),len(self.pd)))
