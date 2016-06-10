@@ -1,6 +1,24 @@
 # HASE
 Framework for efficient high-dimensional association analyses.
 
+## Speed test
+`run_ExampleStudy.sh` script runs example of association study with **20.000** SNPs, **1000** phenotypes and **1000** subjects.
+Standart output looks like this:
+```
+START regression mode...
+reading file example_study.csv
+There are 1000 ids and 1000 columns 
+reading file example_study.csv
+There are 1000 ids and 3 columns 
+There are 1000 ids
+There are 1000 common ids
+...
+time to compute GWAS for 1000 phenotypes and 5000 SNPs .... 0.681949138641 sec
+...
+
+experiment finished in 10.0326929092 s
+```
+
 ## Installation HASE
 
 Navigate to directory where you want to install HASE and clone this repository:
