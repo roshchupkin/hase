@@ -3,7 +3,7 @@ Framework for efficient high-dimensional association analyses.
 
 ## Speed test
 `run_ExampleStudy.sh` script runs example of association study with **20.000** SNPs, **1000** phenotypes and **1000** subjects.
-Standart output looks like this:
+It runs analysis by chunk of 5000 SNPs (which you can define in `config.py` file). Standart output looks like this:
 ```
 START regression mode...
 reading file example_study.csv
@@ -13,9 +13,14 @@ There are 1000 ids and 3 columns
 There are 1000 ids
 There are 1000 common ids
 ...
-time to compute GWAS for 1000 phenotypes and 5000 SNPs .... 0.681949138641 sec
 ...
-
+...
+time to compute GWAS for 1000 phenotypes and 5000 SNPs .... 0.681949138641 sec
+Read 15000, processed 15000, total 20000
+...
+time to compute GWAS for 1000 phenotypes and 5000 SNPs .... 0.565479040146 sec
+Read 20000, processed 20000, total 20000
+...
 experiment finished in 10.0326929092 s
 ```
 
