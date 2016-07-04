@@ -567,7 +567,7 @@ class Mapper(object):
 				#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 				return [indexes[:,i] for i in range(self.n_study)], keys
 			elif self.include is not None:
-				ind=np.array([self.hash.get_index(i)[0] for i in self.include])
+				ind=np.array([self.hash.get_index(i)[0] for i in self.include]) #TODO (mid) move to mapper value
 				if self.exclude is not None:
 					ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
 					ind=np.setxor1d(ind,ind_exc)
@@ -583,7 +583,7 @@ class Mapper(object):
 				return [indexes[:,i] for i in range(self.n_study)], keys
 
 			elif self.exclude is not None:
-				ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
+				ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])#TODO (mid) move to mappre value
 				start=self.processed
 				finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
 				self.processed=finish
@@ -595,7 +595,7 @@ class Mapper(object):
 				keys=keys[~r]
 				#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 				return [indexes[:,i] for i in range(self.n_study)], keys
-
+			#TODO (high) if self.exclude is not None and self.include is not None
 
 	def get_all(self, name, nonempty=True):
 		ind=self.genotype_names.index(name)
