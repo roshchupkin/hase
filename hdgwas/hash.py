@@ -10,12 +10,15 @@ class HashTablePOS(object):
         self.protected=False
         self.data_frame=None
         self.collisions={i:[] for i in range(23)}
+        self.type='POS'
+        self.n_keys=0
 
     def fill(self,data_frame):
         self.data_frame=data_frame
         if self.data_frame is None:
             raise ValueError('Genotype data frame is not defined!')
         for i in self.data_frame.iterrows():
+            self.n_keys+=1
             if self.hash_dic[i[1].CHR].get(i[1].bp) is not None:
                 if isinstance(self.hash_dic[i[1].CHR][i[1].bp], tuple):
                     print(
@@ -74,7 +77,64 @@ class HashTableRSID(object):
         self.list=[]
         self.hash_dic={}
         self.protected=False
+        self.type='RSID'
+        self.n_keys=0
 
+
+    def fill_id(self,id):
+        #print id
+        if not self.protected:
+            self.n_keys+=1
+            try:
+                if id.ID[:2]=='rs':
+                    m=int(id.ID[2:])
+                    if self.hash_table[m]!=0:
+                        print 'collision {}!'.format(id)
+                        if isinstance(self.list[self.hash_table[m]],tuple):
+                            self.list[self.hash_table[m]]=[self.list[self.hash_table[m]], (id,id['allele1'],id['allele2'])         ]
+                        else:
+                            self.list[self.hash_table[m]].append( (id,id['allele1'],id['allele2'])  )
+                    else:
+                        self.list.append( ( id,id['allele1'],id['allele2'] )  )
+                        self.hash_table[m]=len(self.list)
+                else:
+                    if self.hash_dic.get(id.ID) is None:
+                        self.hash_dic[id.ID]=(id,id['allele1'],id['allele2'])
+                    else:
+                        if isinstance(self.hash_dic[id.ID],tuple):
+                            print(
+                            "Collision! You are trying to fill {} again with A1_{}/A2_{},"
+                            " it is already inserted with A1_{}/A2_{}. "
+                                "You can resolve the collisions, use genotype data with CHR and bp info".format(
+                                id.ID,
+                                id['allele1'],id['allele2'],
+                                self.hash_dic[id.ID][1],self.hash_dic[id.ID][2])
+
+                                        )
+                            self.hash_dic[id.ID]=[self.hash_dic[id.ID], (id,id['allele1'],id['allele2'])]
+                        else:
+                            self.hash_dic[id.ID].append((id,id['allele1'],id['allele2']))
+            except:
+                if self.hash_dic.get(id.ID) is None:
+                    self.hash_dic[id.ID]=[id,id['allele1'],id['allele2']]
+                else:
+                    if isinstance(self.hash_dic[id[1].ID],tuple):
+                        print(
+                        "Collision! You are trying to fill {} again with A1_{}/A2_{},"
+                        " it is already inserted with A1_{}/A2_{}. "
+                            "You can resolve the collisions, use genotype data with CHR and bp info".format(
+                            id.ID,
+                            id['allele1'],id['allele2'],
+                            self.hash_dic[id.ID][1],self.hash_dic[id.ID][2])
+
+                                    )
+                        self.hash_dic[id.ID]=[self.hash_dic[id.ID], (id,id['allele1'],id['allele2'])]
+                    else:
+                        self.hash_dic[id.ID].append((id,id['allele1'],id['allele2']))
+
+            #self.protected=True
+        else:
+            raise ValueError('Hash table already filled!')
 
     def fill(self,df):
         if not self.protected:
@@ -101,7 +161,7 @@ class HashTableRSID(object):
                                 " it is already inserted with A1_{}/A2_{}. "
                                     "You can resolve the collisions, use genotype data with CHR and bp info".format(
                                     i[1].ID,
-                                    i[1]['allele1'],df['allele2'],
+                                    i[1]['allele1'],i['allele2'],
                                     self.hash_dic[i[1].ID][1],self.hash_dic[i[1].ID][2])
 
                                             )

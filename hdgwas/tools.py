@@ -617,27 +617,35 @@ class Reference(object):
 	def __init__(self):
 		self.name=None
 		self.reference_name=None
+		self.path_default=os.path.join(os.environ['HASEDIR'], 'data')
 		self.path={
 			'1000Gp1v3_ref':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz'),
 			'1000Gp1v3_ref_test':os.path.join(os.environ['HASEDIR'], 'test','Ref', '1000Gp1v3.ref.test.gz')
 				  }
 		self.dataframe=None
 		self.loaded=False
-		self.chunk=100000
+		self.chunk=10000
 		self.read=0
+		self.columns=['ID','A1','A2','CHR','bp']
 
 
 	def load(self):
 		if self.reference_name is not None:
 			if self.path.get(self.reference_name) is not None:
 				try:
-					self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ')
+					self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ',chunksize=self.chunk)
 				except:
 					self.dataframe=pd.read_csv(self.path[self.reference_name], sep=' ')
-				self.dataframe=self.dataframe[['ID','A1','A2','CHR','bp']]
 				self.loaded=True
 			else:
-				raise ValueError('Unknown reference {}!'.format((self.reference_name)))
+				if os.path.isfile(os.path.join(self.path_default,self.reference_name)):
+					try:
+						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), compression='gzip', sep=' ',chunksize=self.chunk)
+					except:
+						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), sep=' ')
+					self.loaded=True
+				else:
+					raise ValueError('Unknown reference {}!'.format((self.reference_name)))
 		else:
 			raise ValueError('Reference name is not define!')
 
