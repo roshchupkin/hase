@@ -288,6 +288,8 @@ class Mapper(object):
 		self.reference=False
 		self.include=None
 		self.exclude=None
+		self.include_ind=None
+		self.exclude_ind=None
 		#self.hash=HashTable()
 		self.cluster=None
 		self.node=None
@@ -295,6 +297,7 @@ class Mapper(object):
 		self.chunk_size=None
 		self.column_names=[]
 		self.flip=[]
+		self.probes=None
 
 
 	def chunk_pop(self):
@@ -309,7 +312,7 @@ class Mapper(object):
 			N=self.n_keys/self.node[0]
 			n=N/self.chunk_size
 			if N<1:
-				raise ValueError('Too many nodes! Change chunk size in mapper.')
+				raise ValueError('Too many nodes! Change chunk size in mapper')
 			elif N==1:
 				self.chunk_pool=[[self.node[1]-1,self.node[1]]]
 			else:
@@ -325,7 +328,7 @@ class Mapper(object):
 
 			if self.node[1]==self.node[0]:
 				if (self.n_keys-N*self.node[0])!=0:
-					self.chunk_pool.append([self.n_keys-N*self.node[0],self.n_keys])
+					self.chunk_pool.append([self.chunk_pool[-1][1],self.n_keys])
 			self.chunk_pool=self.chunk_pool[::-1]
 
 		if len(self.chunk_pool)!=0:
@@ -489,10 +492,9 @@ class Mapper(object):
 		print ('You loaded values for {} studies and {} test values'.format(self.n_study, self.n_keys))
 
 		if self.include is not None or self.exclude is not None:
-			self.hash=HashTable()
-			self.hash.fill(self.keys)
-			#self.hash.save('pathway', 'rsid_hash')#TODO (low) check
-			print ('Hash Table ready!')
+			self.reference=Reference()
+			self.reference.name=self.reference_name
+			self.reference.load_index()
 
 
 	def get_chunk(self,chunk_number ):
@@ -510,35 +512,40 @@ class Mapper(object):
 			r=(indexes==-1).any(axis=1)
 			indexes=indexes[~r]
 			keys=keys[~r]
-			#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 			return [indexes[:,i] for i in range(self.n_study)], keys
 
 		elif self.include is not None: #TODO (mid) check for millions snps
-			ind=np.array([self.hash.get_index(i)[0] for i in self.include])
+			#ind=np.array([self.hash.get_index(i)[0] for i in self.include])
+			if self.include_ind is not None:
+				self.include_ind=self.reference.index.select('reference',where='ID=self.include').index
 			if self.exclude is not None:
-				ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
-				ind=np.setxor1d(ind,ind_exc)
-			if ind.shape[0]==0:
+				#ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
+				if self.exclude_ind is not None:
+					self.exclude_ind=self.reference.index.select('reference',where='ID=self.exclude').index
+					self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
+			if self.include_ind.shape[0]==0:
 				raise ValueError('No rsid for test!')
-			indexes=self.values[ind,:]
+			elif self.include_ind.shape[0]>25000:
+				print ('WARNING! To many {} rsid to test!Will use to much memory.'.format(self.include_ind.shape[0]))
+			indexes=self.values[self.include_ind,:]
 			keys=self.include
 			r=(indexes==-1).any(axis=1)
 			indexes=indexes[~r]
 			keys=keys[~r]
 			self.processed=self.n_keys
-			#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 			return [indexes[:,i] for i in range(self.n_study)], keys
 		elif self.exclude is not None:
-			ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
+			#ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
+			if self.exclude_ind is not None:
+				self.exclude_ind=self.reference.index.select('reference',where='ID=self.exclude').index
 			start=chunk_number[0]
 			finish=chunk_number[1]
-			ind=np.setxor1d(np.arange(start,finish),ind_exc)
+			ind=np.setxor1d(np.arange(start,finish),self.exclude_ind)
 			indexes=self.values[ind,:]
 			keys=self.keys[ind]
 			r=(indexes==-1).any(axis=1)
 			indexes=indexes[~r]
 			keys=keys[~r]
-			#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 			return [indexes[:,i] for i in range(self.n_study)], keys
 
 
@@ -619,38 +626,50 @@ class Reference(object):
 		self.reference_name=None
 		self.path_default=os.path.join(os.environ['HASEDIR'], 'data')
 		self.path={
-			'1000Gp1v3_ref':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz'),
-			'1000Gp1v3_ref_test':os.path.join(os.environ['HASEDIR'], 'test','Ref', '1000Gp1v3.ref.test.gz')
+			'1000Gp1v3_ref':{'table':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz'),
+							 'index':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.h5') }
 				  }
 		self.dataframe=None
 		self.loaded=False
 		self.chunk=10000
 		self.read=0
-		self.columns=['ID','A1','A2','CHR','bp']
+		self.columns=['ID','allele1','allele2','CHR','bp']
+		self.index=None
 
 
 	def load(self):
 		if self.reference_name is not None:
 			if self.path.get(self.reference_name) is not None:
 				try:
-					self.dataframe=pd.read_csv(self.path[self.reference_name], compression='gzip', sep=' ',chunksize=self.chunk)
+					self.dataframe=pd.read_csv(self.path[self.reference_name]['table'], compression='gzip', sep=' ',chunksize=self.chunk)
 				except:
-					self.dataframe=pd.read_csv(self.path[self.reference_name], sep=' ')
+					self.dataframe=pd.read_csv(self.path[self.reference_name]['table'], sep=' ',chunksize=self.chunk)
 				self.loaded=True
 			else:
 				if os.path.isfile(os.path.join(self.path_default,self.reference_name)):
 					try:
 						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), compression='gzip', sep=' ',chunksize=self.chunk)
 					except:
-						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), sep=' ')
+						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), sep=' ',chunksize=self.chunk)
 					self.loaded=True
 				else:
 					raise ValueError('Unknown reference {}!'.format((self.reference_name)))
 		else:
 			raise ValueError('Reference name is not define!')
 
+
+	def load_index(self):
+		try:
+			self.index=pd.HDFStore( os.path.join( self.path[self.reference_name]['index'] ), 'r' )
+		except:
+			if os.path.isfile(os.path.join(self.path_default,self.reference_name)):
+				self.index=pd.HDFStore(os.path.join(self.path_default,self.reference_name), 'r' )
+			else:
+				raise ValueError('There is {} no index file {}'.format(self.path_default, self.reference_name))
+
+
 	def next(self):
-		df=self.dataframe.get_chunk(self.chunk)
+		df=self.dataframe.get_chunk()
 		self.read+=df.shape[0]
 		return df
 
