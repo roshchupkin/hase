@@ -514,14 +514,18 @@ class Mapper(object):
 			keys=keys[~r]
 			return [indexes[:,i] for i in range(self.n_study)], keys
 
-		elif self.include is not None: #TODO (mid) check for millions snps
-			#ind=np.array([self.hash.get_index(i)[0] for i in self.include])
+		elif self.include is not None:
 			if self.include_ind is not None:
-				self.include_ind=self.reference.index.select('reference',where='ID=self.include').index
+				if 'ID' in self.include.columns:
+					self.include_ind=self.reference.index.select('reference',where='ID=self.include.ID').index
+				elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
+					self.include_ind=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp').index
 			if self.exclude is not None:
-				#ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
 				if self.exclude_ind is not None:
-					self.exclude_ind=self.reference.index.select('reference',where='ID=self.exclude').index
+					if 'ID' in self.exclude.columns:
+						self.exclude_ind=self.reference.index.select('reference',where='ID=self.exclude').index
+					elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
+						self.exclude_ind=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp').index
 					self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
 			if self.include_ind.shape[0]==0:
 				raise ValueError('No rsid for test!')
@@ -635,6 +639,7 @@ class Reference(object):
 		self.read=0
 		self.columns=['ID','allele1','allele2','CHR','bp']
 		self.index=None
+
 
 
 	def load(self):

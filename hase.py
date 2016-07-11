@@ -446,9 +446,13 @@ if __name__=='__main__':
 			mapper.genotype_names=args.study_name
 			mapper.reference_name=args.ref_name
 			if args.snp_id_inc is not None:
-				mapper.include=np.array(pd.DataFrame.from_csv(args.snp_id_inc)['rsid'].tolist())
+				mapper.include=pd.DataFrame.from_csv(args.snp_id_inc)
+				if 'ID' not in mapper.include.columns and ('CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
+					raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_inc))
 			if args.snp_id_exc is not None:
-				mapper.exclude=np.array(pd.DataFrame.from_csv(args.snp_id_exc)['rsid'].tolist())
+				mapper.exclude=pd.DataFrame.from_csv(args.snp_id_exc)
+				if 'ID' not in mapper.include.columns and ('CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
+					raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_exc))
 			mapper.load(args.mapper)
 			mapper.load_flip(args.mapper)
 			mapper.cluster=args.cluster
