@@ -111,10 +111,13 @@ if __name__=='__main__':
 
 	#ADVANCED SETTINGS
 	parser.add_argument('-interaction', type=str, help='path to file with data for genotype interaction test') #TODO (low)
+	parser.add_argument('-mapper_chunk', type=int, help='Change mapper chunk size from config file')
 	###
 	args = parser.parse_args()
 	if not args.thr:
 		print ('WARNING!!! You did not set threshold for t-value, all results will be saved')
+	if args.mapper_chunk:
+		MAPPER_CHUNK_SIZE=args.mapper_chunk
 	ARG_CHECKER=Checker()
 	print args
 
