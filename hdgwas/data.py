@@ -272,9 +272,13 @@ class Hdf5Data(Data):
 	def __init__(self, data_path , name, type='PLINK'):
 		super(Hdf5Data, self).__init__()
 		self.name=name
-		self.names=pd.read_hdf(os.path.join(data_path,'probes', self.name +'.h5'),'probes', where='columns=[ID]').ID
 		self.id=np.array(pd.read_hdf(os.path.join(data_path,'individuals',self.name+'.h5'),'individuals').individual.tolist())
-		self.shape=(len(self.id), len(self.names))
+		if os.environ["MAPPER"]=='False':
+			self.names=pd.read_hdf(os.path.join(data_path,'probes', self.name +'.h5'),'probes', where='columns=[ID]').ID
+			self.shape=(len(self.id), len(self.names))
+		else:
+			self.names=pd.HDFStore(os.path.join(data_path,'probes', self.name +'.h5'),'r')
+			self.shape=(len(self.id), self.names.get_storer('probes').nrows)
 		if type=='PLINK':
 			l=os.listdir(os.path.join(data_path,'genotype'))
 			a,b=h5py.File(os.path.join(data_path,'genotype',l[0]), 'r')['genotype'][...].shape

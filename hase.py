@@ -423,6 +423,8 @@ if __name__=='__main__':
 		#ARG_CHECKER.check(args,mode='regression')
 
 		print ('START regression mode...')
+		if args.mapper is None:
+			os.environ['MAPPER']="False" #need to set it here, before genotype Reader start
 
 		phen=Reader('phenotype')
 		phen.start(args.phenotype[0])
@@ -446,12 +448,16 @@ if __name__=='__main__':
 			mapper.genotype_names=args.study_name
 			mapper.reference_name=args.ref_name
 			if args.snp_id_inc is not None:
-				mapper.include=pd.DataFrame.from_csv(args.snp_id_inc)
+				mapper.include=pd.DataFrame.from_csv(args.snp_id_inc,index_col=None)
+				print 'Include:'
+				print mapper.include.head()
 				if 'ID' not in mapper.include.columns and ('CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
 					raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_inc))
 			if args.snp_id_exc is not None:
-				mapper.exclude=pd.DataFrame.from_csv(args.snp_id_exc)
-				if 'ID' not in mapper.include.columns and ('CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
+				mapper.exclude=pd.DataFrame.from_csv(args.snp_id_exc,index_col=None)
+				print 'Exclude:'
+				print mapper.exclude.head()
+				if 'ID' not in mapper.exclude.columns and ('CHR' not in mapper.exclude.columns or 'bp' not in mapper.exclude.columns):
 					raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_exc))
 			mapper.load(args.mapper)
 			mapper.load_flip(args.mapper)
@@ -470,6 +476,8 @@ if __name__=='__main__':
 				mapper.keys=np.array(gen[0].folder._data.names.tolist())
 				mapper.values=np.array(range(mapper.n_keys)).reshape(-1,1)
 				mapper.flip=np.array([1]*mapper.n_keys).reshape(-1,1)
+				if args.snp_id_exc is not None or args.snp_id_inc is not None:
+					raise ValueError('You can not exclude or include variants to analysis without mapper!')
 			else:
 				raise ValueError('You can not run regression analysis with several genotype data without mapper!')
 			#mapper=None

@@ -101,7 +101,7 @@ if __name__=='__main__':
 		a['counter_prob']=np.arange(p_start_i,p_stop_i,dtype='int32')
 
 		reference=Reference()
-		reference.reference_name=args.ref_name
+		reference.name=args.ref_name
 		reference.chunk=chunk_size
 		reference.load()
 		counter_ref=0
@@ -151,10 +151,10 @@ if __name__=='__main__':
 		reference=None
 
 	index=np.ones(ID.shape[0],dtype='int')*-1
-	flip=np.ones(ID.shape[0],dtype='int')
+	flip=np.ones(probes_n_rows,dtype='int')
 	index[match_key]=match_index
 	index[flip_key]=flip_index
-	flip[flip_key]=-1
+	flip[flip_index]=-1
 	print ('Saving results for {} to {} ...'.format(args.study_name,args.out))
 	np.save(os.path.join(args.out,'values_'+args.ref_name+'_'+args.study_name+'.npy'),index)
 	np.save(os.path.join(args.out,'flip_'+args.ref_name+'_'+args.study_name+'.npy'),flip)

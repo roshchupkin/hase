@@ -515,33 +515,41 @@ class Mapper(object):
 			return [indexes[:,i] for i in range(self.n_study)], keys
 
 		elif self.include is not None:
-			if self.include_ind is not None:
+			if self.include_ind is None:
 				if 'ID' in self.include.columns:
-					self.include_ind=self.reference.index.select('reference',where='ID=self.include.ID').index
+					self.query_include=self.reference.index.select('reference',where='ID=self.include.ID')
+					self.include_ind=self.query_include.index
 				elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
-					self.include_ind=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp').index
+					self.query_include=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp')
+					self.include_ind=self.query_include.index
 			if self.exclude is not None:
-				if self.exclude_ind is not None:
+				if self.exclude_ind is None:
 					if 'ID' in self.exclude.columns:
-						self.exclude_ind=self.reference.index.select('reference',where='ID=self.exclude').index
+						self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
+						self.exclude_ind=self.query_exclude.index
 					elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
-						self.exclude_ind=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp').index
+						self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
+						self.exclude_ind=self.query_exclude.index
 					self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
 			if self.include_ind.shape[0]==0:
 				raise ValueError('No rsid for test!')
 			elif self.include_ind.shape[0]>25000:
 				print ('WARNING! To many {} rsid to test!Will use to much memory.'.format(self.include_ind.shape[0]))
 			indexes=self.values[self.include_ind,:]
-			keys=self.include
+			keys=self.query_include.ID
 			r=(indexes==-1).any(axis=1)
 			indexes=indexes[~r]
 			keys=keys[~r]
 			self.processed=self.n_keys
 			return [indexes[:,i] for i in range(self.n_study)], keys
 		elif self.exclude is not None:
-			#ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
-			if self.exclude_ind is not None:
-				self.exclude_ind=self.reference.index.select('reference',where='ID=self.exclude').index
+			if self.exclude_ind is None:
+					if 'ID' in self.exclude.columns:
+						self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
+						self.exclude_ind=self.query_exclude.index
+					elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
+						self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
+						self.exclude_ind=self.query_exclude.index
 			start=chunk_number[0]
 			finish=chunk_number[1]
 			ind=np.setxor1d(np.arange(start,finish),self.exclude_ind)
@@ -575,36 +583,55 @@ class Mapper(object):
 				r=(indexes==-1).any(axis=1)
 				indexes=indexes[~r]
 				keys=keys[~r]
-				#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 				return [indexes[:,i] for i in range(self.n_study)], keys
 			elif self.include is not None:
-				ind=np.array([self.hash.get_index(i)[0] for i in self.include])
+				if self.include_ind is None:
+					if 'ID' in self.include.columns:
+						self.query_include=self.reference.index.select('reference',where='ID=self.include.ID')
+						self.include_ind=self.query_include.index
+					elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
+						self.query_include=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp')
+						self.include_ind=self.query_include.index
+					else:
+						raise ValueError('Include file does not have ID or CHR/bp info {}'.format(self.include.columns))
 				if self.exclude is not None:
-					ind_exc=np.array([self.hash.get_index(i)[0] for i in self.exclude])
-					ind=np.setxor1d(ind,ind_exc)
-				if ind.shape[0]==0:
+					if self.exclude_ind is None:
+						if 'ID' in self.exclude.columns:
+							self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
+							self.exclude_ind=self.query_exclude.index
+						elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
+							self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
+							self.exclude_ind=self.query_exclude.index
+						else:
+							raise ValueError('Ixclude file does not have ID or CHR/bp info {}'.format(self.exclude.columns))
+						self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
+				if self.include_ind.shape[0]==0:
 					raise ValueError('No rsid for test!')
-				indexes=self.values[ind,:]
-				keys=self.include
+				indexes=self.values[self.include_ind,:]
+				keys=self.query_include.ID
 				r=(indexes==-1).any(axis=1)
 				indexes=indexes[~r]
 				keys=keys[~r]
 				self.processed=self.n_keys
-				#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 				return [indexes[:,i] for i in range(self.n_study)], keys
 
 			elif self.exclude is not None:
-				ind_exc=np.array([self.hash.get_index(i)[0] for i in self.include])
+				if self.exclude_ind is None:
+						if 'ID' in self.exclude.columns:
+							self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
+							self.exclude_ind=self.query_exclude.index
+						elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
+							self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
+							self.exclude_ind=self.query_exclude.index
 				start=self.processed
 				finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
 				self.processed=finish
-				ind=np.setxor1d(np.arange(start,finish),ind_exc)
+				ind=np.setxor1d(np.arange(start,finish),self.exclude_ind)
 				indexes=self.values[ind,:]
 				keys=self.keys[ind]
 				r=(indexes==-1).any(axis=1)
 				indexes=indexes[~r]
 				keys=keys[~r]
-				#return [link(indexes[:,i], split_size) for i in range(self.n_study)], keys
 				return [indexes[:,i] for i in range(self.n_study)], keys
 
 
@@ -627,11 +654,10 @@ class Reference(object):
 
 	def __init__(self):
 		self.name=None
-		self.reference_name=None
 		self.path_default=os.path.join(os.environ['HASEDIR'], 'data')
 		self.path={
 			'1000Gp1v3_ref':{'table':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.gz'),
-							 'index':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref.h5') }
+							 'index':os.path.join(os.environ['HASEDIR'], 'data', '1000Gp1v3.ref_info.h5') }
 				  }
 		self.dataframe=None
 		self.loaded=False
@@ -643,34 +669,34 @@ class Reference(object):
 
 
 	def load(self):
-		if self.reference_name is not None:
-			if self.path.get(self.reference_name) is not None:
+		if self.name is not None:
+			if self.path.get(self.name) is not None:
 				try:
-					self.dataframe=pd.read_csv(self.path[self.reference_name]['table'], compression='gzip', sep=' ',chunksize=self.chunk)
+					self.dataframe=pd.read_csv(self.path[self.name]['table'], compression='gzip', sep=' ',chunksize=self.chunk)
 				except:
-					self.dataframe=pd.read_csv(self.path[self.reference_name]['table'], sep=' ',chunksize=self.chunk)
+					self.dataframe=pd.read_csv(self.path[self.name]['table'], sep=' ',chunksize=self.chunk)
 				self.loaded=True
 			else:
-				if os.path.isfile(os.path.join(self.path_default,self.reference_name)):
+				if os.path.isfile(os.path.join(self.path_default,self.name)):
 					try:
-						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), compression='gzip', sep=' ',chunksize=self.chunk)
+						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.name), compression='gzip', sep=' ',chunksize=self.chunk)
 					except:
-						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.reference_name), sep=' ',chunksize=self.chunk)
+						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.name), sep=' ',chunksize=self.chunk)
 					self.loaded=True
 				else:
-					raise ValueError('Unknown reference {}!'.format((self.reference_name)))
+					raise ValueError('Unknown reference {}!'.format((self.name)))
 		else:
 			raise ValueError('Reference name is not define!')
 
 
 	def load_index(self):
 		try:
-			self.index=pd.HDFStore( os.path.join( self.path[self.reference_name]['index'] ), 'r' )
+			self.index=pd.HDFStore( os.path.join( self.path[self.name]['index'] ), 'r' )
 		except:
-			if os.path.isfile(os.path.join(self.path_default,self.reference_name)):
-				self.index=pd.HDFStore(os.path.join(self.path_default,self.reference_name), 'r' )
+			if os.path.isfile(os.path.join(self.path_default,self.name)):
+				self.index=pd.HDFStore(os.path.join(self.path_default,self.name), 'r' )
 			else:
-				raise ValueError('There is {} no index file {}'.format(self.path_default, self.reference_name))
+				raise ValueError('There is {} no index file {}'.format(self.path_default, self.name))
 
 
 	def next(self):
