@@ -56,7 +56,7 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
     while True:
 
         with Timer() as t_gen:
-            SNPs_index, keys=MAP.get_next()
+            SNPs_index, keys=MAP.get()
             if isinstance(SNPs_index, type(None)):
                 np.save(os.path.join(save_path,study_name+'_a_test.npy'), np.concatenate(a_test) )
                 np.save(os.path.join(save_path,study_name+'_metadata.npy'),metadata)

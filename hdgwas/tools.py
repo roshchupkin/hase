@@ -288,8 +288,8 @@ class Mapper(object):
 		self.reference=False
 		self.include=None
 		self.exclude=None
-		self.include_ind=None
-		self.exclude_ind=None
+		self.include_ind=np.array([])
+		self.exclude_ind=np.array([])
 		#self.hash=HashTable()
 		self.cluster=None
 		self.node=None
@@ -394,31 +394,6 @@ class Mapper(object):
 					self.dic[j]=[-1]*(self.n_study+1)
 					self.dic[j][self.n_study]=i
 
-	def save(self,path): #TODO (middle) remove
-
-		values=np.array(self.dic.values() )
-		n=1
-		for i in range(values.shape[1]):
-			if (self.genotype_names)!=0:
-				name='values_'+self.genotype_names[i-1] +'.npy'
-			else:
-				name='values_'+str(n)+'_'+self.name+'.npy'
-			if i==0:
-				np.save(os.path.join(path, 'ref_'+self.reference_name+'.npy'), values[:,i] )
-			else:
-				np.save(os.path.join(path, name), values[:,i] )
-			n+=1
-
-		#TODO (low) to do through Log class
-		f=open(os.path.join(path,'mapper_log.txt'))
-		f.write('##############################\n')
-		f.write(self.reference.reference_name + '\n')
-		for i in self.genotype_names:
-			f.write(i + '\n')
-		f.write('##############################\n')
-		f.close()
-
-
 	def load_flip(self,folder):
 
 		if folder is None:
@@ -496,6 +471,67 @@ class Mapper(object):
 			self.reference.name=self.reference_name
 			self.reference.load_index()
 
+	def get(self,chunk_number=None):
+
+		if isinstance(self.keys, type(None)) and isinstance(self.values, type(None)):
+			raise ValueError('mapper data is not loaded!')
+
+		if isinstance(self.chunk_size,type(None)):
+			raise ValueError('chunk_size and should be defined')
+
+		if self.processed==self.n_keys:
+			return None, None
+
+		if self.include is not None:
+			if len(self.include_ind)==0:
+				if 'ID' in self.include.columns:
+					self.query_include=self.reference.index.select('reference',where='ID=self.include.ID')
+					self.include_ind=self.query_include.index
+				elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
+					self.query_include=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp')
+					self.include_ind=self.query_include.index
+
+		if self.exclude is not None:
+			if len(self.exclude_ind)==0:
+					if 'ID' in self.exclude.columns:
+						self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
+						self.exclude_ind=self.query_exclude.index
+					elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
+						self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
+						self.exclude_ind=self.query_exclude.index
+
+		if chunk_number is not None:
+			start=chunk_number[0]
+			finish=chunk_number[1]
+		else:
+			start=self.processed
+			finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
+			self.processed=finish
+		self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
+		if len(self.include_ind)>0:
+			ind=np.intersect1d(np.arange(start,finish),self.include_ind)
+		else:
+			ind=np.arange(start,finish)
+
+		if chunk_number is not None and len(ind)==0:
+			return None,None
+		else:
+			while len(ind)==0:
+				start=self.processed
+				finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
+				self.processed=finish
+				ind=np.intersect1d(np.arange(start,finish),self.include_ind)
+				if self.processed==self.n_keys:
+					return None, None
+
+		ind=ind.astype('int')
+		indexes=self.values[ind,:]
+		keys=self.keys[ind]
+		r=(indexes==-1).any(axis=1)
+		indexes=indexes[~r]
+		keys=keys[~r]
+		return [indexes[:,i] for i in range(self.n_study)], keys
+
 
 	def get_chunk(self,chunk_number ):
 		if isinstance(self.keys, type(None)) and isinstance(self.values, type(None)):
@@ -522,6 +558,8 @@ class Mapper(object):
 				elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
 					self.query_include=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp')
 					self.include_ind=self.query_include.index
+			else:
+				return None,None #TODO (low) make this work with many included IDs and with cluster chunks
 			if self.exclude is not None:
 				if self.exclude_ind is None:
 					if 'ID' in self.exclude.columns:
@@ -531,6 +569,8 @@ class Mapper(object):
 						self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
 						self.exclude_ind=self.query_exclude.index
 					self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
+				else:
+					return None,None
 			if self.include_ind.shape[0]==0:
 				raise ValueError('No rsid for test!')
 			elif self.include_ind.shape[0]>25000:
@@ -594,6 +634,8 @@ class Mapper(object):
 						self.include_ind=self.query_include.index
 					else:
 						raise ValueError('Include file does not have ID or CHR/bp info {}'.format(self.include.columns))
+				else:
+					return None,None
 				if self.exclude is not None:
 					if self.exclude_ind is None:
 						if 'ID' in self.exclude.columns:
@@ -604,7 +646,10 @@ class Mapper(object):
 							self.exclude_ind=self.query_exclude.index
 						else:
 							raise ValueError('Ixclude file does not have ID or CHR/bp info {}'.format(self.exclude.columns))
+
 						self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
+					else:
+						return None,None
 				if self.include_ind.shape[0]==0:
 					raise ValueError('No rsid for test!')
 				indexes=self.values[self.include_ind,:]

@@ -35,16 +35,14 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True):
 		gc.collect()
 		if mapper is not None:
 			if mapper.cluster=='n':
-				SNPs_index, keys=mapper.get_next()
+				SNPs_index, keys=mapper.get()
 			else:
 				ch=mapper.chunk_pop()
 				if ch is None:
 					SNPs_index=None
 					break
 				print ch
-				SNPs_index, keys=mapper.get_chunk(ch)
-
-
+				SNPs_index, keys=mapper.get(chunk_number=ch)
 			if isinstance(SNPs_index, type(None)):
 				break
 			Analyser.rsid=keys
