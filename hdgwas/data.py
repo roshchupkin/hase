@@ -273,7 +273,7 @@ class Hdf5Data(Data):
 		super(Hdf5Data, self).__init__()
 		self.name=name
 		self.id=np.array(pd.read_hdf(os.path.join(data_path,'individuals',self.name+'.h5'),'individuals').individual.tolist())
-		if os.environ["MAPPER"]=='False':
+		if "MAPPER" in os.environ:
 			self.names=pd.read_hdf(os.path.join(data_path,'probes', self.name +'.h5'),'probes', where='columns=[ID]').ID
 			self.shape=(len(self.id), len(self.names))
 		else:
