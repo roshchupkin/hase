@@ -829,7 +829,7 @@ class PLINKFolder(Folder):
 
 		self._bedcode = {
 			2: ba.bitarray('11'),
-			9: ba.bitarray('10'),
+			9: ba.bitarray('10'), #TODO (high) NA data handle
 			1: ba.bitarray('01'),
 			0: ba.bitarray('00')
 		}
