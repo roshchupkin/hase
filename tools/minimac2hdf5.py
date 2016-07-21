@@ -18,6 +18,11 @@ def probes_minimac2hdf5(data_path, save_path,study_name):
 	for i,chunk in enumerate(df):
 		print 'add chunk {}'.format(i)
 		chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
+		chunk.allele1=chunk.allele1.astype(str)
+		chunk.allele2=chunk.allele2.astype(str)
+		chunk.ID=chunk.ID.astype(str)
+		chunk.MAF=chunk.MAF.astype(float)
+		chunk.Rsq=chunk.Rsq.astype(float)
 		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
 				 min_itemsize = 25, complib='zlib',complevel=9 )
 
