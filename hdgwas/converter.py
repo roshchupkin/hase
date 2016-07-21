@@ -236,7 +236,8 @@ class GenotypeMINIMAC(object):
 
 		else:
 			f=open(os.path.join( out,'minimac_convert.sh' ), 'w')
-			N_probes=pd.read_hdf(os.path.join(out,'probes', self.study_name +'.h5'),'probes', where='columns=[ID]').ID.shape[0]
+			probes=pd.HDFStore(os.path.join(out,'probes', self.study_name +'.h5'),'r')
+			N_probes=probes.get_storer('probes').nrows
 			print 'There are {} probes'.format(N_probes)
 			chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
 			N_jobs=chunk.shape[1]

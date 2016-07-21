@@ -13,16 +13,13 @@ from hdgwas.tools import Timer
 import tables
 
 def probes_minimac2hdf5(data_path, save_path,study_name):
-	n=[]
-	f=open(data_path,'r')
-	for i,j in enumerate(f):
-		n.append((j[:-1]).split(' '))
-	f.close()
-	n=np.array(n)
-	chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
 
-	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',
-			                   min_itemsize = 25, complib='zlib',complevel=9 )
+	df=pd.read_csv(data_path,sep=' ',chunksize=1000000, header=None,index_col=None)
+	for i,chunk in enumerate(df):
+		print 'add chunk {}'.format(i)
+		chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
+		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
+				 min_itemsize = 25, complib='zlib',complevel=9 )
 
 def ind_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
