@@ -195,7 +195,7 @@ class GenotypeMINIMAC(object):
 	def MACH2hdf5(self, out, id=False,remove_id=False):
 		FNULL = open(os.devnull, 'w')
 		subprocess.call(['bash',os.path.join(os.environ['HASEDIR'],'tools','minimac2hdf5.sh'),
-						 self.reader.folder.path, out , os.environ['HASEDIR'], self.study_name ], shell=False,stderr=FNULL)
+						 self.reader.folder.path, out , os.environ['HASEDIR'], self.study_name ], shell=False,stderr=subprocess.STDOUT)
 
 		if id:
 			if self.cluster:
