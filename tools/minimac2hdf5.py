@@ -12,18 +12,29 @@ import numpy as np
 from hdgwas.tools import Timer
 import tables
 
+
+#### THIS IS JUST TEST VERSION OF SCRIPT
+#### DESIGNED SPECIALLY FOR ASPS TESTING
+#### DO NOT USE FOR REAL ANALYSIS !!!
+
 def probes_minimac2hdf5(data_path, save_path,study_name):
 
-	df=pd.read_csv(data_path,sep=' ',chunksize=1000000, header=None,index_col=None)
-	for i,chunk in enumerate(df):
-		print 'add chunk {}'.format(i)
-		chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
-		chunk.allele1=chunk.allele1.astype(str)
-		chunk.allele2=chunk.allele2.astype(str)
-		chunk.ID=chunk.ID.astype(str)
-		#chunk.MAF=chunk.MAF.astype(float)
-		#chunk.Rsq=chunk.Rsq.astype(float)
-		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
+	n=[]
+	f=open(data_path,'r')
+	for i,j in enumerate(f):
+		n.append((j[:-1]).split(' '))
+		if i>=500000 and i%500000==0:
+			print 'add chunk {}'.format(str(i/500000) )
+			n=np.array(n)
+			print n.shape
+			chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
+			n=[]
+			chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
+				 min_itemsize = 25, complib='zlib',complevel=9 )
+	f.close()
+	n=np.array(n)
+	chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
+	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
 				 min_itemsize = 25, complib='zlib',complevel=9 )
 
 def ind_minimac2hdf5(data_path, save_path,study_name):
@@ -35,7 +46,7 @@ def ind_minimac2hdf5(data_path, save_path,study_name):
 	n=np.array(n)
 	chunk=pd.DataFrame.from_dict({"individual":n})
 	chunk.to_hdf(os.path.join(save_path,'individuals',study_name+'.h5'), key='individuals',format='table',
-			                   min_itemsize = 25, complib='zlib',complevel=9 )
+				 min_itemsize = 25, complib='zlib',complevel=9 )
 
 def id_minimac2hdf5(data_path,id, save_path):
 
