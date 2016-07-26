@@ -30,7 +30,7 @@ files_order=`awk '{if(NR==FNR){split($1,a,".dose");f[a[1]]++}else{split($1,b,".i
 
 for i in $files_order;
 do
-zcat $i.info.gz | awk '{if($1!="SNP"){print $1,$2,$3,$5,$7}}' >> ${SAVE_DIR}/${SNPs_INFO}
+zcat $i.info.gz | awk '{if(NR!=1){print $1,$2,$3,$5,$7}}' >> ${SAVE_DIR}/${SNPs_INFO}
 echo $i >> ${SAVE_DIR}/files_order.txt
 done
 
