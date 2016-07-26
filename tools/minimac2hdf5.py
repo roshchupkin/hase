@@ -57,34 +57,34 @@ def probes_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
 
 
-	df=pd.read_csv(data_path,sep=' ',chunksize=500000, header=None,index_col=None)
+	# df=pd.read_csv(data_path,sep=' ',chunksize=500000, header=None,index_col=None)
+    #
+	# for i,chunk in enumerate(df):
+	# 	print 'add chunk {}'.format(i)
+	# 	chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
+	# 	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
+	# 			 min_itemsize = 25, complib='zlib',complevel=9 )
 
-	for i,chunk in enumerate(df):
-		print 'add chunk {}'.format(i)
-		chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
-		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
+	f=open(data_path,'r')
+	for i,j in enumerate(f):
+		n.append((j[:-1]).split(' '))
+		if i>=500000 and i%500000==0:
+			print 'add chunk {}'.format(str(i/500000) )
+			n=np.array(n)
+			print n.shape
+			chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
+			n=[]
+			chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
 				 min_itemsize = 25, complib='zlib',complevel=9 )
 
-	# f=open(data_path,'r')
-	# for i,j in enumerate(f):
-	# 	n.append((j[:-1]).split(' '))
-	# 	if i>=500000 and i%500000==0:
-	# 		print 'add chunk {}'.format(str(i/500000) )
-	# 		n=np.array(n)
-	# 		print n.shape
-	# 		chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
-	# 		n=[]
-	# 		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
-	# 			 min_itemsize = 25, complib='zlib',complevel=9 )
-    #
-	# f.close()
-	# print 'memory after read probes', memory()
-	# n=np.array(n)
-	# print 'memory after probes2npy', memory()
-	# chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
-	# print 'memory after dic', memory()
-	# chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
-	# 			 min_itemsize = 25, complib='zlib',complevel=9 )
+	f.close()
+	print 'memory after read probes', memory()
+	n=np.array(n)
+	print 'memory after probes2npy', memory()
+	chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
+	print 'memory after dic', memory()
+	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
+				 min_itemsize = 25, complib='zlib',complevel=9 )
 
 def ind_minimac2hdf5(data_path, save_path,study_name):
 	n=[]
