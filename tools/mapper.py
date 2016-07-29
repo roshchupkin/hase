@@ -43,6 +43,7 @@ if __name__=='__main__':
 	del_counter_ref={}
 	ID2CHR=False
 	IDconv=False
+	hashing=False
 	merge_on={
 			'ID':{
 				'straight':["ID",'allele1','allele2'],
@@ -56,7 +57,7 @@ if __name__=='__main__':
 			      }
 		  	}
 
-	for p in xrange(int(np.ceil(probes_n_rows / chunk_size))):
+	for p in xrange(int(np.ceil(probes_n_rows / float(chunk_size)))):
 		print 'p',p
 
 		p_start_i = p * chunk_size
@@ -65,6 +66,8 @@ if __name__=='__main__':
 		a = probes.select('probes', start = p_start_i, stop = p_stop_i)
 
 		if p==0:
+			if issubclass(type(a.iloc[0]['allele1']), np.str):
+				hashing=True
 			if "CHR" in a.columns and 'bp' in a.columns:
 				ID2CHR=True
 				merge=merge_on['CHR']
@@ -105,6 +108,10 @@ if __name__=='__main__':
 		reference.chunk=chunk_size
 		reference.load()
 		counter_ref=0
+		if hashing:
+			print 'Hashing...'
+			a.allele1=a.allele1.apply(hash)
+			a.allele2=a.allele2.apply(hash)
 		for r,b in enumerate(reference.dataframe):
 			if r==0:
 				if np.sum(np.array([ 1 if i in reference.columns else 0 for i in b.columns.tolist()  ]))!=len(reference.columns):
@@ -148,7 +155,6 @@ if __name__=='__main__':
 				else:
 					del_counter_ref[r]=np.append(del_counter_ref[r], flip_key)
 			gc.collect()
-		reference=None
 
 	index=np.ones(ID.shape[0],dtype='int')*-1
 	flip=np.ones(probes_n_rows,dtype='int')
@@ -156,9 +162,9 @@ if __name__=='__main__':
 	index[flip_key]=flip_index
 	flip[flip_index]=-1
 	print ('Saving results for {} to {} ...'.format(args.study_name,args.out))
-	np.save(os.path.join(args.out,'values_'+args.ref_name+'_'+args.study_name+'.npy'),index)
-	np.save(os.path.join(args.out,'flip_'+args.ref_name+'_'+args.study_name+'.npy'),flip)
-	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),ID)
+	np.save(os.path.join(args.out,'values_'+reference.name+'_'+args.study_name+'.npy'),index)
+	np.save(os.path.join(args.out,'flip_'+reference.name+'_'+args.study_name+'.npy'),flip)
+	np.save(os.path.join(args.out,'keys_'+reference.name+'.npy'),ID)
 	print ('Data successfully saved')
 
 	mismatch_index=np.setdiff1d(np.arange(probes_n_rows),np.append(match_index,flip_index) )

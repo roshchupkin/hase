@@ -582,6 +582,7 @@ class Reference(object):
 					except:
 						self.dataframe=pd.read_csv(os.path.join(self.path_default,self.name), sep=' ',chunksize=self.chunk)
 					self.loaded=True
+					self.name=os.path.basename(self.name)
 				else:
 					raise ValueError('Unknown reference {}!'.format((self.name)))
 		else:
