@@ -29,8 +29,8 @@ rm -f ${SAVE_DIR}/${SNPs_INFO}
 rm -f ${SAVE_DIR}/id_convert.txt
 
 
-zcat $id_file | gawk '{ print $1}' | gawk 'BEGIN{FS="->"}{print $1}' >> ${SAVE_DIR}/${SUBJECT_ID_FILE}
-zcat $id_file | gawk '{ print $1}' | gawk 'BEGIN{FS="->"}{print $2}' >> ${SAVE_DIR}/${SUBJECT_FAM_FILE}
+zcat $id_file | gawk '{ print $1}' | gawk 'BEGIN{FS="->"}{if(NF==2){print $2}else{print $1}}' >> ${SAVE_DIR}/${SUBJECT_ID_FILE}
+zcat $id_file | gawk '{ print $1}' | gawk 'BEGIN{FS="->"}{if(NF==2){print $1}else{print "NO FAM DATA";exit}}' >> ${SAVE_DIR}/${SUBJECT_FAM_FILE}
 
 files_order=`awk '{if(NR==FNR){split($1,a,".dose");f[a[1]]++}else{split($1,b,".info");f[b[1]]++}}END{for(i in f){if(f[i]==2){print i}}}' <(ls | grep dose) <(ls | grep info)`
 
