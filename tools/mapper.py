@@ -43,6 +43,7 @@ if __name__=='__main__':
 	del_counter_ref={}
 	ID2CHR=False
 	IDconv=False
+	hashing=False
 	merge_on={
 			'ID':{
 				'straight':["ID",'allele1','allele2'],
@@ -56,7 +57,7 @@ if __name__=='__main__':
 			      }
 		  	}
 
-	for p in xrange(int(np.ceil(probes_n_rows / chunk_size))):
+	for p in xrange(int(np.ceil(probes_n_rows / float(chunk_size)))):
 		print 'p',p
 
 		p_start_i = p * chunk_size
@@ -65,6 +66,8 @@ if __name__=='__main__':
 		a = probes.select('probes', start = p_start_i, stop = p_stop_i)
 
 		if p==0:
+			if issubclass(type(a.iloc[0]['allele1']), np.str):
+				hashing=True
 			if "CHR" in a.columns and 'bp' in a.columns:
 				ID2CHR=True
 				merge=merge_on['CHR']
@@ -105,6 +108,10 @@ if __name__=='__main__':
 		reference.chunk=chunk_size
 		reference.load()
 		counter_ref=0
+		if hashing:
+			print 'Hashing...'
+			a.allele1=a.allele1.apply(hash)
+			a.allele2=a.allele2.apply(hash)
 		for r,b in enumerate(reference.dataframe):
 			if r==0:
 				if np.sum(np.array([ 1 if i in reference.columns else 0 for i in b.columns.tolist()  ]))!=len(reference.columns):
@@ -148,7 +155,6 @@ if __name__=='__main__':
 				else:
 					del_counter_ref[r]=np.append(del_counter_ref[r], flip_key)
 			gc.collect()
-		reference=None
 
 	index=np.ones(ID.shape[0],dtype='int')*-1
 	flip=np.ones(probes_n_rows,dtype='int')
@@ -156,19 +162,41 @@ if __name__=='__main__':
 	index[flip_key]=flip_index
 	flip[flip_index]=-1
 	print ('Saving results for {} to {} ...'.format(args.study_name,args.out))
-	np.save(os.path.join(args.out,'values_'+args.ref_name+'_'+args.study_name+'.npy'),index)
-	np.save(os.path.join(args.out,'flip_'+args.ref_name+'_'+args.study_name+'.npy'),flip)
-	np.save(os.path.join(args.out,'keys_'+args.ref_name+'.npy'),ID)
+	np.save(os.path.join(args.out,'values_'+reference.name+'_'+args.study_name+'.npy'),index)
+	np.save(os.path.join(args.out,'flip_'+reference.name+'_'+args.study_name+'.npy'),flip)
+	np.save(os.path.join(args.out,'keys_'+reference.name+'.npy'),ID)
 	print ('Data successfully saved')
 
 	mismatch_index=np.setdiff1d(np.arange(probes_n_rows),np.append(match_index,flip_index) )
 
+	if os.path.isfile(os.path.join(args.g,'probes', args.study_name+'_hash_table.csv.gz')):
+		try:
+			df_hash=pd.read_csv(os.path.join(args.g,'probes', args.study_name+'_hash_table.csv.gz'),sep='\t', compression='gzip', index_col=False)
+		except:
+			df_hash=pd.read_csv(os.path.join(args.g,'probes', args.study_name+'_hash_table.csv.gz'),sep='\t', index_col=False)
+
+
+	else:
+		df_hash=None
+		print ('You do not have hash_table for alleles in your probes folder! '
+			   'You used old version of HASE to convert your genotype data.'
+			   'To see original codes for allele you can make hash_table using script'
+			   '{}/tools/tools.py -hash -g "original genotype folder" '.format(os.environ['HASEDIR']))
 
 	print 'There are {} common variances with reference panel, which will be included in study'.format(np.where(index!=-1)[0].shape[0] )
 	print 'There are {} variances from reference panel, which were not found in probes'.format(np.where(index==-1)[0].shape[0] )
 	print 'There are {} variances excluded from study (not found in reference panel)'.format( probes_n_rows-np.where(index!=-1)[0].shape[0]  )
 	if args.mismatch_table and mismatch_index.shape[0]!=0:
 		df_mismatch=probes.select('probes',where=mismatch_index)
+		if df_hash is not None and not hashing:
+			df_mismatch=pd.merge(df_hash,df_mismatch,left_on='keys', right_on='allele1')
+			df_mismatch['str_allele1']=df_mismatch['allele']
+			del df_mismatch['allele']
+			df_mismatch=pd.merge(df_hash,df_mismatch,left_on='keys', right_on='allele2')
+			df_mismatch['str_allele2']=df_mismatch['allele']
+			del df_mismatch['allele']
+			del df_mismatch['keys_x']
+			del df_mismatch['keys_y']
 		df_mismatch.to_csv(os.path.join(args.out,'mismatch_ID_info.csv'))
 		print 'Mismatch ID info saved to {}'.format(os.path.join(args.out,'mismatch_ID_info.csv'))
 	elif mismatch_index.shape[0]!=0:
@@ -178,6 +206,15 @@ if __name__=='__main__':
 	print 'There are {} flipped variances'.format(len(flip_index))
 	if args.flipped_table and flip_index.shape[0]!=0:
 		df_flipped=probes.select('probes',where=flip_index)
+		if df_hash is not None and not hashing:
+			df_flipped=pd.merge(df_hash,df_flipped,left_on='keys', right_on='allele1')
+			df_flipped['str_allele1']=df_flipped['allele']
+			del df_flipped['allele']
+			df_flipped=pd.merge(df_hash,df_flipped,left_on='keys', right_on='allele2')
+			df_flipped['str_allele2']=df_flipped['allele']
+			del df_flipped['allele']
+			del df_flipped['keys_x']
+			del df_flipped['keys_y']
 		df_flipped.to_csv(os.path.join(args.out,'flipped_ID_info.csv'))
 		print 'Flipped ID info saved to {}'.format(os.path.join(args.out,'flipped_ID_info.csv'))
 	elif flip_index.shape[0]!=0:

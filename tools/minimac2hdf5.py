@@ -11,82 +11,40 @@ import pandas as pd
 import numpy as np
 from hdgwas.tools import Timer
 import tables
+import glob
 
+#### THIS IS JUST TEST VERSION OF SCRIPT
+#### DESIGNED SPECIALLY FOR ASPS TESTING
+#### DO NOT USE FOR REAL ANALYSIS !!!
 
+def probes_minimac2hdf5(data_path, save_path,study_name, chunk_size=1000000):
 
-_proc_status = '/proc/%d/status' % os.getpid()
+	if os.path.isfile(os.path.join(save_path,'probes',study_name+'.h5')):
+		os.remove(os.path.join(save_path,'probes',study_name+'.h5'))
 
-_scale = {'kB': 1024.0, 'mB': 1024.0*1024.0,
-		  'KB': 1024.0, 'MB': 1024.0*1024.0}
+	hash_table={'keys':np.array([],dtype=np.int),'allele':np.array([])}
 
-def _VmB(VmKey):
-	'''Private.
-    '''
-	global _proc_status, _scale
-	# get pseudo file  /proc/<pid>/status
-	try:
-		t = open(_proc_status)
-		v = t.read()
-		t.close()
-	except:
-		return 0.0  # non-Linux?
-		# get VmKey line e.g. 'VmRSS:  9999  kB\n ...'
-	i = v.index(VmKey)
-	v = v[i:].split(None, 3)  # whitespace
-	if len(v) < 3:
-		return 0.0  # invalid format?
-		# convert Vm value to bytes
-	return float(v[1]) * _scale[v[2]]
-
-
-def memory(since=0.0):
-	'''Return memory usage in bytes.
-    '''
-	return _VmB('VmSize:') - since
-
-
-def resident(since=0.0):
-	'''Return resident memory usage in bytes.
-    '''
-	return _VmB('VmRSS:') - since
-
-
-def probes_minimac2hdf5(data_path, save_path,study_name):
-	#raise ValueError('test')
-	print 'memory before read probes', memory()
-	n=[]
-
-
-	# df=pd.read_csv(data_path,sep=' ',chunksize=500000, header=None,index_col=None)
-    #
-	# for i,chunk in enumerate(df):
-	# 	print 'add chunk {}'.format(i)
-	# 	chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
-	# 	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
-	# 			 min_itemsize = 25, complib='zlib',complevel=9 )
-
-	f=open(data_path,'r')
-	for i,j in enumerate(f):
-		n.append((j[:-1]).split(' '))
-		if i>=500000 and i%500000==0:
-			print 'add chunk {}'.format(str(i/500000) )
-			n=np.array(n)
-			print n.shape
-			chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
-			n=[]
-			chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
-				 min_itemsize = 25, complib='zlib',complevel=9 )
-
-	f.close()
-	print 'memory after read probes', memory()
-	n=np.array(n)
-	print 'memory after probes2npy', memory()
-	chunk=pd.DataFrame.from_dict({"ID":n[:,0],'allele1':n[:,1],'allele2':n[:,2],'MAF':n[:,3],'Rsq':n[:,4]})
-	print 'memory after dic', memory()
-	chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'), key='probes',format='table',append=True,
-				 min_itemsize = 25, complib='zlib',complevel=9 )
+	df=pd.read_csv(data_path,sep=' ',chunksize=chunk_size, header=None,index_col=None)
+	for i,chunk in enumerate(df):
+		print 'add chunk {}'.format(i)
+		chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
+		hash_1=chunk.allele1.apply(hash)
+		hash_2=chunk.allele2.apply(hash)
+		k,indices=np.unique(np.append(hash_1,hash_2),return_index=True)
+		s=np.append(chunk.allele1,chunk.allele2)[indices]
+		ind=np.invert(np.in1d(k,hash_table['keys']))
+		hash_table['keys']=np.append(hash_table['keys'],k[ind])
+		hash_table['allele']=np.append(hash_table['allele'],s[ind])
+		chunk.allele1=hash_1
+		chunk.allele2=hash_2
+		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'),data_columns=True, key='probes',format='table',append=True,
+			 min_itemsize = 25, complib='zlib',complevel=9 )
+	pd.DataFrame.from_dict(hash_table).to_csv(os.path.join(save_path,'probes',study_name+'_hash_table.csv.gz'),index=False,compression='gzip', sep='\t')
 
 def ind_minimac2hdf5(data_path, save_path,study_name):
+
+	if os.path.isfile(os.path.join(save_path,'individuals',study_name+'.h5')):
+		os.remove(os.path.join(save_path,'individuals',study_name+'.h5'))
 	n=[]
 	f=open(data_path,'r')
 	for i,j in enumerate(f):
@@ -129,6 +87,11 @@ def id_minimac2hdf5_pandas(data_path,id, save_path):
 	df=None
 
 def genotype_minimac2hdf5(data_path,id, save_path, study_name):
+
+	os.chdir(os.path.join(save_path,'genotype') )
+	files=glob.glob('*.h5')
+	for filename in files:
+		os.unlink(filename)
 
 	df=pd.read_csv(data_path, header=None, index_col=None,sep='\t', dtype=np.float16)
 	data=df.as_matrix()

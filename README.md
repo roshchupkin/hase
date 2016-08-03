@@ -3,7 +3,7 @@ Framework for efficient high-dimensional association analyses.
 
 ## Speed test
 `run_ExampleStudy.sh` script runs example of association study with **20.000** SNPs, **1000** phenotypes and **1000** subjects.
-It runs analysis by chunk of 5000 SNPs (which you can define in `config.py` file). Standart output looks like this:
+It runs analysis by chunk of 5000 SNPs (which you can define in `config.py` file). Standard output looks like this:
 ```
 START regression mode...
 reading file example_study.csv
