@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from hdgwas.tools import Timer
 import tables
-
+import glob
 
 #### THIS IS JUST TEST VERSION OF SCRIPT
 #### DESIGNED SPECIALLY FOR ASPS TESTING
@@ -19,18 +19,32 @@ import tables
 
 def probes_minimac2hdf5(data_path, save_path,study_name, chunk_size=1000000):
 
+	if os.path.isfile(os.path.join(save_path,'probes',study_name+'.h5')):
+		os.remove(os.path.join(save_path,'probes',study_name+'.h5'))
 
+	hash_table={'keys':np.array([],dtype=np.int),'allele':np.array([])}
 
 	df=pd.read_csv(data_path,sep=' ',chunksize=chunk_size, header=None,index_col=None)
 	for i,chunk in enumerate(df):
 		print 'add chunk {}'.format(i)
 		chunk.columns=["ID",'allele1','allele2','MAF','Rsq']
-		chunk.allele1=chunk.allele1.apply(hash)
-		chunk.allele2=chunk.allele2.apply(hash)
+		hash_1=chunk.allele1.apply(hash)
+		hash_2=chunk.allele2.apply(hash)
+		k,indices=np.unique(np.append(hash_1,hash_2),return_index=True)
+		s=np.append(chunk.allele1,chunk.allele2)[indices]
+		ind=np.invert(np.in1d(k,hash_table['keys']))
+		hash_table['keys']=np.append(hash_table['keys'],k[ind])
+		hash_table['allele']=np.append(hash_table['allele'],s[ind])
+		chunk.allele1=hash_1
+		chunk.allele2=hash_2
 		chunk.to_hdf(os.path.join(save_path,'probes',study_name+'.h5'),data_columns=True, key='probes',format='table',append=True,
 			 min_itemsize = 25, complib='zlib',complevel=9 )
+	pd.DataFrame.from_dict(hash_table).to_csv(os.path.join(save_path,'probes',study_name+'_hash_table.csv.gz'),index=False,compression='gzip', sep='\t')
 
 def ind_minimac2hdf5(data_path, save_path,study_name):
+
+	if os.path.isfile(os.path.join(save_path,'individuals',study_name+'.h5')):
+		os.remove(os.path.join(save_path,'individuals',study_name+'.h5'))
 	n=[]
 	f=open(data_path,'r')
 	for i,j in enumerate(f):
@@ -73,6 +87,11 @@ def id_minimac2hdf5_pandas(data_path,id, save_path):
 	df=None
 
 def genotype_minimac2hdf5(data_path,id, save_path, study_name):
+
+	os.chdir(os.path.join(save_path,'genotype') )
+	files=glob.glob('*.h5')
+	for filename in files:
+		os.unlink(filename)
 
 	df=pd.read_csv(data_path, header=None, index_col=None,sep='\t', dtype=np.float16)
 	data=df.as_matrix()

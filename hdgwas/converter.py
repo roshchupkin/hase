@@ -10,7 +10,7 @@ from tools import Timer
 import pandas as pd
 from data import MINIMACHDF5Folder
 import shutil
-
+import glob
 class Genotype(object):
 	def __init__(self):
 		self.file_name = None
@@ -86,8 +86,9 @@ class GenotypePLINK(GenotypeHDF5):
 	#@profile
 	def convert_probes(self, chunk_size=100000):
 
-		os.remove(os.path.join(self.out,'probes',self.h5_name))
-
+		if os.path.isfile(os.path.join(self.out,'probes',self.h5_name)):
+			os.remove(os.path.join(self.out,'probes',self.h5_name))
+		hash_table={'keys':np.array([],dtype=np.int),'allele':np.array([])}
 		i=0
 		chunk=np.array([])
 		while True:
@@ -95,16 +96,31 @@ class GenotypePLINK(GenotypeHDF5):
 			if isinstance(chunk,type(None)):
 				break
 			print i
+			chunk.columns=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2']
+			hash_1=chunk.allele1.apply(hash)
+			hash_2=chunk.allele2.apply(hash)
+			k,indices=np.unique(np.append(hash_1,hash_2),return_index=True)
+			s=np.append(chunk.allele1,chunk.allele2)[indices]
+			ind=np.invert(np.in1d(k,hash_table['keys']))
+			hash_table['keys']=np.append(hash_table['keys'],k[ind])
+			hash_table['allele']=np.append(hash_table['allele'],s[ind])
+			chunk.allele1=hash_1
+			chunk.allele2=hash_2
 			# WARNING!!! doesn't work on windows
-			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes',format='table', append=True,
-						 names=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
+			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes',format='table',data_columns=True, append=True,
 						 complib='zlib',complevel=9, min_itemsize = 25)
 			gc.collect()
 			i+=1
+		pd.DataFrame.from_dict(hash_table).to_csv(os.path.join(self.out,'probes',self.file_name+'_hash_table.csv.gz'),index=False,compression='gzip', sep='\t')
 		print('Number of Probes {} converted'.format(self.reader.folder.N_probes))
 
 	#@profile
 	def convert_genotypes(self):
+
+		os.chdir(os.path.join(self.out,'genotype') )
+		files=glob.glob('*.h5')
+		for filename in files:
+			os.unlink(filename)
 
 		chunk_size=self.split_size
 		if chunk_size is None:
@@ -204,9 +220,9 @@ class GenotypeMINIMAC(object):
 				print 'Submit to cluster!'
 				cmd="qsub -sync y -t 1-{} {} {}".format(N,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'id_convert.sh' ))
 				print cmd
-				proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
+				proc=subprocess.Popen(cmd, shell=True,stderr=subprocess.STDOUT,stdout=subprocess.PIPE).communicate()
 			else:
-				proc=subprocess.Popen(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=FNULL)
+				proc=subprocess.Popen(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=subprocess.STDOUT)
 				print proc.communicate()
 			self.folder=MINIMACHDF5Folder(out,self.study_name)
 			self.folder.pool.split_size=self.split_size
@@ -273,7 +289,7 @@ class GenotypeMINIMAC(object):
 				print 'Submit to cluster!'
 				cmd="qsub -sync y -t 1-{} {} {}".format(N_jobs,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'minimac_convert.sh' ))
 				print cmd
-				proc=subprocess.Popen(cmd, shell=True,stderr=FNULL,stdout=subprocess.PIPE).communicate()
+				proc=subprocess.Popen(cmd, shell=True,stderr=subprocess.STDOUT,stdout=subprocess.PIPE).communicate()
 			else:
 				proc=subprocess.Popen(['bash',os.path.join( out,'minimac_convert.sh' ) ], shell=False,stderr=FNULL)
 				print proc.communicate()
