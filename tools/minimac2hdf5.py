@@ -13,9 +13,6 @@ from hdgwas.tools import Timer
 import tables
 import glob
 
-#### THIS IS JUST TEST VERSION OF SCRIPT
-#### DESIGNED SPECIALLY FOR ASPS TESTING
-#### DO NOT USE FOR REAL ANALYSIS !!!
 
 def probes_minimac2hdf5(data_path, save_path,study_name, chunk_size=1000000):
 

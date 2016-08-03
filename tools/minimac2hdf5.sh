@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 ### in this directory should be only dose and info files
 
-#### THIS IS JUST TEST VERSION OF SCRIPT
-#### DESIGNED SPECIALLY FOR ASPS TESTING
-#### DO NOT USE FOR REAL ANALYSIS !!!
-
 
 GENOTYPE_DIR=$1
 SAVE_DIR=$2
