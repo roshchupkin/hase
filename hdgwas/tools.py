@@ -257,16 +257,10 @@ class Checker(object): #TODO (mid) finish or remove this class
 
 	def regression(self,args):
 
-		if isinstance(args.mapper, type(None)):
-			raise ValueError('You should define mapper folder --mapper, if it does not exist you should first run Mapper script')
-
-		if isinstance(args.mapper_name, type(None)):
-			raise ValueError('You should define mapper name --mapper_name, if it does not exist you should first run Mapper script')
-
 		g=[os.path.isdir(i) for i in args.genotype ]
 
-		if np.sum(g)!=len(args.genotype) or not os.path.isdir(args.phenotype) or not os.path.isdir(args.covariates) :
-			raise ValueError('{},{} or {} is nor a directory'.format(os.path.isdir(args.genotype),os.path.isdir(args.phenotype), os.path.isdir(args.derivatives )) )
+		if np.sum(g)!=len(args.genotype) or not os.path.isdir(args.phenotype[0]) or not os.path.isdir(args.covariates) :
+			raise ValueError('{},{} or {} is not a directory'.format(os.path.isdir(args.genotype),os.path.isdir(args.phenotype), os.path.isdir(args.derivatives )) )
 
 
 ########################################################################

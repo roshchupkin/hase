@@ -120,13 +120,14 @@ if __name__=='__main__':
 		MAPPER_CHUNK_SIZE=args.mapper_chunk
 	ARG_CHECKER=Checker()
 	print args
+	ARG_CHECKER.check(args,mode=args.mode)
 
 
 	################################### CONVERTING ##############################
 
 	if args.mode=='converting':
 
-		#ARG_CHECKER.check(args,mode='converting')
+
 
 		R=Reader('genotype')
 		R.start(args.genotype[0])
@@ -151,7 +152,7 @@ if __name__=='__main__':
 
 	elif args.mode=='encoding':
 
-		#ARG_CHECKER.check(args,mode='encoding')
+
 		mapper=Mapper()
 		mapper.genotype_names=args.study_name
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
@@ -187,7 +188,7 @@ if __name__=='__main__':
 					genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
 					genotype=genotype[:,row_index[0]]
 					encode_genotype=e.encode(genotype, data_type='genotype')
-					e.save_hdf5(encode_genotype,os.path.join(args.out, 'encode_genotype' ) )
+					e.save_hdf5(encode_genotype,save_path=os.path.join(args.out, 'encode_genotype' ) )
 					encode_genotype=None
 					gc.collect()
 
@@ -215,7 +216,7 @@ if __name__=='__main__':
 
 	elif args.mode=='single-meta':
 
-		#ARG_CHECKER.check(args,mode='single-meta')
+
 		mapper=Mapper()
 		mapper.genotype_names=args.study_name
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
@@ -246,7 +247,7 @@ if __name__=='__main__':
 
 	elif args.mode=='meta-stage':
 
-		#ARG_CHECKER.check(args,mode='meta-stage')
+
 
 		##### Init data readers #####
 		if args.derivatives is None:
@@ -298,8 +299,7 @@ if __name__=='__main__':
 				gen.append(Reader('genotype'))
 				gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
 
-			#for i in gen:
-			#	i._data.link()
+
 			row_index, ids =  study_indexes(phenotype=tuple(i.folder._data for i in phen),genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
 
 		while True:
@@ -420,7 +420,7 @@ if __name__=='__main__':
 
 	elif args.mode=='regression':
 
-		#ARG_CHECKER.check(args,mode='regression')
+
 
 		print ('START regression mode...')
 		if args.mapper is None:
@@ -480,7 +480,7 @@ if __name__=='__main__':
 					raise ValueError('You can not exclude or include variants to analysis without mapper!')
 			else:
 				raise ValueError('You can not run regression analysis with several genotype data without mapper!')
-			#mapper=None
+
 
 		Analyser=HaseAnalyser()
 		Analyser.threshold=args.thr

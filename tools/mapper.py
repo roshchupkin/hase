@@ -29,6 +29,12 @@ if __name__=='__main__':
 	args = parser.parse_args()
 	print args
 
+	try:
+		print ('Creating directories...')
+		os.mkdir(args.out)
+	except:
+		print('Directory {} is already exist!'.format(args.out))
+
 	probes=pd.HDFStore(os.path.join(args.g,'probes', args.study_name+'.h5'),'r')
 	probes_n_rows=probes.get_storer('probes').nrows
 	chunk_size = np.min([args.chunk,probes_n_rows])
@@ -198,7 +204,7 @@ if __name__=='__main__':
 			del df_mismatch['keys_x']
 			del df_mismatch['keys_y']
 		df_mismatch.to_csv(os.path.join(args.out,'mismatch_ID_info.csv'))
-		print 'Mismatch ID info saved to {}'.format(os.path.join(args.out,'mismatch_ID_info.csv'))
+		print 'Mismatch ID info saved to {}'.format(os.path.join(args.out,args.study_name+'_mismatch_ID_info.csv'))
 	elif mismatch_index.shape[0]!=0:
 		print ('Mismatch examples:')
 		print probes.select('probes',where=mismatch_index[:10])
@@ -216,7 +222,7 @@ if __name__=='__main__':
 			del df_flipped['keys_x']
 			del df_flipped['keys_y']
 		df_flipped.to_csv(os.path.join(args.out,'flipped_ID_info.csv'))
-		print 'Flipped ID info saved to {}'.format(os.path.join(args.out,'flipped_ID_info.csv'))
+		print 'Flipped ID info saved to {}'.format(os.path.join(args.out,args.study_name + '_flipped_ID_info.csv'))
 	elif flip_index.shape[0]!=0:
 		print ('Flipped examples:')
 		print probes.select('probes',where=flip_index[:10])

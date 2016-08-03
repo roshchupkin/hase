@@ -658,9 +658,8 @@ class CSVFolder(Folder):
 		super(CSVFolder,self).__init__(path)
 		try:
 			self.read(self.next())
-		except:
-			raise ValueError("Failed to init CSVFolder")
-		#self.processed-=1
+		except Exception,e:
+			raise (e)
 		self.data_info={}
 		for i in self.files:
 			df=pd.read_csv(os.path.join(self.path,i), sep='\t', index_col=None)
@@ -675,11 +674,13 @@ class CSVFolder(Folder):
 			print ('There are samples and columns {} in cache {}'.format(self._data.shape, file))
 
 		else:
-			try:
-				print 'reading file {}'.format(file)
-				df=pd.read_csv(os.path.join(self.path,file), sep='\t', index_col=None)
-			except:
-				raise ValueError('Cant read {} file; default settings: index=None, header=True; sep=tab '.format(file))
+			print 'reading file {}'.format(file)
+			for i in ['\t', ' ']:
+					df=pd.read_csv(os.path.join(self.path,file), sep=i, index_col=None)
+					if df.shape[1]>1:
+						break
+			else:
+				raise ValueError('Cant read {} file; default settings: index=None, header=True; sep=tab or space '.format(file))
 
 
 			self._data=Data()
