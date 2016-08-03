@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+mkdir -p ./test/results/
+
 python hase.py \
 -th 0 \
 -o ./test/results/ \
