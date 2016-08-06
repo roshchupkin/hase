@@ -117,10 +117,6 @@ class GenotypePLINK(GenotypeHDF5):
 	#@profile
 	def convert_genotypes(self):
 
-		os.chdir(os.path.join(self.out,'genotype') )
-		files=glob.glob('*.h5')
-		for filename in files:
-			os.unlink(filename)
 
 		chunk_size=self.split_size
 		if chunk_size is None:
