@@ -120,6 +120,7 @@ if __name__=='__main__':
 		MAPPER_CHUNK_SIZE=args.mapper_chunk
 	ARG_CHECKER=Checker()
 	print args
+	os.environ['HASEOUT']=args.out
 
 
 	################################### CONVERTING ##############################

@@ -28,6 +28,7 @@ if __name__=="__main__":
 	results['t-stat']=np.array([])
 	results['phenotype']=np.array([])
 	results['SE']=np.array([])
+	results['MAF']=np.array([])
 
 	while True:
 		Analyser.summary()

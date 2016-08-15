@@ -69,7 +69,7 @@ class HaseAnalyser(Analyser):
 		self.permutation=False
 		self.rsid_dic={}
 		self.result_folder=None
-		self.result_dump_size=100
+		self.result_dump_size=3
 
 
 	def summary(self):
@@ -81,13 +81,14 @@ class HaseAnalyser(Analyser):
 			raise ValueError('Please set DF to Analyser!')
 
 		if self.result_folder is None:
-			self.result_folder=os.listdir(self.result_path)
+			self.result_folder=glob.glob(self.result_path + '*.npy')
 
 		self.results['RSID']=np.array([])
 		self.results['p_value']=np.array([])
 		self.results['t-stat']=np.array([])
 		self.results['phenotype']=np.array([])
 		self.results['SE']=np.array([])
+		self.results['MAF']=np.array([])
 
 		files=[]
 		for i in range(self.result_dump_size):
@@ -98,12 +99,13 @@ class HaseAnalyser(Analyser):
 		if len(files)!=0:
 			for i in files:
 				print i
-				d=np.load(os.path.join(self.result_path, i)).item()
+				d=np.load(i).item()
 				p_value=stats.t.sf(np.abs(d['t-stat']),self.DF)*2
 				self.results['t-stat']=np.append(self.results['t-stat'],d['t-stat'].flatten())
 				self.results['SE']=np.append(self.results['SE'],d['SE'].flatten())
 				self.results['RSID']=np.append(self.results['RSID'],d['index'])
 				self.results['phenotype']=np.append(self.results['phenotype'],d['phenotype'])
+				self.results['MAF']=np.append(self.results['MAF'],d['MAF'])
 				self.results['p_value']=np.append(self.results['p_value'],p_value.flatten())
 		else:
 			self.results=None
@@ -123,7 +125,7 @@ class HaseAnalyser(Analyser):
 		if (len(mask[0]) != 0):
 			t_save = self.t_stat[mask[0],mask[1],mask[2]]
 			se=self.SE[mask[0],mask[1],mask[2]]
-			result = {'phenotype': phen_names[mask[2]], 't-stat': t_save,'index':self.rsid[mask[0]],'SE':se}
+			result = {'phenotype': phen_names[mask[2]], 't-stat': t_save,'index':self.rsid[mask[0]],'SE':se, 'MAF':self.MAF[mask[0]]}
 
 			if not self.cluster:
 				np.save(os.path.join(save_path, str(self.result_index) + 'result.npy'), result)
@@ -675,6 +677,7 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 		index_c=np.array([np.where(id_c==i)[0][0] for i in common_id])
 
 	print ('There are {} common ids'.format(len(common_id)))
+	np.savetxt(os.path.join(os.environ['HASEOUT'],'study_common_id.txt'),common_id, fmt='%s')
 	if len(common_id)==0:
 		exit(0)
 
