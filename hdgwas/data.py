@@ -690,7 +690,7 @@ class CSVFolder(Folder):
 			if self._id is None:
 				self._id=self._data.id
 			else:
-				if (self._id!=self._data.id).any():
+				if (self._id!=self._data.id).any(): #TODO (middle) check for not overlapped id (AttributeError: 'bool' object has no attribute 'any')
 					raise ValueError('id in {} different from previous!'.format(file))
 			self._data.type=np.ndarray
 			self._data.names=np.array(df.columns[1:])

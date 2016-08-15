@@ -86,10 +86,6 @@ def id_minimac2hdf5_pandas(data_path,id, save_path):
 
 def genotype_minimac2hdf5(data_path,id, save_path, study_name):
 
-	os.chdir(os.path.join(save_path,'genotype') )
-	files=glob.glob('*.h5')
-	for filename in files:
-		os.unlink(filename)
 
 	df=pd.read_csv(data_path, header=None, index_col=None,sep='\t', dtype=np.float16)
 	data=df.as_matrix()
