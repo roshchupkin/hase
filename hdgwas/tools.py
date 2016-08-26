@@ -123,6 +123,7 @@ class HaseAnalyser(Analyser):
 			mask = np.where(np.abs(self.t_stat) > 0)
 
 		if (len(mask[0]) != 0):
+			print ('Saving results to {}'.format(save_path))
 			t_save = self.t_stat[mask[0],mask[1],mask[2]]
 			se=self.SE[mask[0],mask[1],mask[2]]
 			result = {'phenotype': phen_names[mask[2]], 't-stat': t_save,'index':self.rsid[mask[0]],'SE':se, 'MAF':self.MAF[mask[0]]}

@@ -66,6 +66,7 @@ if __name__=='__main__':
 		a = probes.select('probes', start = p_start_i, stop = p_stop_i)
 
 		if p==0:
+			print a.head()
 			if issubclass(type(a.iloc[0]['allele1']), np.str):
 				hashing=True
 			if "CHR" in a.columns and 'bp' in a.columns:
@@ -98,7 +99,7 @@ if __name__=='__main__':
 			def f(x):
 				s=x.ID.split(':')
 				return s[0],s[1]
-			CHR_bp=a.apply(f, s[0],s[1], axis=1 )
+			CHR_bp=a.apply(f, axis=1 )
 			a['CHR'],a['bp']=zip(*CHR_bp)
 
 		a['counter_prob']=np.arange(p_start_i,p_stop_i,dtype='int32')
