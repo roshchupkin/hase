@@ -147,3 +147,10 @@ Gennady V. Roshchupkin (Department of Epidemiology, Radiology and Medical Inform
 
 Hieab H. Adams (Department of Epidemiology, Erasmus MC, Rotterdam, Netherlands) 
 
+## Contacts
+
+If you have any questions/suggestions/comments or problems do not hesitate to contact us!
+
+* g.roshchupkin@erasmusmc.nl
+* h.adams@erasmusmc.nl
+ 

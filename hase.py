@@ -96,11 +96,11 @@ if __name__=='__main__':
 	###
 
 	#FLAGS
-	parser.add_argument('-hdf5', type=bool,default=True, help='flag for genotype data format')
-	parser.add_argument('-id', type=bool, default=False, help='Flag to convert minimac data to genotype per subject files first (default False)')
-	parser.add_argument('-pd_full', type=bool, default=False, help='For not HD association study')
-	parser.add_argument('-effect_intercept', type=bool, default=False, help='Flag for add study effect to PD regression model')
-	parser.add_argument('-permute_ph', type=bool, default=False, help='Flag for phenotype permutation')
+	parser.add_argument('-hdf5', action='store_true',default=True, help='flag for genotype data format')
+	parser.add_argument('-id', action='store_true', default=False, help='Flag to convert minimac data to genotype per subject files first (default False)')
+	parser.add_argument('-pd_full', action='store_true', default=False, help='For not HD association study')
+	parser.add_argument('-effect_intercept', action='store_true', default=False, help='Flag for add study effect to PD regression model')
+	parser.add_argument('-permute_ph', action='store_true', default=False, help='Flag for phenotype permutation')
 	#TODO (low) save genotype after MAF
 	###
 
