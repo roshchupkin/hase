@@ -136,8 +136,7 @@ And then you need to install (or first uninstall) `scipy` and `numpy` python lib
 ## Citation 
 If you use HASE framework, please cite:
 
-[G.Roshchupkin et al. HASE: Framework for efficient high-dimensional association analyses. 
-BioRxiv, 2016.](http://dx.doi.org/10.1101/037382) 
+[Roshchupkin, G. V. et al. HASE: Framework for efficient high-dimensional association analyses. Sci. Rep. 6, 36076; doi: 10.1038/srep36076 (2016)](http://www.nature.com/articles/srep36076) 
 
 ## Licence
 This project is licensed under GNU GPL v3.
