@@ -1,6 +1,8 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import h5py
+import tables
 from hdgwas.tools import Timer,HaseAnalyser, Reference
 import argparse
 import pandas as pd
@@ -17,7 +19,7 @@ if __name__=="__main__":
 	#TODO (low) add reference panel
 	args = parser.parse_args()
 	Analyser=HaseAnalyser()
-
+	print args
 
 	Analyser.DF=np.float(args.df)
 	Analyser.result_path=args.r

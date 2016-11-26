@@ -81,7 +81,7 @@ class HaseAnalyser(Analyser):
 			raise ValueError('Please set DF to Analyser!')
 
 		if self.result_folder is None:
-			self.result_folder=glob.glob(self.result_path + '*.npy')
+			self.result_folder=glob.glob( os.path.join(self.result_path, '*.npy') )
 
 		self.results['RSID']=np.array([])
 		self.results['p_value']=np.array([])
@@ -512,7 +512,8 @@ class Mapper(object):
 			self.processed=finish
 		self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
 		if len(self.include_ind)>0:
-			ind=np.intersect1d(np.arange(start,finish),self.include_ind)
+			ind=self.include_ind
+			self.processed=self.n_keys #TODO (low) dirty hack
 		else:
 			ind=np.arange(start,finish)
 
@@ -526,6 +527,10 @@ class Mapper(object):
 				ind=np.intersect1d(np.arange(start,finish),self.include_ind)
 				if self.processed==self.n_keys:
 					return None, None
+
+		if self.include is not None and len(self.include_ind)==0:
+			print ('None of included ID found in genotype data!')
+			return None,None
 
 		ind=ind.astype('int')
 		indexes=self.values[ind,:]
