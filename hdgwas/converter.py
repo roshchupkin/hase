@@ -117,6 +117,7 @@ class GenotypePLINK(GenotypeHDF5):
 	#@profile
 	def convert_genotypes(self):
 
+
 		chunk_size=self.split_size
 		if chunk_size is None:
 			raise ValueError('CONVERTER_SPLIT_SIZE does not define in config file!')

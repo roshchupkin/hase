@@ -274,9 +274,11 @@ class Hdf5Data(Data):
 		self.name=name
 		self.id=np.array(pd.read_hdf(os.path.join(data_path,'individuals',self.name+'.h5'),'individuals').individual.tolist())
 		if "MAPPER" in os.environ:
+			print ('Reading ID from probes....')
 			self.names=pd.read_hdf(os.path.join(data_path,'probes', self.name +'.h5'),'probes', where='columns=[ID]').ID
 			self.shape=(len(self.id), len(self.names))
 		else:
+			print ('Use ID from mapper')
 			self.names=pd.HDFStore(os.path.join(data_path,'probes', self.name +'.h5'),'r')
 			self.shape=(len(self.id), self.names.get_storer('probes').nrows)
 		if type=='PLINK':

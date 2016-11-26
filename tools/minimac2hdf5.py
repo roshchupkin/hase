@@ -14,7 +14,6 @@ import tables
 import glob
 
 
-
 def probes_minimac2hdf5(data_path, save_path,study_name, chunk_size=1000000):
 
 	if os.path.isfile(os.path.join(save_path,'probes',study_name+'.h5')):
