@@ -7,7 +7,7 @@ if PYTHON_PATH is not None:
 import h5py
 import tables
 from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_pard, merge_genotype, Reference, maf_pard
-from hdgwas.converter import  GenotypePLINK, GenotypeMINIMAC
+from hdgwas.converter import  GenotypePLINK, GenotypeMINIMAC, GenotypeVCF
 from hdgwas.data import Reader, MetaParData, MetaPhenotype
 from hdgwas.fake import Encoder
 from hdgwas.hdregression import HASE, A_covariates, A_tests, B_covariates, C_matrix, A_inverse,B4
@@ -101,6 +101,7 @@ if __name__=='__main__':
 	parser.add_argument('-pd_full', action='store_true', default=False, help='For not HD association study')
 	parser.add_argument('-effect_intercept', action='store_true', default=False, help='Flag for add study effect to PD regression model')
 	parser.add_argument('-permute_ph', action='store_true', default=False, help='Flag for phenotype permutation')
+	parser.add_argument('-vcf', action='store_true', default=False, help='Flag for VCF data to convert')
 	#TODO (low) save genotype after MAF
 	###
 
@@ -130,7 +131,7 @@ if __name__=='__main__':
 		#ARG_CHECKER.check(args,mode='converting')
 
 		R=Reader('genotype')
-		R.start(args.genotype[0])
+		R.start(args.genotype[0], vcf=args.vcf)
 
 		with Timer() as t:
 			if R.format=='PLINK':
@@ -144,8 +145,15 @@ if __name__=='__main__':
 					G.cluster=True
 				G.split_size=CONVERTER_SPLIT_SIZE
 				G.MACH2hdf5(args.out,id=args.id)
+
+			elif R.format=='VCF':
+				G = GenotypeVCF(args.study_name[0], reader=R)
+				if args.cluster=='y':
+					G.cluster=True
+				G.split_size=CONVERTER_SPLIT_SIZE
+				G.VCF2hdf5(args.out)
 			else:
-				raise ValueError('Genotype data should be in PLINK or MINIMAC format and alone in folder')
+				raise ValueError('Genotype data should be in PLINK/MINIMAC/VCF format and alone in folder')
 		print ('Time to convert all data: {} sec'.format(t.secs))
 
 	################################### ENCODING ##############################

@@ -195,6 +195,14 @@ class Pool(object):
 
 			result[(ind==i),:]=r
 
+		if np.sum(result==9)!=0:
+			print ('Imputing missing genotype to mean...')
+			result[np.where(result == 9)]=np.nanmean(result[np.where(result==9)[0], :], axis=1)
+
+		if np.sum( np.isnan(result) )!=0:
+			print ('Imputing missing genotype to mean...')
+			result[np.where(np.isnan(result))]=np.nanmean(result[np.where(np.isnan(result))[0], :], axis=1)
+
 		return result
 
 class Data(object):
@@ -614,7 +622,7 @@ class PLINKHDF5Folder(HDF5Folder):
 		self.processed+=len(index)
 		result=[]
 		if True:
-		#if self.pool.inmem==self.pool.limit:
+		#if self.pool.inmem==self.pool.limit: #TODO (high) check the bellow methods, remove get_data from pool?
 			result=self.pool.get_chunk(index)
 		else:
 			result=[self.pool.get_data(i,j) for i,j in index]
@@ -1014,13 +1022,27 @@ class MINIMACFolder(Folder):
 	def get_next(self,**kwargs):
 		pass
 
+
+class VCFFolder(Folder):
+
+	def __init__(self, path):
+		super(VCFFolder, self).__init__(path)
+		self.scan()
+
+	def scan(self): #TODO (middle) add checking for correct VCF format (? checkVCF.py) before start shell scripts
+		pass
+
+	def get_next(self,**kwargs):
+		pass
+
+
 class Reader(object):
 
 	def __init__(self, name):
 		self.name=name
 		self.path=None
 		self._data=None
-		self.ext=['.npy', '.csv', '.txt','.h5', 'PLINK','.gz']
+		self.ext=['.npy', '.csv', '.txt','.h5', 'PLINK','.gz','VCF']
 		self.pool=None
 		self.folder=None
 		self.processed=0
@@ -1040,7 +1062,10 @@ class Reader(object):
 
 			self.format=self.folder.format
 
-			if self.name=='genotype' and self.format!='PLINK' and self.format!='.gz':
+			if kwargs.get('vcf',0) and kwargs['vcf']:
+				self.format='VCF'
+
+			if self.name=='genotype' and self.format!='PLINK' and self.format!='.gz' and self.format!='VCF':
 				self.format='.h5'
 
 			if self.format not in self.ext:
@@ -1067,8 +1092,11 @@ class Reader(object):
 				self.folder=MINIMACFolder(path)
 				self.format="MINIMAC"
 
+			elif self.format=='VCF':
+				self.folder = VCFFolder(path)
+
 			elif self.format=='.h5' and self.name!='genotype':
-				raise ValueError('hdf5 format implemented only for converted from PLINK/minimac genotype data...Sorry')
+				raise ValueError('hdf5 format implemented only for converted from genotype data...Sorry')
 
 			elif self.format!='.h5' and self.name=='genotype':
 				raise ValueError('genotype data should be in hdf5 format')

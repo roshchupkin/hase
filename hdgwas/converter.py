@@ -11,6 +11,7 @@ import pandas as pd
 from data import MINIMACHDF5Folder
 import shutil
 import glob
+import signal
 class Genotype(object):
 	def __init__(self):
 		self.file_name = None
@@ -301,3 +302,70 @@ class GenotypeMINIMAC(object):
 	def summary(self):
 		pass
 
+class GenotypeVCF(object):
+
+	def __init__(self, name, reader=None):
+		self.reader=reader
+		self.study_name=name
+		self.split_size=None
+		self.hdf5_iter=0
+		self.pytable_filter=tables.Filters(complevel=9, complib='zlib')
+		self.cluster=False
+
+	def VCF2hdf5(self, out):
+
+		FNULL = open(os.devnull, 'w')
+		subprocess.call(['bash',os.path.join(os.environ['HASEDIR'],'tools','VCF2hdf5.sh'),
+						 self.reader.folder.path, out , os.environ['HASEDIR'], self.study_name ], shell=False,stderr=subprocess.STDOUT,
+						preexec_fn=lambda:signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+						)
+
+
+		f=open(os.path.join( out,'vcf_convert.sh' ), 'w')
+		probes=pd.HDFStore(os.path.join(out,'probes', self.study_name +'.h5'),'r')
+		N_probes=probes.get_storer('probes').nrows
+		print 'There are {} probes'.format(N_probes)
+		chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
+		N_jobs=chunk.shape[1]
+		for i_ch in range(chunk.shape[1]):
+			ch=chunk[:,i_ch]
+			#print ch
+			l='bash {} {} {} {} {} {} {} {} \n'.format(
+				os.path.join(os.environ['HASEDIR'],'tools','VCFGenotype2hdf5.sh'),
+				self.reader.folder.path,
+				out,
+				os.environ['HASEDIR'],
+				self.study_name,
+				ch[0],
+				ch[1],
+				i_ch
+					)
+			f.write(l)
+		if ch[1]!=N_probes:
+			l='bash {} {} {} {} {} {} {} {} \n'.format(
+				os.path.join(os.environ['HASEDIR'],'tools','VCFGenotype2hdf5.sh'),
+				self.reader.folder.path,
+				out,
+				os.environ['HASEDIR'],
+				self.study_name,
+				ch[1]+1,
+				N_probes,
+				i_ch+1
+					)
+			f.write(l)
+			N_jobs+=1
+		f.close()
+		if self.cluster:
+			print 'Submit to cluster!'
+			cmd="qsub -sync y -t 1-{} {} {}".format(N_jobs,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'vcf_convert.sh' ))
+			print cmd
+			proc=subprocess.Popen(cmd, shell=True,stderr=subprocess.STDOUT,stdout=subprocess.PIPE).communicate()
+		else:
+			proc=subprocess.Popen(['bash',os.path.join( out,'vcf_convert.sh' ) ], shell=False,stderr=FNULL)
+			print proc.communicate()
+
+		shutil.move(os.path.join(out,'vcf_convert.sh'), os.path.join(out,'tmp_files','vcf_convert.sh') )
+		shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )
+		shutil.move(os.path.join(out, 'snps_count.txt'), os.path.join(out, 'tmp_files', 'snps_count.txt'))
+
+		os.remove(os.path.join(out,'files_order.txt'))
