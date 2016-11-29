@@ -1,6 +1,10 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import MAPPER_CHUNK_SIZE, basedir,CONVERTER_SPLIT_SIZE, PYTHON_PATH
+os.environ['HASEDIR']=basedir
+if PYTHON_PATH is not None:
+	for i in PYTHON_PATH: sys.path.insert(0,i)
 import h5py
 import tables
 from hdgwas.tools import Timer,HaseAnalyser, Reference
@@ -15,13 +19,13 @@ if __name__=="__main__":
 	parser = argparse.ArgumentParser(description='Script analyse results of HASE')
 	parser.add_argument("-r", required=True,help="path to hase results")
 	parser.add_argument("-o", "--out", type=str, required=True,help="path to save result folder")
-	parser.add_argument("-df", type=str,required=True, help="degree of freedom = ( #subjects in study  - #covariates - 1 )")
+	parser.add_argument("-df", type=float,default=None, help="degree of freedom = ( #subjects in study  - #covariates - 1 )")
 	#TODO (low) add reference panel
 	args = parser.parse_args()
 	Analyser=HaseAnalyser()
 	print args
 
-	Analyser.DF=np.float(args.df)
+	Analyser.DF=args.df
 	Analyser.result_path=args.r
 
 	results={}
@@ -31,6 +35,7 @@ if __name__=="__main__":
 	results['phenotype']=np.array([])
 	results['SE']=np.array([])
 	results['MAF']=np.array([])
+	results['BETA'] = np.array([])
 
 	while True:
 		Analyser.summary()

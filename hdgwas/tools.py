@@ -78,7 +78,7 @@ class HaseAnalyser(Analyser):
 			raise ValueError('Please set result pathway to Analyser!')
 
 		if isinstance(self.DF,type(None)):
-			raise ValueError('Please set DF to Analyser!')
+			print ('DF is not defined. Forced to use z_score statistics!')
 
 		if self.result_folder is None:
 			self.result_folder=glob.glob( os.path.join(self.result_path, '*.npy') )
@@ -89,6 +89,7 @@ class HaseAnalyser(Analyser):
 		self.results['phenotype']=np.array([])
 		self.results['SE']=np.array([])
 		self.results['MAF']=np.array([])
+		self.results['BETA'] = np.array([])
 
 		files=[]
 		for i in range(self.result_dump_size):
@@ -100,15 +101,22 @@ class HaseAnalyser(Analyser):
 			for i in files:
 				print i
 				d=np.load(i).item()
-				p_value=stats.t.sf(np.abs(d['t-stat']),self.DF)*2
+				p_value=self.get_p_value(d['t-stat'],df=self.DF)
 				self.results['t-stat']=np.append(self.results['t-stat'],d['t-stat'].flatten())
 				self.results['SE']=np.append(self.results['SE'],d['SE'].flatten())
 				self.results['RSID']=np.append(self.results['RSID'],d['index'])
 				self.results['phenotype']=np.append(self.results['phenotype'],d['phenotype'])
 				self.results['MAF']=np.append(self.results['MAF'],d['MAF'])
 				self.results['p_value']=np.append(self.results['p_value'],p_value.flatten())
+				self.results['BETA'] = np.append(self.results['BETA'],  d['t-stat'].flatten() *  d['SE'].flatten() )
 		else:
 			self.results=None
+
+	def get_p_value(self,t_stat,df=None):
+		if df is None:
+			return stats.norm.sf(np.abs(t_stat))*2
+		else:
+			return stats.t.sf(np.abs(t_stat),df)*2
 
 	def save_result(self , phen_names):
 
