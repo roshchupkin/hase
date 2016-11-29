@@ -254,6 +254,8 @@ class GenotypeMINIMAC(object):
 			print 'There are {} probes'.format(N_probes)
 			chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
 			N_jobs=chunk.shape[1]
+			ch=[0,0]
+			i_ch = -1
 			for i_ch in range(chunk.shape[1]):
 				ch=chunk[:,i_ch]
 				#print ch
@@ -327,6 +329,8 @@ class GenotypeVCF(object):
 		print 'There are {} probes'.format(N_probes)
 		chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
 		N_jobs=chunk.shape[1]
+		ch=[0,0]
+		i_ch=-1
 		for i_ch in range(chunk.shape[1]):
 			ch=chunk[:,i_ch]
 			#print ch

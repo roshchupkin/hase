@@ -31,7 +31,7 @@ zcat -f ${files_order[1]} | awk 'BEGIN{FS="\t"}/^#CHROM/{for (i=10;i<=NF;i++){pr
 for i in ${files_order[*]};
 do
 echo ${i}
-zcat -f ${i} | cut -f1-8 | awk -v name=${i} -v file="${SAVE_DIR}/snps_count.txt" 'BEGIN{FS="\t"}/^[^#]/{print }END{ print name,FNR >>file }'  >> ${SAVE_DIR}/${SNPs_INFO}
+zcat -f ${i} | cut -f1-8 | awk -v name=${i} -v file="${SAVE_DIR}/snps_count.txt" 'BEGIN{FS="\t"}/^[^#]/{i++;print }END{ print name,i >>file }'  >> ${SAVE_DIR}/${SNPs_INFO}
 echo $i >> ${SAVE_DIR}/files_order.txt
 done
 
