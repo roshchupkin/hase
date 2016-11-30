@@ -29,10 +29,11 @@ get_vcf_chunk(){
                 BEGIN=$(($1 - ${iter} + ${SNPs}))
                 END=$(( $2 - ${iter} + ${SNPs} ))
                 echo ${iter},${SNPs},${BEGIN},${END}
-                if [ "$3"=='GT' ]; then
+                if [ "$3" = "GT" ]; then
                 echo 'use GT'
                     zcat -f ${GENOTYPE_DIR}/${file} | awk 'BEGIN{FS="\t"}/^[^#]/{print }' | cut -f10-  | sed -n "${BEGIN},${END}p;${END}q" |  tr / " "| tr \| " "  | awk -v ind=$4 'BEGIN{FS="\t"}{R="";for (i=1;i<=NF;i++){split($i,a,":");split(a[ind],b," ");if(b[1]=="." || b[2]=="."){g=-7}else{ if(b[1]>1){b[1]=1};if(b[2]>1){b[2]=1}; g=b[1]+b[2]  };if(i==1){R=2-g}else{R=R"\t"2-g} };print R} '  >> ${SAVE_DIR}/chunk_${START}_${FINISH}.txt
                 else
+                echo "use ${3}"
                     zcat -f ${GENOTYPE_DIR}/${file} | awk 'BEGIN{FS="\t"}/^[^#]/{print }' | cut -f10-  | sed -n "${BEGIN},${END}p;${END}q" | awk -v ind=$4 'BEGIN{FS="\t"}{R="";for (i=1;i<=NF;i++){split($i,a,":");if(a[ind]=="."){a[ind]=-7};if(i==1){R=2-a[ind]}else{R=R"\t"2-a[ind]} };print R} '  >> ${SAVE_DIR}/chunk_${START}_${FINISH}.txt
                 fi
             return 0
@@ -40,10 +41,11 @@ get_vcf_chunk(){
                 BEGIN=$(( $1 - ${iter} + ${SNPs}))
                 END=$(( $SNPs  ))
                 echo ${iter},${SNPs},${BEGIN},${END}
-                if [ "$3"== 'GT' ]; then
+                if [ "$3" = "GT" ]; then
                 echo 'use GT'
                     zcat -f ${GENOTYPE_DIR}/${file} | awk 'BEGIN{FS="\t"}/^[^#]/{print }' | cut -f10-  | sed -n "${BEGIN},${END}p;${END}q" |  tr / " "| tr \| " "  | awk -v ind=$4 'BEGIN{FS="\t"}{R="";for (i=1;i<=NF;i++){split($i,a,":");split(a[ind],b," ");if(b[1]=="." || b[2]=="."){g=-7}else{ if(b[1]>1){b[1]=1};if(b[2]>1){b[2]=1}; g=b[1]+b[2]  };if(i==1){R=2-g}else{R=R"\t"2-g} };print R} '  >> ${SAVE_DIR}/chunk_${START}_${FINISH}.txt
                 else
+                echo "use ${3}"
                     zcat -f ${GENOTYPE_DIR}/${file} | awk 'BEGIN{FS="\t"}/^[^#]/{print }' | cut -f10-  | sed -n "${BEGIN},${END}p;${END}q" | awk -v ind=$4 'BEGIN{FS="\t"}{R="";for (i=1;i<=NF;i++){split($i,a,":");if(a[ind]=="."){a[ind]=-7};if(i==1){R=2-a[ind]}else{R=R"\t"2-a[ind]} };print R} '  >> ${SAVE_DIR}/chunk_${START}_${FINISH}.txt
                 fi
                 get_minimac_chunk $(($iter + 1)) ${2} $3 $4
