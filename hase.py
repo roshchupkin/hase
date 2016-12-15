@@ -167,8 +167,6 @@ if __name__=='__main__':
 		mapper.reference_name=args.ref_name
 		mapper.load_flip(args.mapper)
 		mapper.load(args.mapper)
-		index=np.argsort(mapper.values[:,0][mapper.values[:,0]!=-1])
-		mapper.flip=mapper.flip[index,:]
 
 		phen=Reader('phenotype')
 		phen.start(args.phenotype[0])
