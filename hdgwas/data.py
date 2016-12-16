@@ -172,11 +172,9 @@ class Pool(object):
 	def get_chunk(self,indices):
 		indices=self.link(indices)
 		indices=np.array(indices)
-		#print indices.shape
 		keys, ind = np.unique(indices[:,0], return_inverse=True)
 		result=None
 		gc.collect()
-		#print len(keys)
 		for i,k in enumerate(keys):
 			r=None
 			if k in self.loaded:
@@ -672,7 +670,10 @@ class CSVFolder(Folder):
 			raise (e)
 		self.data_info={}
 		for i in self.files:
-			df=pd.read_csv(os.path.join(self.path,i), sep='\t', index_col=None)
+			for j in ['\t', ' ']:
+					df=pd.read_csv(os.path.join(self.path,i), sep=j, index_col=None)
+					if df.shape[1] > 1:
+						break
 			self.data_info[i]=np.array(df.columns[1:])
 
 

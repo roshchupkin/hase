@@ -81,7 +81,7 @@ class HaseAnalyser(Analyser):
 			print ('DF is not defined. Forced to use z_score statistics!')
 
 		if self.result_folder is None:
-			self.result_folder=glob.glob( os.path.join(self.result_path, '*.npy') )
+			self.result_folder=[ i for i in glob.glob( os.path.join(self.result_path, '*.npy') ) if 'RSID' not in i]
 
 		self.results['RSID']=np.array([])
 		self.results['p_value']=np.array([])
@@ -399,7 +399,7 @@ class Mapper(object):
 					self.dic[j]=[-1]*(self.n_study+1)
 					self.dic[j][self.n_study]=i
 
-	def load_flip(self,folder):
+	def load_flip(self,folder,erase=False):
 
 		if folder is None:
 			raise ValueError('Mapper is not defined!')
@@ -420,6 +420,8 @@ class Mapper(object):
 				if len_flip!=self.flip[j].shape[0]:
 					raise ValueError('Different length of flip array between studies; used different ref panel!')
 		self.flip=np.array(self.flip).T
+		if erase:
+			self.flip.fill(1)
 
 	def load (self, folder):
 		if folder is None:

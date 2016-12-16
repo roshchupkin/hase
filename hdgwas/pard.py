@@ -53,19 +53,19 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
 
     print ('Time to PD phenotype {} is {} s'.format(np.array(C).shape, t_phen.secs))
 
+    N_snps_read=0
     while True:
-
         with Timer() as t_gen:
-            SNPs_index, keys=MAP.get()
-            if isinstance(SNPs_index, type(None)):
+            genotype=GEN.get_next()
+            if isinstance(genotype, type(None)):
                 np.save(os.path.join(save_path,study_name+'_a_test.npy'), np.concatenate(a_test) )
                 np.save(os.path.join(save_path,study_name+'_metadata.npy'),metadata)
                 if B4_flag:
                     b4=np.concatenate(b4, axis=0)
                     np.save(os.path.join(save_path,study_name+'_b4.npy'),b4)
                 break
-            genotype=GEN.get(SNPs_index[0])
-            flip=MAP.flip[SNPs_index[0],0]
+            flip = MAP.flip[N_snps_read:N_snps_read + genotype.shape[0], 0]
+            N_snps_read += genotype.shape[0]
             flip_index=(flip==-1)
             genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
             genotype=genotype[:,row_index[0]]

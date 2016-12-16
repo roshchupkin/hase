@@ -102,6 +102,7 @@ if __name__=='__main__':
 	parser.add_argument('-effect_intercept', action='store_true', default=False, help='Flag for add study effect to PD regression model')
 	parser.add_argument('-permute_ph', action='store_true', default=False, help='Flag for phenotype permutation')
 	parser.add_argument('-vcf', action='store_true', default=False, help='Flag for VCF data to convert')
+	parser.add_argument('-encoded', action='store_true', default=False, help='Flag to notify HASE that the input data are already encoded')
 	#TODO (low) save genotype after MAF
 	###
 
@@ -227,7 +228,7 @@ if __name__=='__main__':
 		mapper.genotype_names=args.study_name
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
 		mapper.reference_name=args.ref_name
-		mapper.load_flip(args.mapper)
+		mapper.load_flip(args.mapper, erase=args.encoded)
 		mapper.load(args.mapper)
 
 
