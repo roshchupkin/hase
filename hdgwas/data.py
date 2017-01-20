@@ -82,19 +82,18 @@ class PhenPool(object):
 	def __init__(self, folder):
 		self.paths={}
 		self.loaded={}
-		self.keys=[]
 		self.readed={}
 		self.inmem=0
 		self.limit=2
 		self.split_size=None
 		self.folder=folder
-		self.keys=self.folder.data_info.keys()
+		self.keys=self.folder.files
 
 	def link(self, n):
-		r=np.zeros((len(n),2),dtype=np.int)
+		r=np.zeros((len(n),2),dtype=np.int64)
 		for i,ind in enumerate(n):
 			N=ind
-			for j,k in enumerate(self.folder.data_info):
+			for j,k in enumerate(self.keys):
 				N=N-len(self.folder.data_info[k])
 				if N<0:
 					r[i,0]=j
@@ -169,7 +168,7 @@ class Pool(object):
 				f.close()
 		return r
 
-	def get_chunk(self,indices):
+	def get_chunk(self,indices, impute):
 		indices=self.link(indices)
 		indices=np.array(indices)
 		keys, ind = np.unique(indices[:,0], return_inverse=True)
@@ -192,14 +191,14 @@ class Pool(object):
 				result=np.empty((indices.shape[0],l))
 
 			result[(ind==i),:]=r
+		if not impute:
+			if np.sum(result==9)!=0:
+				print ('Imputing missing genotype to mean...')
+				result[np.where(result == 9)]=np.nanmean(result[np.where(result==9)[0], :], axis=1)
 
-		if np.sum(result==9)!=0:
-			print ('Imputing missing genotype to mean...')
-			result[np.where(result == 9)]=np.nanmean(result[np.where(result==9)[0], :], axis=1)
-
-		if np.sum( np.isnan(result) )!=0:
-			print ('Imputing missing genotype to mean...')
-			result[np.where(np.isnan(result))]=np.nanmean(result[np.where(np.isnan(result))[0], :], axis=1)
+			if np.sum( np.isnan(result) )!=0:
+				print ('Imputing missing genotype to mean...')
+				result[np.where(np.isnan(result))]=np.nanmean(result[np.where(np.isnan(result))[0], :], axis=1)
 
 		return result
 
@@ -290,8 +289,11 @@ class Hdf5Data(Data):
 		if type=='PLINK':
 			l=os.listdir(os.path.join(data_path,'genotype'))
 			a,b=h5py.File(os.path.join(data_path,'genotype',l[0]), 'r')['genotype'][...].shape
-			c,d=h5py.File(os.path.join(data_path,'genotype',l[1]), 'r')['genotype'][...].shape
-			self.gen_split_size=np.max((a,c)) #TODO (middle) not efficient
+			try:
+				c,d=h5py.File(os.path.join(data_path,'genotype',l[1]), 'r')['genotype'][...].shape
+				self.gen_split_size=np.max((a,c)) #TODO (middle) not efficient
+			except:
+				self.gen_split_size =a
 
 		print ('There are %d ids' %(self.shape[0]))
 
@@ -307,14 +309,19 @@ class ParData(Data):
 		self.metadata=None
 		self.b4=None
 
+	def check(self): #TODO (middle) place to implement the check of analysis protocol and log summary from PD
+		print ('Number of subjects {}'.format(int(self.a_cov[0,0])))
+
 	def get(self,gen_order=None, phen_order=None,cov_order=None):
 
 		if gen_order is None or phen_order is None or cov_order is None:
 			raise ValueError('PD order is not define!')
 		if isinstance(self.a_inv, type(None)):
-			return self.a_test[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[cov_order,:], self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
+			return self.a_test[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[np.ix_(cov_order,phen_order)], \
+				   self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
 		else:
-			return self.a_inv[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[cov_order,:], self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
+			return self.a_inv[np.ix_(gen_order,np.append(cov_order,self.a_test.shape[1]-1))], self.b_cov[np.ix_(cov_order,phen_order)], \
+				   self.C[phen_order], self.a_cov[np.ix_(cov_order,cov_order)]
 
 class MetaPhenotype(object):
 
@@ -345,12 +352,13 @@ class MetaPhenotype(object):
 					for j in k.folder.files:
 						if j!='info_dic.npy':
 							phen_names=phen_names+list(k.folder.data_info[j])
-					self.mapper.push(phen_names,name=i)
+					self.mapper.push(phen_names,name=i, new_id=False)
 
 				self.keys.append(i)
 
 			self.order, self.phen_names =_check(self.mapper,self.keys)
 			self.n_phenotypes=len(self.order[self.keys[0]])
+			print ('Loaded {} common phenotypes for meta-analysis'.format( self.n_phenotypes  ))
 			self.processed=0
 		else:
 			if not protocol.enable:
@@ -368,16 +376,21 @@ class MetaPhenotype(object):
 			self.processed=finish
 
 		for i,j in enumerate(self.keys):
+
 			if i==0:
 				phenotype=self.pool[j].get_chunk(self.order[j][start:finish])
+				N = np.random.randint(0, phenotype.shape[1], 10)
+				print phenotype.mean(axis=0)[N]
 			else:
-				phenotype=np.vstack((phenotype,self.pool[j].get_chunk(self.order[j][start:finish])))
+				ph_tmp=self.pool[j].get_chunk(self.order[j][start:finish])
+				print ph_tmp.mean(axis=0)[N]
+				phenotype=np.vstack((phenotype,ph_tmp))
 
 		return phenotype, self.phen_names[start:finish]
 
 class MetaParData(object):
 
-	def __init__(self,pd,protocol=None):
+	def __init__(self,pd,study_names,protocol=None):
 
 		def _check(map,keys):
 			values=np.array(map.dic.values() )
@@ -390,18 +403,20 @@ class MetaParData(object):
 			return result
 
 		self.name=None
+		self.study_names=study_names
 		self.phen_mapper=Mapper()
 		self.cov_mapper=Mapper()
 		self.pd={i.folder.name:i for i in pd}
 		keys=[]
 		if protocol is None:
 			for i,k in enumerate(pd):
+				k.folder._data.metadata['names']=[n.split(self.study_names[i]+'_')[1] for n in k.folder._data.metadata['names']]
 				if i==0:
 					self.phen_mapper.fill(k.folder._data.metadata['phenotype'],k.folder.name, reference=False)
 					self.cov_mapper.fill(k.folder._data.metadata['names'],k.folder.name, reference=False)
 				else:
-					self.phen_mapper.push(k.folder._data.metadata['phenotype'],name=k.folder.name)
-					self.cov_mapper.push(k.folder._data.metadata['names'],name=k.folder.name)
+					self.phen_mapper.push(k.folder._data.metadata['phenotype'],name=k.folder.name,new_id=False)
+					self.cov_mapper.push(k.folder._data.metadata['names'],name=k.folder.name, new_id=False)
 				keys.append(k.folder.name)
 
 			self.phen_order =_check(self.phen_mapper,keys)
@@ -410,6 +425,23 @@ class MetaParData(object):
 		if protocol is not None:
 			if not protocol.enable:
 				protocol.parse()
+
+	def check_pd(self, old, new):
+
+		np.set_printoptions(precision=3, suppress=True)
+		print ("*******PD CHECK*********")
+		print ('A covariates...')
+		print old[3] / old[3][0, 0]
+		print new[3] / new[3][0, 0]
+		print ('FREQ TESTs')
+		N=np.random.randint(0, np.min( (old[0].shape[0],new[0].shape[0]) )  ,10)
+		print np.array(old[0][:, 0] / old[3][0, 0]/ 2)[N]
+		print np.array(new[0][:, 0] / new[3][0, 0] / 2)[N]
+		print ('FREQ PHENO')
+		M=np.random.randint(0, np.min( (old[1].shape[1],new[1].shape[1]) )  ,10)
+		print np.array(old[1][0, :] / old[3][0, 0])[M]
+		print np.array(new[1][0, :] / new[3][0, 0])[M]
+		print ("****************")
 
 	def get(self, SNPs_index=None, B4=False, regression_model=None,random_effect_intercept=False ):
 
@@ -433,6 +465,7 @@ class MetaParData(object):
 
 		for i in range(1, len(self.pd)):
 			a,b,c,a_c=self.pd[k[i]].get(gen_order=SNPs_index[i], phen_order=self.phen_order[k[i]], cov_order=self.cov_order[k[i]])
+			self.check_pd([a_test, b_cov, C, a_cov], [a,b,c,a_c])
 			a_test=a_test + a
 			b_cov=b_cov + b
 			C=C+c
@@ -584,7 +617,8 @@ class PLINKHDF5Folder(HDF5Folder):
 		if not os.path.isdir(os.path.join(self.path,'genotype')) or not os.path.isdir(os.path.join(self.path,'probes')) or not os.path.isdir(os.path.join(self.path,'individuals')):
 			raise ValueError('in genotype folder should be /genotype; /probes; /individuals folders')
 
-		self.f_names=os.listdir(os.path.join(self.path,'genotype'))
+		self.f_names=os.listdir(os.path.join(self.path,'genotype')) #TODO (high) remove this extra attribute
+		self.files = self.f_names
 		self.n_files=len(self.f_names)
 		self.processed=-1
 		self.pool.paths={i:os.path.join(self.path,'genotype',str(i)+'_'+self.name +'.h5') for i in range(self.n_files)}
@@ -616,15 +650,22 @@ class PLINKHDF5Folder(HDF5Folder):
 		else:
 			return d[:,index]
 
-	def get(self, index):
+	def get(self, index, impute=True):
 		self.processed+=len(index)
 		result=[]
 		if True:
 		#if self.pool.inmem==self.pool.limit: #TODO (high) check the bellow methods, remove get_data from pool?
-			result=self.pool.get_chunk(index)
+			result=self.pool.get_chunk(index, impute)
 		else:
 			result=[self.pool.get_data(i,j) for i,j in index]
 		return np.array(result)
+
+	def get_info(self,file):
+		info={}
+		f = h5py.File(file, 'r')
+		info['shape']= f['genotype'].shape
+		f.close()
+		return info
 
 class MINIMACHDF5Folder(HDF5Folder):
 
@@ -730,15 +771,16 @@ class NPFolder(Folder):
 			file_path=os.path.dirname(path)
 			self.data_info=np.load(os.path.join(file_path, 'info_dic.npy')).item()
 			self._data.id=self.data_info['id']
+			self.files=[k for k in self.data_info.keys() if k!='id']
 
-		except:
-			raise ValueError('in directory {} should be data info file info_dic.npy!'.format(self.path))
+		except Exception, e:
+			raise ValueError('in directory {} should be data info file info_dic.npy!'.format(self.path) + str(e)  )
 
 
 		try:
 			self.read(self.next())
-		except:
-			raise ValueError("Failed to init NPFolder")
+		except Exception, e:
+			raise ValueError("Failed to init NPFolder;" + str(e))
 
 	def read(self,file):
 

@@ -285,7 +285,7 @@ class Mapper(object):
 		self.genotype_names=[]
 		self.dic=OrderedDict()
 		self.n_study=0
-		self.values=[]
+		self.values=[] # array (N_study, N_keys), where N_keys = number of ID in reference table
 		self.keys=None
 		self.n_keys=None
 		self.processed=0
@@ -301,8 +301,9 @@ class Mapper(object):
 		self.chunk_pool=None
 		self.chunk_size=None
 		self.column_names=[]
-		self.flip=[]
+		self.flip={} # keys - study names; values - array, with length equal to number of probes
 		self.probes=None
+		self.encoded={}
 
 
 	def chunk_pop(self):
@@ -380,7 +381,6 @@ class Mapper(object):
 		if isinstance(self._limit, type(None)):
 			for i,j in enumerate(new_keys):
 				if self.dic.get(j):
-					#self.dic[j][n]=i
 					self.dic[j]=self.dic[j] + [i]
 				else:
 					if new_id:
@@ -388,7 +388,7 @@ class Mapper(object):
 						self.dic[j]=[-1]*(self.n_study+1)
 						self.dic[j][self.n_study]=i
 					else:
-						print ('WARNING! You are pushing ID {} which is not present in reference panel!'.format(j))
+						continue
 		else:
 			for i,j in enumerate(new_keys):
 				if i==self._limit:
@@ -399,7 +399,12 @@ class Mapper(object):
 					self.dic[j]=[-1]*(self.n_study+1)
 					self.dic[j][self.n_study]=i
 
-	def load_flip(self,folder,erase=False):
+		for k in self.dic:
+			if len(self.dic[k])<self.n_study+1:
+				self.dic[k]=self.dic[k] + [-1]
+
+
+	def load_flip(self,folder,encode=None):
 
 		if folder is None:
 			raise ValueError('Mapper is not defined!')
@@ -413,15 +418,15 @@ class Mapper(object):
 			raise ValueError('There is no flip mapper data in folder {}'.format(folder))
 
 		for j,i in enumerate(self.genotype_names):
-			self.flip.append(np.load(os.path.join(folder, 'flip_'+self.reference_name+'_'+i+'.npy')))
-			if j==0:
-				len_flip=self.flip[0].shape[0]
+			if encode is not None:
+				self.encoded[i]=encode[j]
+				if encode[j]==0:
+					self.flip[i]=np.load(os.path.join(folder, 'flip_'+self.reference_name+'_'+i+'.npy'))
+				elif encode[j]==1:
+					flip=np.load(os.path.join(folder, 'flip_'+self.reference_name+'_'+i+'.npy'))
+					self.flip[i] = np.ones(flip.shape[0])
 			else:
-				if len_flip!=self.flip[j].shape[0]:
-					raise ValueError('Different length of flip array between studies; used different ref panel!')
-		self.flip=np.array(self.flip).T
-		if erase:
-			self.flip.fill(1)
+				self.flip[i] = np.load(os.path.join(folder, 'flip_' + self.reference_name + '_' + i + '.npy'))
 
 	def load (self, folder):
 		if folder is None:
@@ -637,10 +642,10 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 
 	def _get_id(notype):
 		if isinstance(notype,type(None)):
-			id_p=np.array([])
+			id_p=np.array([],dtype=np.str)
 		else:
 			if isinstance(notype,tuple):
-				id_p=np.array([])
+				id_p=np.array([],dtype=np.str)
 				for i in notype:
 					if isinstance(i,dict):
 						id_p=np.append(id_p,i['id'])
@@ -688,51 +693,13 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 
 	print ('There are {} common ids'.format(len(common_id)))
 	np.savetxt(os.path.join(os.environ['HASEOUT'],'study_common_id.txt'),common_id, fmt='%s')
+	np.savetxt(os.path.join(os.environ['HASEOUT'], 'gen_id.txt'), index_g, fmt='%s')
+	np.savetxt(os.path.join(os.environ['HASEOUT'], 'phen_id.txt'), index_p, fmt='%s')
+	np.savetxt(os.path.join(os.environ['HASEOUT'], 'cov_id.txt'), index_c, fmt='%s')
 	if len(common_id)==0:
 		exit(0)
 
 	return [index_g,index_p,index_c], np.array(common_id)
-
-
-def merge_pard(pard, SNPs_index,B4=False):
-
-	if len(pard)!=len(SNPs_index):
-		raise ValueError('There are not equal number od PD and SNPs indexes {}!={}'.format(len(pard), len(SNPs_index)))
-
-	a_test, b_cov, C, a_cov = pard[0].get(index=SNPs_index[0])
-
-	if B4:
-		b4=pard[0].folder.data.b4
-
-	for i in range(1, len(pard)):
-
-		a,b,c,a_c=pard[i].get(index=SNPs_index[i])
-
-		a_test=a_test + a
-		b_cov=b_cov + b
-		C=C+c
-		a_cov=a_cov + a_c
-		if B4:
-			b4=b4+pard[i].folder.data.b4
-
-	if B4:
-		return a_test, b_cov, C, a_cov,b4
-	else:
-		return a_test, b_cov, C, a_cov
-
-
-def maf_pard(pard,SNPs_index): #TODO (middle) delete function
-
-	samples=0
-	maf=np.zeros( (SNPs_index[0]) )
-	for j,i in enumerate(pard):
-		n=len(pard.folder._data.metadata['id'])
-		samples+=n
-		maf=maf+n*pard.folder._data.metadata['maf'][SNPs_index[j]]
-
-	maf=maf/np.float(samples)
-	return maf
-
 
 
 def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
@@ -746,15 +713,17 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 	else:
 		if len(genotype)!=len(SNPs_index):
 			raise ValueError('There are not equal number of genotypes and SNPs indexes {}!={}'.format(len(genotype), len(SNPs_index)))
-		gen=genotype[0].get(SNPs_index[0])
+		gen=genotype[0].get(SNPs_index[0],impute=mapper.encoded.get(genotype[0].folder.name,0) )
+		print gen.shape
 		if flip_flag:
-			flip=mapper.flip[SNPs_index[0],0]
+			flip=mapper.flip[genotype[0].folder.name][SNPs_index[0]]
 			flip_index=(flip==-1)
 			gen=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,gen)
 		for i in range(1, len(genotype)):
-			g=genotype[i].get(SNPs_index[i])
+			g=genotype[i].get(SNPs_index[i],impute=mapper.encoded.get(genotype[0].folder.name,0))
+			print g.shape
 			if flip_flag:
-				flip=mapper.flip[SNPs_index[i],i]
+				flip=mapper.flip[genotype[i].folder.name][SNPs_index[i]]
 				flip_index=(flip==-1)
 				g=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,g)
 			gen=np.hstack( (gen,g ) )

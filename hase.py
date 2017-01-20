@@ -6,7 +6,7 @@ if PYTHON_PATH is not None:
 	for i in PYTHON_PATH: sys.path.insert(0,i)
 import h5py
 import tables
-from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_pard, merge_genotype, Reference, maf_pard
+from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_genotype, Reference
 from hdgwas.converter import  GenotypePLINK, GenotypeMINIMAC, GenotypeVCF
 from hdgwas.data import Reader, MetaParData, MetaPhenotype
 from hdgwas.fake import Encoder
@@ -19,12 +19,12 @@ from hdgwas.regression import haseregression
 import pandas as pd
 import time
 from hdgwas.protocol import Protocol
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 HEAD = "*********************************************************************\n"
 HEAD += "* HASE: Framework for efficient high-dimensional association analyses \n"
 HEAD += "* Version {V}\n".format(V=__version__)
-HEAD += "* (C) 2015-2016 Gennady Roshchupkin and Hieab Adams\n"
+HEAD += "* (C) 2015-2017 Gennady Roshchupkin and Hieab Adams\n"
 HEAD += "* Erasmus MC, Rotterdam /  Department of Medical Informatics, Radiology and Epidemiology \n"
 HEAD += "* GNU General Public License v3\n"
 HEAD += "*********************************************************************\n"
@@ -93,6 +93,8 @@ if __name__=='__main__':
 	parser.add_argument('-intercept', type=str, default='y', choices=['y','n'], help='include intercept to regression, default yes')
 
 	parser.add_argument('-maf', type=float, default=0.05, help='MAF for genetics data')
+
+	parser.add_argument('-encoded', nargs='+', type=int, help='Value per every study, 1 - if encoded, 0 - if not')
 	###
 
 	#FLAGS
@@ -102,13 +104,13 @@ if __name__=='__main__':
 	parser.add_argument('-effect_intercept', action='store_true', default=False, help='Flag for add study effect to PD regression model')
 	parser.add_argument('-permute_ph', action='store_true', default=False, help='Flag for phenotype permutation')
 	parser.add_argument('-vcf', action='store_true', default=False, help='Flag for VCF data to convert')
-	parser.add_argument('-encoded', action='store_true', default=False, help='Flag to notify HASE that the input data are already encoded')
+
 	#TODO (low) save genotype after MAF
 	###
 
 	###CLUSTER SETTING
 	parser.add_argument('-cluster', type=str, default='n', choices=['y','n'], help=' Is it parallel cluster job, default no')
-	parser.add_argument('-node', nargs='+',help='number of nodes / this node number, example: 10 2 ')
+	parser.add_argument('-node', nargs='+',type=int,help='number of nodes / this node number, example: 10 2 ')
 	###
 
 	#ADVANCED SETTINGS
@@ -124,6 +126,10 @@ if __name__=='__main__':
 	print args
 	os.environ['HASEOUT']=args.out
 
+	if args.cluster=='y':
+		if args.node is not None:
+			if args.node[1]>args.node[0]:
+				raise ValueError('Node # {} > {} total number of nodes'.format(args.node[1], args.node[0] ))
 
 	################################### CONVERTING ##############################
 
@@ -189,7 +195,7 @@ if __name__=='__main__':
 					if isinstance(genotype, type(None)):
 						break
 
-					flip=mapper.flip[N_snps_read:N_snps_read+genotype.shape[0],0]
+					flip=mapper.flip[args.study_name[0]][N_snps_read:N_snps_read+genotype.shape[0]]
 					N_snps_read+=genotype.shape[0]
 					flip_index=(flip==-1)
 					genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
@@ -228,8 +234,10 @@ if __name__=='__main__':
 		mapper.genotype_names=args.study_name
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
 		mapper.reference_name=args.ref_name
-		mapper.load_flip(args.mapper, erase=args.encoded)
+		mapper.load_flip(args.mapper)
 		mapper.load(args.mapper)
+		mapper.cluster=args.cluster
+		mapper.node=args.node
 
 
 		phen=Reader('phenotype')
@@ -264,7 +272,7 @@ if __name__=='__main__':
 		mapper.genotype_names=args.study_name
 		mapper.reference_name=args.ref_name
 		mapper.load(args.mapper)
-		mapper.load_flip(args.mapper)
+		mapper.load_flip(args.mapper, encode=args.encoded)
 		mapper.cluster=args.cluster
 		mapper.node=args.node
 
@@ -289,7 +297,7 @@ if __name__=='__main__':
 		else:
 			protocol=None
 
-		meta_pard=MetaParData(pard,protocol=protocol)
+		meta_pard=MetaParData(pard,args.study_name,protocol=protocol)
 
 		if np.sum(PD)==0:
 			phen=[]
@@ -306,10 +314,11 @@ if __name__=='__main__':
 				gen.append(Reader('genotype'))
 				gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
 
-			#for i in gen:
-			#	i._data.link()
-			row_index, ids =  study_indexes(phenotype=tuple(i.folder._data for i in phen),genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
 
+			row_index, ids =  study_indexes(phenotype=tuple(i.folder._data for i in phen),genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
+			if row_index[2].shape[0]!=np.sum([i.folder._data.metadata['id'].shape[0] for i in pard]) :
+				raise ValueError('Partial Derivatives covariates have different number of subjects {} than genotype and phenotype {}'.format(row_index[2].shape[0],
+																									np.sum([i.folder._data.metadata['id'].shape[0] for i in pard])))
 		while True:
 			if mapper.cluster=='n':
 				SNPs_index, keys=mapper.get()
@@ -327,7 +336,7 @@ if __name__=='__main__':
 			Analyser.rsid=keys
 			if np.sum(PD)==0:
 				genotype=np.array([])
-				genotype=merge_genotype(gen, SNPs_index, mapper, flip_flag=False)
+				genotype=merge_genotype(gen, SNPs_index, mapper)
 				genotype=genotype[:,row_index[0]]
 
 			#TODO (low) add interaction
@@ -381,18 +390,23 @@ if __name__=='__main__':
 						meta_phen.processed=0
 						print 'All phenotypes processed!'
 						break
+					print ("Merged phenotype shape {}".format(phenotype.shape))
 					#TODO (middle) select phen from protocol
 					phenotype=phenotype[row_index[1],:]
+					print ("Selected phenotype shape {}".format(phenotype.shape))
 					keys=meta_pard.phen_mapper.dic.keys()
 					phen_ind=np.in1d(keys, names)
 					phen_ind_inv=np.in1d(names,keys)
 					if np.sum(phen_ind)==0:
-						print 'There is no common ids in phenotype file {} and PD data!'.format((phen.folder._data.filename))
+						print 'There is no common ids in phenotype files and PD data!'
 						break
+					else:
+						print 'There are {} common ids in phenotype files and PD data!'.format( np.sum(phen_ind)  )
 					C_test=C[phen_ind]
 					b_cov_test=b_cov[:,phen_ind]
 
 					b4 = B4(phenotype,genotype)
+					print ("B4 shape is {}".format(b4.shape))
 					t_stat,SE =HASE(b4, a_inv, b_cov_test, C_test, N_con, DF)
 
 					if mapper.cluster=='y':
@@ -483,7 +497,7 @@ if __name__=='__main__':
 				mapper.n_keys=gen[0].folder._data.names.shape[0]
 				mapper.keys=np.array(gen[0].folder._data.names.tolist())
 				mapper.values=np.array(range(mapper.n_keys)).reshape(-1,1)
-				mapper.flip=np.array([1]*mapper.n_keys).reshape(-1,1)
+				mapper.flip[args.study_name[0]]=np.array([1]*mapper.n_keys)
 				if args.snp_id_exc is not None or args.snp_id_inc is not None:
 					raise ValueError('You can not exclude or include variants to analysis without mapper!')
 			else:
