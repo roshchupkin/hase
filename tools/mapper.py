@@ -78,6 +78,7 @@ if __name__=='__main__':
 			if "CHR" in a.columns and 'bp' in a.columns:
 				ID2CHR=True
 				merge=merge_on['CHR']
+				print ('Merge on CHR/bp')
 			else:
 				if ':' in a.ID.iloc[0] and ':' in a.ID.iloc[1]:
 					CHR=[]
@@ -91,15 +92,21 @@ if __name__=='__main__':
 					if np.max(CHR)<23 and np.min(CHR)>0:
 						a['CHR']=CHR
 						a['bp']=bp
+						a.CHR = a.CHR.astype(np.int64)
+						a.bp = a.bp.astype(np.int64)
 						ID2CHR=True
 						IDconv=True
 						merge=merge_on['CHR']
+						print ('Merge on CHR/bp from ID')
+						print a.head()
 					else:
 						print 'No CHR and bp info...'
 						merge=merge_on['ID']
+						print ('Merge on ID')
 				else:
 					print 'No CHR and bp info...'
 					merge=merge_on['ID']
+					print ('Merge on ID')
 
 		elif IDconv:
 			def f(x):
@@ -107,7 +114,9 @@ if __name__=='__main__':
 				return s[0],s[1]
 			CHR_bp=a.apply(f, axis=1 )
 			a['CHR'],a['bp']=zip(*CHR_bp)
-
+			a.CHR=a.CHR.astype(np.int64)
+			a.bp= a.bp.astype(np.int64)
+			print a.head()
 		a['counter_prob']=np.arange(p_start_i,p_stop_i,dtype='int32')
 
 		reference=Reference()

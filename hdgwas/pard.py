@@ -18,7 +18,6 @@ def merge_PD(path, max_node, study_name):
         if i==1:
             metadata=np.load(os.path.join(path,'node_{}_{}_metadata.npy'.format(i,study_name)) ).item()
             a_test=np.load( os.path.join(path,'node_{}_{}_a_test.npy'.format(i,study_name)  ))
-            print a_test.dtype
             if b4_flag:
                 b4=np.load( os.path.join(path,'node_{}_{}_b4.npy'.format(i,study_name)  ))
 
@@ -26,7 +25,6 @@ def merge_PD(path, max_node, study_name):
         else:
             metadata_tmp=np.load((os.path.join(path,'node_{}_{}_metadata.npy'.format(i,study_name)) )).item()
             a_test_tmp=np.load( (os.path.join(path,'node_{}_{}_a_test.npy'.format(i,study_name)  )))
-            print a_test_tmp.dtype
             metadata['MAF']=metadata['MAF'] + metadata_tmp['MAF']
             a_test=np.vstack((  a_test,   a_test_tmp     ) )
             if b4_flag:
