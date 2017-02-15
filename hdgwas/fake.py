@@ -95,12 +95,12 @@ class Encoder(object):
 		if isinstance(save_path,type(None)) or  not os.path.isdir(save_path):
 			raise ValueError('There is no such path or directory {}'.format(save_path))
 
-		self.h5_gen_file = tables.openFile(
+		self.h5_gen_file = tables.open_file(
 			os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name +'.h5'), 'w', title='encode_genotype')
 		self.hdf5_iter+=1
 
 		atom = tables.Float64Atom()
-		self.genotype = self.h5_gen_file.createCArray(self.h5_gen_file.root, 'genotype', atom,
+		self.genotype = self.h5_gen_file.create_carray(self.h5_gen_file.root, 'genotype', atom,
 													  (data.shape),
 													  title='Genotype', filters=self.pytable_filters)
 		self.genotype[:] = data
