@@ -92,7 +92,7 @@ if __name__=='__main__':
 
 	parser.add_argument('-intercept', type=str, default='y', choices=['y','n'], help='include intercept to regression, default yes')
 
-	parser.add_argument('-maf', type=float, default=0.05, help='MAF for genetics data')
+	parser.add_argument('-maf', type=float, default=0.0, help='MAF for genetics data')
 
 	parser.add_argument('-encoded', nargs='+', type=int, help='Value per every study, 1 - if encoded, 0 - if not')
 	###
@@ -201,7 +201,7 @@ if __name__=='__main__':
 					genotype=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,genotype)
 					genotype=genotype[:,row_index[0]]
 					encode_genotype=e.encode(genotype, data_type='genotype')
-					e.save_hdf5(encode_genotype,os.path.join(args.out, 'encode_genotype' ) )
+					e.save_hdf5(encode_genotype,os.path.join(args.out, 'encode_genotype' ),info= gen.folder , index=row_index[0] )
 					encode_genotype=None
 					gc.collect()
 
@@ -214,9 +214,9 @@ if __name__=='__main__':
 						break
 					encode_phenotype=e.encode(phenotype, data_type='phenotype')
 					if phen.folder.format=='.npy':
-						e.save_npy(encode_phenotype,save_path=os.path.join(args.out, 'encode_phenotype'),info=phen.folder)
+						e.save_npy(encode_phenotype,save_path=os.path.join(args.out, 'encode_phenotype'),info=phen.folder, index=row_index[1])
 					if phen.folder.format in ['.csv', '.txt']:
-						e.save_csv(encode_phenotype,save_path=os.path.join(args.out, 'encode_phenotype'),info=phen.folder)
+						e.save_csv(encode_phenotype,save_path=os.path.join(args.out, 'encode_phenotype'),info=phen.folder, index=row_index[1] )
 					encode_phenotype=None
 					gc.collect()
 			if phen.folder.format=='.npy':
@@ -384,7 +384,7 @@ if __name__=='__main__':
 
 				while True:
 					phenotype=np.array([])
-					phenotype, names = meta_phen.get()
+					phenotype, phen_names = meta_phen.get()
 
 					if isinstance(phenotype, type(None)):
 						meta_phen.processed=0
@@ -395,13 +395,13 @@ if __name__=='__main__':
 					phenotype=phenotype[row_index[1],:]
 					print ("Selected phenotype shape {}".format(phenotype.shape))
 					keys=meta_pard.phen_mapper.dic.keys()
-					phen_ind=np.in1d(keys, names)
-					phen_ind_inv=np.in1d(names,keys)
-					if np.sum(phen_ind)==0:
+					phen_ind_dic = { k:i for i,k in enumerate(keys) }
+					phen_ind=np.array([phen_ind_dic.get(i,-1) for i in phen_names] )
+					if np.sum(phen_ind==-1)==len(phen_ind):
 						print 'There is no common ids in phenotype files and PD data!'
 						break
 					else:
-						print 'There are {} common ids in phenotype files and PD data!'.format( np.sum(phen_ind)  )
+						print 'There are {} common ids in phenotype files and PD data!'.format( np.sum(phen_ind!=-1)  )
 					C_test=C[phen_ind]
 					b_cov_test=b_cov[:,phen_ind]
 
@@ -417,7 +417,7 @@ if __name__=='__main__':
 					Analyser.SE=SE
 					Analyser.threshold=args.thr
 					Analyser.out=args.out
-					Analyser.save_result(  names[phen_ind_inv] )
+					Analyser.save_result(  phen_names[(phen_ind!=-1) ] )
 
 					t_stat=None
 					Analyser.t_stat=None
