@@ -60,11 +60,11 @@ def genotype_VCF2hdf5(data_path,id, save_path, study_name):
 	data=df.as_matrix()
 	print data.shape
 	print 'Saving chunk...{}'.format(os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'))
-	h5_gen_file = tables.openFile(
+	h5_gen_file = tables.open_file(
 		os.path.join(save_path,'genotype',str(id)+'_'+study_name+'.h5'), 'w', title=study_name)
 
 	atom = tables.Float16Atom()
-	genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
+	genotype = h5_gen_file.create_earray(h5_gen_file.root, 'genotype', atom,
 										(data.shape),
 										title='Genotype',
 										filters=tables.Filters(complevel=9, complib='zlib'))

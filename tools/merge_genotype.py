@@ -67,15 +67,15 @@ if __name__ == '__main__':
 		data=merge_genotype(gen, SNPs_index) #TODO (high) add mapper
 		print data.shape
 		if args.cluster=='n':
-			h5_gen_file = tables.openFile(
+			h5_gen_file = tables.open_file(
 				os.path.join(args.out,str(hdf5_iter)+'_'+h5_name+'.h5'), 'w', title=args.save_name)
 		else:#TODO (high) check!
-			h5_gen_file = tables.openFile(
+			h5_gen_file = tables.open_file(
 				os.path.join(args.out,str(chunk[0])+'_' +str(chunk[1])+'_'+h5_name+'.h5'), 'w', title=args.save_name)
 		hdf5_iter+=1
 
 		atom = tables.Int8Atom()  # TODO (low) check data format
-		genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
+		genotype = h5_gen_file.create_carray(h5_gen_file.root, 'genotype', atom,
 											(data.shape),
 											title='Genotype',
 											filters=pytable_filter)

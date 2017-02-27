@@ -45,14 +45,14 @@ class GenotypeHDF5(Genotype):
 			return
 		else:
 			if type=='pr':
-				self.h5_pr_file = tables.openFile(os.path.join(self.out,type_dic[type][0],self.h5_name), 'w',
+				self.h5_pr_file = tables.open_file(os.path.join(self.out,type_dic[type][0],self.h5_name), 'w',
 												  title=self.file_name)
 				self.h5_pr_file.close() #need to close file before join data
 			elif type=='ind':
-				self.h5_ind_file = tables.openFile(os.path.join(self.out,type_dic[type][0],self.h5_name), 'w',
+				self.h5_ind_file = tables.open_file(os.path.join(self.out,type_dic[type][0],self.h5_name), 'w',
 												   title=self.file_name)
 			elif type=='gen':
-				self.h5_gen_file = tables.openFile(os.path.join(self.out,type_dic[type][0],str(self.gen_iter)+'_'+self.h5_name),
+				self.h5_gen_file = tables.open_file(os.path.join(self.out,type_dic[type][0],str(self.gen_iter)+'_'+self.h5_name),
 												   'w', title=self.file_name)
 				self.gen_iter+=1
 
@@ -134,7 +134,7 @@ class GenotypePLINK(GenotypeHDF5):
 
 			self.write_data('gen')
 			atom = tables.Int8Atom()
-			self.genotype = self.h5_gen_file.createCArray(self.h5_gen_file.root, 'genotype', atom,
+			self.genotype = self.h5_gen_file.create_carray(self.h5_gen_file.root, 'genotype', atom,
 														  (G.shape),
 														  title='Genotype', filters=self.pytable_filters)
 			with Timer() as t:
@@ -190,11 +190,11 @@ class GenotypeMINIMAC(object):
 
 	def save_hdf5_chunk(self,data,out,name):
 		print 'Saving chunk...{}'.format(os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'))
-		h5_gen_file = tables.openFile(
+		h5_gen_file = tables.open_file(
 			os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
 
 		atom = tables.Float16Atom()  # TODO (low) check data format
-		genotype = h5_gen_file.createCArray(h5_gen_file.root, 'genotype', atom,
+		genotype = h5_gen_file.create_carray(h5_gen_file.root, 'genotype', atom,
 											(data.shape),
 											title='Genotype',
 											filters=self.pytable_filter)
