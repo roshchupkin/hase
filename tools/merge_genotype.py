@@ -29,69 +29,71 @@ print args
 
 if __name__ == '__main__':
 
-	mapper=Mapper(args.mapper_name)
-	mapper.load(args.mapper)
-	mapper.chunk_size=args.split
+	print ('Not implemented!')
 
-
-	hdf5_iter=0
-	h5_name=args.save_name
-	pytable_filter=tables.Filters(complevel=9, complib='zlib')
-	gen=[]
-	for i,j in enumerate(args.genotype):
-		gen.append(Reader('genotype'))
-		gen[i].start(j,hdf5=True, study_name=args.study_name[i], ID=False)
-
-	RSID=[]
-	SUB_ID=[]
-	for i in gen:
-		SUB_ID.append(i.folder._data.get_id())
-	mapper.cluster=args.cluster
-	mapper.node=args.node
-
-	while True:
-		if args.cluster=='n':
-			SNPs_index, keys=mapper.get_next()
-		else:
-			chunk=mapper.chunk_pop()
-			if chunk is None:
-				SNPs_index=None
-				break
-			print chunk
-			SNPs_index, keys=mapper.get_chunk(chunk)
-
-		if SNPs_index is None:
-			break
-		RSID.append(keys)
-
-		data=merge_genotype(gen, SNPs_index) #TODO (high) add mapper
-		print data.shape
-		if args.cluster=='n':
-			h5_gen_file = tables.open_file(
-				os.path.join(args.out,str(hdf5_iter)+'_'+h5_name+'.h5'), 'w', title=args.save_name)
-		else:#TODO (high) check!
-			h5_gen_file = tables.open_file(
-				os.path.join(args.out,str(chunk[0])+'_' +str(chunk[1])+'_'+h5_name+'.h5'), 'w', title=args.save_name)
-		hdf5_iter+=1
-
-		atom = tables.Int8Atom()  # TODO (low) check data format
-		genotype = h5_gen_file.create_carray(h5_gen_file.root, 'genotype', atom,
-											(data.shape),
-											title='Genotype',
-											filters=pytable_filter)
-		genotype[:] = data
-		h5_gen_file.close()
-		genotype=None
-		data=None
-		gc.collect()
-		print hdf5_iter
-
-	RSID=np.array(RSID)
-	SUB_ID=np.array(SUB_ID)
-	if args.cluster=='n':
-		np.save(os.path.join(args.out,'RSID.npy'),RSID)
-		np.save(os.path.join(args.out,'SUB_ID.npy'),SUB_ID)
-
-	else:
-		np.save(os.path.join(args.out,str(args.node[1])+'_RSID.npy'),RSID)
-		np.save(os.path.join(args.out,str(args.node[1])+'_SUB_ID.npy'),SUB_ID)
+	# mapper=Mapper(args.mapper_name)
+	# mapper.load(args.mapper)
+	# mapper.chunk_size=args.split
+    #
+    #
+	# hdf5_iter=0
+	# h5_name=args.save_name
+	# pytable_filter=tables.Filters(complevel=9, complib='zlib')
+	# gen=[]
+	# for i,j in enumerate(args.genotype):
+	# 	gen.append(Reader('genotype'))
+	# 	gen[i].start(j,hdf5=True, study_name=args.study_name[i], ID=False)
+    #
+	# RSID=[]
+	# SUB_ID=[]
+	# for i in gen:
+	# 	SUB_ID.append(i.folder._data.get_id())
+	# mapper.cluster=args.cluster
+	# mapper.node=args.node
+    #
+	# while True:
+	# 	if args.cluster=='n':
+	# 		SNPs_index, keys=mapper.get_next()
+	# 	else:
+	# 		chunk=mapper.chunk_pop()
+	# 		if chunk is None:
+	# 			SNPs_index=None
+	# 			break
+	# 		print chunk
+	# 		SNPs_index, keys=mapper.get_chunk(chunk)
+    #
+	# 	if SNPs_index is None:
+	# 		break
+	# 	RSID.append(keys)
+    #
+	# 	data=merge_genotype(gen, SNPs_index) #TODO (high) add mapper
+	# 	print data.shape
+	# 	if args.cluster=='n':
+	# 		h5_gen_file = tables.open_file(
+	# 			os.path.join(args.out,str(hdf5_iter)+'_'+h5_name+'.h5'), 'w', title=args.save_name)
+	# 	else:#TODO (high) check!
+	# 		h5_gen_file = tables.open_file(
+	# 			os.path.join(args.out,str(chunk[0])+'_' +str(chunk[1])+'_'+h5_name+'.h5'), 'w', title=args.save_name)
+	# 	hdf5_iter+=1
+    #
+	# 	atom = tables.Int8Atom()  # TODO (low) check data format
+	# 	genotype = h5_gen_file.create_carray(h5_gen_file.root, 'genotype', atom,
+	# 										(data.shape),
+	# 										title='Genotype',
+	# 										filters=pytable_filter)
+	# 	genotype[:] = data
+	# 	h5_gen_file.close()
+	# 	genotype=None
+	# 	data=None
+	# 	gc.collect()
+	# 	print hdf5_iter
+    #
+	# RSID=np.array(RSID)
+	# SUB_ID=np.array(SUB_ID)
+	# if args.cluster=='n':
+	# 	np.save(os.path.join(args.out,'RSID.npy'),RSID)
+	# 	np.save(os.path.join(args.out,'SUB_ID.npy'),SUB_ID)
+    #
+	# else:
+	# 	np.save(os.path.join(args.out,str(args.node[1])+'_RSID.npy'),RSID)
+	# 	np.save(os.path.join(args.out,str(args.node[1])+'_SUB_ID.npy'),SUB_ID)
