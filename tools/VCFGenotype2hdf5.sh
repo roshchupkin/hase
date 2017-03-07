@@ -48,7 +48,7 @@ get_vcf_chunk(){
                 echo "use ${3}"
                     zcat -f ${GENOTYPE_DIR}/${file} | awk 'BEGIN{FS="\t"}/^[^#]/{print }' | cut -f10-  | sed -n "${BEGIN},${END}p;${END}q" | awk -v ind=$4 'BEGIN{FS="\t"}{R="";for (i=1;i<=NF;i++){split($i,a,":");if(a[ind]=="."){a[ind]=-7};if(i==1){R=2-a[ind]}else{R=R"\t"2-a[ind]} };print R} '  >> ${SAVE_DIR}/chunk_${START}_${FINISH}.txt
                 fi
-                get_minimac_chunk $(($iter + 1)) ${2} $3 $4
+                get_vcf_chunk $(($iter + 1)) ${2} $3 $4
 
                 return 0
             fi
