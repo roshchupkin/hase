@@ -298,7 +298,7 @@ class GenotypeMINIMAC(object):
 			shutil.move(os.path.join(out,'SUB_FAM.txt'), os.path.join(out,'tmp_files','SUB_FAM.txt') )
 			shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )
 
-		os.remove(os.path.join(out,'files_order.txt'))
+		shutil.move(os.path.join(out,'files_order.txt'),os.path.join(out,'tmp_files','files_order.txt'))
 
 
 	def summary(self):
@@ -372,4 +372,4 @@ class GenotypeVCF(object):
 		shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )
 		shutil.move(os.path.join(out, 'snps_count.txt'), os.path.join(out, 'tmp_files', 'snps_count.txt'))
 
-		os.remove(os.path.join(out,'files_order.txt'))
+		shutil.move(os.path.join(out, 'files_order.txt'), os.path.join(out, 'tmp_files', 'files_order.txt'))
