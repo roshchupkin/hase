@@ -133,6 +133,10 @@ if __name__=='__main__':
 
 	################################### CONVERTING ##############################
 
+	if not os.path.isdir(args.out):
+		print "Creating output folder {}".format(args.out)
+		os.mkdir(args.out)
+
 	if args.mode=='converting':
 
 		#ARG_CHECKER.check(args,mode='converting')
