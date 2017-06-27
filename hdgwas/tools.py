@@ -34,6 +34,32 @@ class Timer(object):
 		if self.verbose:
 			print 'elapsed time: %f ms' % self.msecs
 
+def timing(f):
+	def wrap(*args,**kwargs):
+		time1 = time.time()
+		ret = f(*args,**kwargs)
+		time2 = time.time()
+		print '%s function took %0.3f s' % (f.func_name, (time2 - time1) )
+		return ret
+
+	return wrap
+
+
+def check_np():
+
+	for i in ['atlas_blas_info', 'openblas_info', 'lapack_opt_info',
+			  'atlas_info', 'lapack_mkl_info', 'blas_mkl_info',
+			  'atlas_blas_info', 'mkl_info']:
+		try:
+			if len(getattr(np.__config__, i)) >0:
+				print('Numpy linked to {}'.format(i))
+				return 0
+		except:
+			continue
+
+	raise ValueError('NO BLAS/LAPACK/MKL found!'
+					 'To restart with slow speed use -np False')
+
 
 ########################################################################
 ########################################################################
@@ -342,7 +368,7 @@ class Mapper(object):
 		else:
 			return None
 
-
+	@timing
 	def fill(self, keys, name ,repeats=False, reference=False):#TODO (middle) remove
 		self.reference=reference
 		self.reference_name=name
@@ -366,6 +392,7 @@ class Mapper(object):
 					break
 				self.dic[j]=[i]
 
+	@timing
 	def push(self, new_keys,name=None, new_id=True):#TODO (middle) remove
 		if not self.reference and len(self.dic)==0:
 			raise ValueError('You should fill mapper first with ref panel or your own rsids!')

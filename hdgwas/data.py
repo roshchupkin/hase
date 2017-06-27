@@ -10,7 +10,7 @@ from numpy import genfromtxt
 from subprocess import Popen,PIPE
 import bitarray as ba
 import subprocess
-from hdgwas.tools import Mapper
+from hdgwas.tools import Mapper, timing,Timer
 import glob
 import shutil
 
@@ -89,6 +89,7 @@ class PhenPool(object):
 		self.folder=folder
 		self.keys=self.folder.files
 
+	@timing
 	def link(self, n):
 		r=np.zeros((len(n),2),dtype=np.int64)
 		for i,ind in enumerate(n):
@@ -101,13 +102,13 @@ class PhenPool(object):
 					break
 		return r
 
-
+	@timing
 	def get_chunk(self,indices):
 		indices=self.link(indices)
 		indices=np.array(indices)
 		keys, ind = np.unique(indices[:,0], return_inverse=True)
 		result=None
-		gc.collect()
+		#gc.collect()
 		for i,k in enumerate(keys):
 			r=None
 			if k in self.loaded:
@@ -325,21 +326,38 @@ class ParData(Data):
 
 class MetaPhenotype(object):
 
-	def __init__(self, phen, protocol=None):
-
-		def _check(map,keys):
+	def __init__(self, phen, protocol=None, include=None, exclude=None):
+		@timing
+		def _check(map,keys,index=None):
 			values=np.array(map.dic.values() )
 			result={}
 			r=(values==-1).any(axis=1)
+			if index is not None:
+				r[np.where(index==False)[0] ]=True
 			if np.sum(r)==values.shape[0]:
 				raise ValueError('There is no common names between studies')
 			for i,k in enumerate(keys):
 				result[k]=values[~r,i]
 			return result, np.array(map.dic.keys())[~r]
-		self.chunk_size=1000
+		self.chunk_size=100000
+		self.exclude=None
+		self.include=None
 		self.name=None
 		self.mapper=Mapper()
 		self.keys=[]
+		self.keep_index=None
+		if include is not None:
+			self.include = pd.DataFrame.from_csv(include, index_col=None)
+			print 'Include:'
+			print self.include.head()
+			if 'ID' not in self.include.columns:
+				raise ValueError('{} table does not have ID column for phenotypes'.format(include))
+		if exclude is not None:
+			self.exclude = pd.DataFrame.from_csv(exclude, index_col=None)
+			print 'Exclude:'
+			print self.exclude.head()
+			if 'ID' not in self.exclude.columns:
+				raise ValueError('{} table does not have ID column for phenotypes'.format(exclude))
 		if protocol is None:
 			for i,k in enumerate(phen):
 				phen_names=[]
@@ -355,8 +373,13 @@ class MetaPhenotype(object):
 					self.mapper.push(phen_names,name=i, new_id=False)
 
 				self.keys.append(i)
-
-			self.order, self.phen_names =_check(self.mapper,self.keys)
+			if self.exclude is not None or self.include is not None:
+				phen_names=pd.Series(self.mapper.dic.keys())
+				phen_names=phen_names[phen_names.isin(self.include.ID)] if self.include is not None else phen_names
+				phen_names = phen_names[~phen_names.isin(self.exclude.ID)] if self.exclude is not None else phen_names
+				self.keep_index=pd.Series(self.mapper.dic.keys()).isin(phen_names)
+			print np.sum(self.keep_index)
+			self.order, self.phen_names =_check(self.mapper,self.keys,index=self.keep_index)
 			self.n_phenotypes=len(self.order[self.keys[0]])
 			print ('Loaded {} common phenotypes for meta-analysis'.format( self.n_phenotypes  ))
 			self.processed=0
@@ -384,7 +407,9 @@ class MetaPhenotype(object):
 			else:
 				ph_tmp=self.pool[j].get_chunk(self.order[j][start:finish])
 				print ph_tmp.mean(axis=0)[N]
-				phenotype=np.vstack((phenotype,ph_tmp))
+				with Timer() as t:
+					phenotype=np.vstack((phenotype,ph_tmp))
+				print 'vstack takes {}s'.format(t.secs)
 
 		return phenotype, self.phen_names[start:finish]
 

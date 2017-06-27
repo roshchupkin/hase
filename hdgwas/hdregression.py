@@ -2,14 +2,14 @@
 import numpy as np
 import os
 import sys
-from tools import Timer, timer
+from tools import Timer, timer, timing
 import scipy.linalg.blas as FB
 import h5py
 import gc
 import tables
 
 
-#@timer
+@timing
 def A_covariates(covariates, intercept=True):
 
 	'''
@@ -24,7 +24,7 @@ def A_covariates(covariates, intercept=True):
 		covariates=np.hstack((I,covariates))
 	a_cov=np.dot(covariates.T,covariates)
 	return a_cov
-
+@timing
 def B4(phenotype,genotype):
 	b4=np.tensordot(genotype, phenotype, axes=([1], [0]))
 	return b4
@@ -33,7 +33,7 @@ def interaction(genotype,factor):
 	g=genotype*factor.T
 	return g
 
-#@timer
+@timing
 def A_tests(covariates, genotype, intercept=True): #TODO (low) extend for any number of tests in model
 	'''
 	:param covariates: (n_subjects, n_covariates) - only constant covariates should be included (age, sex, ICV etc)
@@ -52,7 +52,7 @@ def A_tests(covariates, genotype, intercept=True): #TODO (low) extend for any nu
 		tr=np.sum(np.power(genotype,2), axis=1).reshape(-1,1)
 		return np.hstack(( sec, tr))
 
-#@timer
+@timing
 def B_covariates(covariates, phenotype, intercept=True):
 
 	S,N=covariates.shape
@@ -66,7 +66,7 @@ def B_covariates(covariates, phenotype, intercept=True):
 		return b_cov
 
 
-#@timer
+@timing
 def A_inverse(a_covariates, a_test): #TODO (low) extend for any number of tests in model
 
 	A_inv=[]
@@ -84,12 +84,12 @@ def A_inverse(a_covariates, a_test): #TODO (low) extend for any number of tests 
 
 	return np.array(A_inv)
 
-#@timer
+@timing
 def C_matrix(phenotype):
 	C=np.einsum('ij,ji->i', phenotype.T, phenotype)
 	return C
 
-#@timer
+@timing
 def HASE(b4, A_inverse, b_cov, C, N_con, DF):
 
 	with Timer() as t:

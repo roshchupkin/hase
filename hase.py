@@ -1,18 +1,18 @@
 import sys
 import os
+import numpy as np
 from config import MAPPER_CHUNK_SIZE, basedir,CONVERTER_SPLIT_SIZE, PYTHON_PATH
 os.environ['HASEDIR']=basedir
 if PYTHON_PATH is not None:
 	for i in PYTHON_PATH: sys.path.insert(0,i)
 import h5py
 import tables
-from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_genotype, Reference
+from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_genotype, Reference, timing, check_np
 from hdgwas.converter import  GenotypePLINK, GenotypeMINIMAC, GenotypeVCF
 from hdgwas.data import Reader, MetaParData, MetaPhenotype
 from hdgwas.fake import Encoder
 from hdgwas.hdregression import HASE, A_covariates, A_tests, B_covariates, C_matrix, A_inverse,B4
 import argparse
-import numpy as np
 import gc
 from hdgwas.pard import partial_derivatives
 from hdgwas.regression import haseregression
@@ -83,7 +83,8 @@ if __name__=='__main__':
 	#ADDITIONAL SETTINGS
 	parser.add_argument("-snp_id_inc", type=str, help="path to file with SNPs id to include to analysis")
 	parser.add_argument("-snp_id_exc", type=str, help="path to file with SNPs id to exclude from analysis")
-
+	parser.add_argument("-ph_id_inc", type=str, help="path to file with phenotype id to exclude from analysis")
+	parser.add_argument("-ph_id_exc", type=str, help="path to file with phenotype id to exclude from analysis")
 
 	#parser.add_argument("-ind_id_inc", type=str, help="path to file with individuals id to include to analysis") #TODO (low)
 	#parser.add_argument("-ind_id_exc", type=str, help="path to file with individuals id to exclude from analysis")#TODO (low)
@@ -104,6 +105,7 @@ if __name__=='__main__':
 	parser.add_argument('-effect_intercept', action='store_true', default=False, help='Flag for add study effect to PD regression model')
 	parser.add_argument('-permute_ph', action='store_true', default=False, help='Flag for phenotype permutation')
 	parser.add_argument('-vcf', action='store_true', default=False, help='Flag for VCF data to convert')
+	parser.add_argument('-np', action='store_true', default=True, help='Check BLAS/LAPACK/MKL')
 
 	#TODO (low) save genotype after MAF
 	###
@@ -136,6 +138,9 @@ if __name__=='__main__':
 	if not os.path.isdir(args.out):
 		print "Creating output folder {}".format(args.out)
 		os.mkdir(args.out)
+
+	if args.np:
+		check_np()
 
 	if args.mode=='converting':
 
@@ -275,6 +280,20 @@ if __name__=='__main__':
 		mapper.chunk_size=MAPPER_CHUNK_SIZE
 		mapper.genotype_names=args.study_name
 		mapper.reference_name=args.ref_name
+		if args.snp_id_inc is not None:
+			mapper.include = pd.DataFrame.from_csv(args.snp_id_inc, index_col=None)
+			print 'Include:'
+			print mapper.include.head()
+			if 'ID' not in mapper.include.columns and (
+					'CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
+				raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_inc))
+		if args.snp_id_exc is not None:
+			mapper.exclude = pd.DataFrame.from_csv(args.snp_id_exc, index_col=None)
+			print 'Exclude:'
+			print mapper.exclude.head()
+			if 'ID' not in mapper.exclude.columns and (
+					'CHR' not in mapper.exclude.columns or 'bp' not in mapper.exclude.columns):
+				raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_exc))
 		mapper.load(args.mapper)
 		mapper.load_flip(args.mapper, encode=args.encoded)
 		mapper.cluster=args.cluster
@@ -309,7 +328,7 @@ if __name__=='__main__':
 				phen.append(Reader('phenotype'))
 				phen[i].start(j)
 
-			meta_phen=MetaPhenotype(phen)
+			meta_phen=MetaPhenotype(phen,include=args.ph_id_inc,exclude=args.ph_id_exc)
 
 			N_studies=len(args.genotype)
 
@@ -340,9 +359,10 @@ if __name__=='__main__':
 			Analyser.rsid=keys
 			if np.sum(PD)==0:
 				genotype=np.array([])
-				genotype=merge_genotype(gen, SNPs_index, mapper)
-				genotype=genotype[:,row_index[0]]
-
+				with Timer() as t_g:
+					genotype=merge_genotype(gen, SNPs_index, mapper)
+					genotype=genotype[:,row_index[0]]
+				print "Time to get G {}s".format(t_g.secs)
 			#TODO (low) add interaction
 
 			a_test=np.array([])
@@ -357,10 +377,13 @@ if __name__=='__main__':
 			else:
 				regression_model=None
 
-			if np.sum(PD)==0:
-				a_test, b_cov, C, a_cov = meta_pard.get( SNPs_index=SNPs_index, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
-			else:
-				a_test, b_cov, C, a_cov, b4 = meta_pard.get( SNPs_index=SNPs_index, B4=True, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
+			with Timer() as t_pd:
+				if np.sum(PD)==0:
+					a_test, b_cov, C, a_cov = meta_pard.get( SNPs_index=SNPs_index, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
+				else:
+					a_test, b_cov, C, a_cov, b4 = meta_pard.get( SNPs_index=SNPs_index, B4=True, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
+
+			print "Time to get PD {}s".format(t_pd.secs)
 
 			MAF=meta_pard.maf_pard(SNPs_index=SNPs_index)
 
@@ -388,7 +411,9 @@ if __name__=='__main__':
 
 				while True:
 					phenotype=np.array([])
-					phenotype, phen_names = meta_phen.get()
+					with Timer() as t_ph:
+						phenotype, phen_names = meta_phen.get()
+					print "Time to get PH {}s".format(t_ph.secs)
 
 					if isinstance(phenotype, type(None)):
 						meta_phen.processed=0
