@@ -77,7 +77,7 @@ class GenotypePLINK(GenotypeHDF5):
 
 		individuals=self.reader.folder.get_fam()
 
-		self.h5_ind_file.createTable(self.h5_ind_file.root, 'individuals', individuals,
+		self.h5_ind_file.create_table(self.h5_ind_file.root, 'individuals', individuals,
 									 title='Individuals', filters=self.pytable_filters)
 		self.h5_ind_file.root.individuals[:] = individuals
 		self.individuals = self.h5_ind_file.root.individuals[:]
