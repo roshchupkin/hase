@@ -768,8 +768,8 @@ def check_converter(converted_folder, study_name):
 		probes = pd.HDFStore(os.path.join(converted_folder, 'probes',study_name + '.h5'), 'r')
 		N_probs=probes.get_storer('probes').nrows
 
-		if df_tmp is not None and int(df_tmp[0][0])!=N_probs:
-			print ("Converted number of variants {} diff from  original number {}".format(N_probs,df_tmp[0][0] ))
+		if df_tmp is not None and int(df_tmp[0][1])!=N_probs:
+			print ("Converted number of variants {} diff from  original number {}".format(N_probs,df_tmp[0][1] ))
 
 		else:
 			print ('Converted number of variants {}'.format(N_probs))
