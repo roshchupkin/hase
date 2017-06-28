@@ -41,8 +41,9 @@ N_SNPs=`cat ${SAVE_DIR}/${SNPs_INFO} | wc -l `
 
 
 echo "There are ${N_SUB} subjects in this genotype data"
-echo "There are ${N_SNPs} variance in this genotype data"
-
+echo "There are ${N_SNPs} variants in this genotype data"
+echo ${N_SUB} >> ${SAVE_DIR}/info.txt
+echo ${N_SNPs} >> ${SAVE_DIR}/info.txt
 
 python ${HASEDIR}/tools/VCF2hdf5.py -flag probes  -data ${SAVE_DIR}/${SNPs_INFO} -out ${SAVE_DIR} -study_name ${STUDYNAME}
 python ${HASEDIR}/tools/VCF2hdf5.py -flag individuals  -data ${SAVE_DIR}/${SUBJECT_ID_FILE} -out ${SAVE_DIR} -study_name ${STUDYNAME}

@@ -6,7 +6,7 @@ if PYTHON_PATH is not None:
 	for i in PYTHON_PATH: sys.path.insert(0,i)
 import h5py
 import tables
-from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_genotype, Reference
+from  hdgwas.tools import Timer, Checker, study_indexes, Mapper,HaseAnalyser, merge_genotype, Reference, check_converter
 from hdgwas.converter import  GenotypePLINK, GenotypeMINIMAC, GenotypeVCF
 from hdgwas.data import Reader, MetaParData, MetaPhenotype
 from hdgwas.fake import Encoder
@@ -165,6 +165,8 @@ if __name__=='__main__':
 				G.VCF2hdf5(args.out)
 			else:
 				raise ValueError('Genotype data should be in PLINK/MINIMAC/VCF format and alone in folder')
+
+		check_converter(args.out,args.study_name[0])
 		print ('Time to convert all data: {} sec'.format(t.secs))
 
 	################################### ENCODING ##############################

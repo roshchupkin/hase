@@ -730,6 +730,70 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 		return gen
 
 
+def check_converter(converted_folder, study_name):
+	l_ind = os.listdir(  os.path.join(converted_folder, 'individuals')  )
+	l_probes = os.listdir(os.path.join(converted_folder, 'probes'))
+	l_genotype = os.listdir(os.path.join(converted_folder, 'genotype'))
+
+	if os.path.isdir(os.path.join(converted_folder, 'tmp_files')):
+		l_tmp=os.listdir(os.path.join(converted_folder, 'tmp_files'))
+		if len(l_tmp)==0:
+			print ('There is no tmp files!')
+		else:
+			try:
+				df_tmp=pd.read_csv( os.path.join(converted_folder, 'tmp_files', 'info.txt') , header=None)
+			except:
+				df_tmp=None
+
+	else:
+		df_tmp=None
+
+	if len(l_ind)!=1 or '.h5' not in l_ind[0]:
+		print ('There should be 1 hdf5 file in individuals folder!')
+
+	else:
+		df_ind = pd.read_hdf(os.path.join(converted_folder, 'individuals',study_name + '.h5'),'individuals')
+		if df_tmp is not None and int(df_tmp[0][0])!=df_ind.shape[0]:
+			print ('Converted number of IDs {} != {} original number'.format( df_ind.shape[0] , df_tmp[0][0] ))
+		else:
+			print ('Number of individuals {} '.format(df_ind.shape[0]))
+			print df_ind.head()
+
+	if len(l_probes)!=2:
+		print ('There should be 2 files in probes folder, you have {}!'.format(len(l_probes)))
+		probes = pd.HDFStore(os.path.join(converted_folder, 'probes', study_name + '.h5'), 'r')
+		N_probs = probes.get_storer('probes').nrows
+
+	else:
+		probes = pd.HDFStore(os.path.join(converted_folder, 'probes',study_name + '.h5'), 'r')
+		N_probs=probes.get_storer('probes').nrows
+
+		if df_tmp is not None and int(df_tmp[0][0])!=N_probs:
+			print ("Converted number of variants {} diff from  original number {}".format(N_probs,df_tmp[0][0] ))
+
+		else:
+			print ('Converted number of variants {}'.format(N_probs))
+
+		print probes.select('probes', start=0, stop=10)
+		probes.close()
+
+	if len(l_genotype)==0:
+		print('There is no genotype data converted!')
+	else:
+		index = 0
+		for i in l_genotype:
+			n, m = h5py.File(os.path.join(converted_folder, 'genotype',i), 'r')['genotype'].shape
+			index += n
+
+		if index!=N_probs:
+			print('Number of variants in genotype folder {} != {} number in probes file'.format(index, N_probs))
+
+		else:
+			print ('Number of variants in genotype folder {}'.format(index))
+
+		print h5py.File(os.path.join(converted_folder, 'genotype',l_genotype[0]), 'r')['genotype'][...]
+
+
 if __name__=='__main__':
 	print 'tools'
 
