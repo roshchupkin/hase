@@ -13,6 +13,7 @@ import subprocess
 from hdgwas.tools import Mapper, timing,Timer
 import glob
 import shutil
+from collections import OrderedDict
 
 class MINIMACPool(object):
 
@@ -88,17 +89,22 @@ class PhenPool(object):
 		self.split_size=None
 		self.folder=folder
 		self.keys=self.folder.files
+		self.len_dict = {k: len(self.folder.data_info[k]) for k in self.keys}
 
 	@timing
-	def link(self, n):
-		r=np.zeros((len(n),2),dtype=np.int64)
-		for i,ind in enumerate(n):
-			N=ind
-			for j,k in enumerate(self.keys):
-				N=N-len(self.folder.data_info[k])
-				if N<0:
-					r[i,0]=j
-					r[i,1]=N+len(self.folder.data_info[k])
+	def link(self,n):
+		r = np.zeros((len(n), 2), dtype=np.int64)
+		n = np.array(n)
+		ind = 0
+		for j, k in enumerate(self.keys):
+			n = n - self.len_dict[k]
+			index = np.where(n < 0)[0]
+			if (len(index)) != 0:
+				r[index, 0] = j
+				r[index, 1] = n[index] + self.len_dict[k]
+				n[index] = 10 ** 9 # replacing by huge number
+				ind += len(index)
+				if ind == len(n):
 					break
 		return r
 
@@ -136,7 +142,7 @@ class Pool(object):
 		self.inmem=0
 		self.limit=2
 		self.split_size=None
-
+	@timing
 	def link(self,n):
 		chunks = n / self.split_size
 		ind=n - self.split_size * chunks
@@ -144,7 +150,7 @@ class Pool(object):
 		r[:,0]=chunks
 		r[:,1]=ind
 		return r
-
+	@timing
 	def get_data(self,key,index):
 		if key in self.loaded:
 			r=self.loaded[key][index,:]
@@ -168,13 +174,13 @@ class Pool(object):
 				r=f['genotype'][index,:]
 				f.close()
 		return r
-
+	@timing
 	def get_chunk(self,indices, impute):
 		indices=self.link(indices)
 		indices=np.array(indices)
 		keys, ind = np.unique(indices[:,0], return_inverse=True)
 		result=None
-		gc.collect()
+		#gc.collect()
 		for i,k in enumerate(keys):
 			r=None
 			if k in self.loaded:
@@ -431,7 +437,9 @@ class MetaParData(object):
 		self.study_names=study_names
 		self.phen_mapper=Mapper()
 		self.cov_mapper=Mapper()
-		self.pd={i.folder.name:i for i in pd}
+		self.pd =OrderedDict()
+		for i in pd:
+			self.pd[i.folder.name]=i
 		keys=[]
 		if protocol is None:
 			for i,k in enumerate(pd):
@@ -806,7 +814,7 @@ class NPFolder(Folder):
 			self.read(self.next())
 		except Exception, e:
 			raise ValueError("Failed to init NPFolder;" + str(e))
-
+	@timing
 	def read(self,file):
 
 		if self.folder_cache_flag and self.folder_cache.get(file) is not None and len(self.folder_cache)<self.cache_buffer_size:

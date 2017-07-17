@@ -2,7 +2,7 @@
 import numpy as np
 import os
 import sys
-from tools import Timer, timer, timing
+from tools import Timer, timer, timing,save_parameters
 import scipy.linalg.blas as FB
 import h5py
 import gc
@@ -89,7 +89,8 @@ def C_matrix(phenotype):
 	C=np.einsum('ij,ji->i', phenotype.T, phenotype)
 	return C
 
-@timing
+#@timing
+#@save_parameters
 def HASE(b4, A_inverse, b_cov, C, N_con, DF):
 
 	with Timer() as t:

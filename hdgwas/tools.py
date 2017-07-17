@@ -11,6 +11,7 @@ import os
 from scipy import stats
 from hash import *
 import glob
+import inspect, itertools
 
 def timer(func):
 	def f(*args,**kwargs):
@@ -44,6 +45,16 @@ def timing(f):
 
 	return wrap
 
+
+def save_parameters(f):
+	def wrap(*args, **kwargs):
+		args_name = inspect.getargspec(f)[0]
+		args_dict = dict(itertools.izip(args_name, args))
+		np.save('{}.npy'.format(f.func_name),args_dict )
+		ret = f(*args, **kwargs)
+		return ret
+
+	return wrap
 
 def check_np():
 
@@ -430,7 +441,7 @@ class Mapper(object):
 			if len(self.dic[k])<self.n_study+1:
 				self.dic[k]=self.dic[k] + [-1]
 
-
+	@timing
 	def load_flip(self,folder,encode=None):
 
 		if folder is None:
@@ -455,6 +466,7 @@ class Mapper(object):
 			else:
 				self.flip[i] = np.load(os.path.join(folder, 'flip_' + self.reference_name + '_' + i + '.npy'))
 
+	@timing
 	def load (self, folder):
 		if folder is None:
 			raise ValueError('Mapper is not defined!')
@@ -510,6 +522,7 @@ class Mapper(object):
 			self.reference.name=self.reference_name
 			self.reference.load_index()
 
+	@timing
 	def get(self,chunk_number=None):
 
 		if isinstance(self.keys, type(None)) and isinstance(self.values, type(None)):
@@ -728,7 +741,7 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 
 	return [index_g,index_p,index_c], np.array(common_id)
 
-
+@timing
 def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 
 	if SNPs_index is None:
@@ -743,17 +756,21 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 		gen=genotype[0].get(SNPs_index[0],impute=mapper.encoded.get(genotype[0].folder.name,0) )
 		print gen.shape
 		if flip_flag:
-			flip=mapper.flip[genotype[0].folder.name][SNPs_index[0]]
-			flip_index=(flip==-1)
-			gen=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,gen)
+			if not mapper.encoded.get(genotype[0].folder.name, 0):
+				flip=mapper.flip[genotype[0].folder.name][SNPs_index[0]]
+				flip_index=(flip==-1)
+				gen=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,gen)
 		for i in range(1, len(genotype)):
-			g=genotype[i].get(SNPs_index[i],impute=mapper.encoded.get(genotype[0].folder.name,0))
+			g=genotype[i].get(SNPs_index[i],impute=mapper.encoded.get(genotype[i].folder.name,0))
 			print g.shape
 			if flip_flag:
-				flip=mapper.flip[genotype[i].folder.name][SNPs_index[i]]
-				flip_index=(flip==-1)
-				g=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,g)
-			gen=np.hstack( (gen,g ) )
+				if not mapper.encoded.get(genotype[i].folder.name,0):
+					flip=mapper.flip[genotype[i].folder.name][SNPs_index[i]]
+					flip_index=(flip==-1)
+					g=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,g)
+			with Timer() as t:
+				gen=np.hstack( (gen,g ) )
+			print 'time to G hstack {}'.format(t.secs)
 		return gen
 
 
