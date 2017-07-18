@@ -228,7 +228,6 @@ mkdir ${OUT}/encode/study/individuals/
 mv ${OUT}/encode/encode_genotype/* ${OUT}/encode/study/genotype/
 mv ${OUT}/encode/encode_individuals/* ${OUT}/encode/study/individuals/
 cp ${ROOTPATH}${STUDYNAME}/${STUDYNAME}/probes/* ${OUT}/encode/study/probes/
-cp ${ROOTPATH}${STUDYNAME}/${STUDYNAME}/individuals/* ${OUT}/encode/study/individuals/
 
 
 python ${HASEROOT}/hase.py -mode meta-stage \

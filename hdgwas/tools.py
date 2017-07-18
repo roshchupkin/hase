@@ -493,9 +493,6 @@ class Mapper(object):
 		if self.genotype_names is None:
 			raise ValueError('Genotype names are not defined!')
 
-		if len(values)!=len(self.genotype_names):
-			raise ValueError('Number of files in mapper folder {} is not equal to number of studies {}'.format(len(values),len(self.genotype_names)))
-
 		for j,i in enumerate(self.genotype_names):
 			self.values.append(np.load(os.path.join(folder, 'values_'+self.reference_name+'_'+i+'.npy')))
 			if j==0:
