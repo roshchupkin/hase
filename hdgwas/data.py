@@ -1010,8 +1010,7 @@ class PLINKFolder(Folder):
 		self.n_probes_dic[file]=N
 
 		self.bim = pd.read_table(os.path.join(self.path,file +'.bim'), sep='\t', header=None, names=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
-								 dtype={'names': ['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
-										'formats': [int, 'S16', int, int, 'S1', 'S1']}, iterator=True)
+								 dtype={'CHR':int, 'ID':'S16','distance':int,'bp':int,'allele1':'S','allele2':'S'}, iterator=True)
 
 
 	def get_bed(self,chunk_size):

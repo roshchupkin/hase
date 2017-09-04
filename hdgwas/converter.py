@@ -77,7 +77,7 @@ class GenotypePLINK(GenotypeHDF5):
 
 		individuals=self.reader.folder.get_fam()
 
-		self.h5_ind_file.createTable(self.h5_ind_file.root, 'individuals', individuals,
+		self.h5_ind_file.create_table(self.h5_ind_file.root, 'individuals', individuals,
 									 title='Individuals', filters=self.pytable_filters)
 		self.h5_ind_file.root.individuals[:] = individuals
 		self.individuals = self.h5_ind_file.root.individuals[:]
@@ -299,7 +299,7 @@ class GenotypeMINIMAC(object):
 			shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )
 
 		shutil.move(os.path.join(out,'files_order.txt'),os.path.join(out,'tmp_files','files_order.txt'))
-
+		shutil.move(os.path.join(out, 'info.txt'), os.path.join(out, 'tmp_files', 'info.txt'))
 
 	def summary(self):
 		pass
@@ -373,3 +373,4 @@ class GenotypeVCF(object):
 		shutil.move(os.path.join(out, 'snps_count.txt'), os.path.join(out, 'tmp_files', 'snps_count.txt'))
 
 		shutil.move(os.path.join(out, 'files_order.txt'), os.path.join(out, 'tmp_files', 'files_order.txt'))
+		shutil.move(os.path.join(out, 'info.txt'), os.path.join(out, 'tmp_files', 'info.txt'))

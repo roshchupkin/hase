@@ -42,7 +42,9 @@ N_SNPs=`cat ${SAVE_DIR}/${SNPs_INFO} | wc -l `
 
 
 echo "There are ${N_SUB} subjects in this genotype data"
-echo "There are ${N_SNPs} variance in this genotype data"
+echo "There are ${N_SNPs} variants in this genotype data"
+echo ${N_SUB} >> ${SAVE_DIR}/info.txt
+echo ${N_SNPs} >> ${SAVE_DIR}/info.txt
 
 for id in $( cat ${SAVE_DIR}/${SUBJECT_ID_FILE} );
 do
