@@ -41,7 +41,6 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True):
 				if ch is None:
 					SNPs_index=None
 					break
-				print ch
 				SNPs_index, keys=mapper.get(chunk_number=ch)
 			if isinstance(SNPs_index, type(None)):
 				break

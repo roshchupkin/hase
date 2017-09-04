@@ -91,7 +91,7 @@ class PhenPool(object):
 		self.keys=self.folder.files
 		self.len_dict = {k: len(self.folder.data_info[k]) for k in self.keys}
 
-	@timing
+	#@timing
 	def link(self,n):
 		r = np.zeros((len(n), 2), dtype=np.int64)
 		n = np.array(n)
@@ -102,13 +102,13 @@ class PhenPool(object):
 			if (len(index)) != 0:
 				r[index, 0] = j
 				r[index, 1] = n[index] + self.len_dict[k]
-				n[index] = 10 ** 9 # replacing by huge number
+				n[index] = 10 ** 9 # replacing by huge number, should be bigger than actual number of phenotypes
 				ind += len(index)
 				if ind == len(n):
 					break
 		return r
 
-	@timing
+	#@timing
 	def get_chunk(self,indices):
 		indices=self.link(indices)
 		indices=np.array(indices)
@@ -142,7 +142,7 @@ class Pool(object):
 		self.inmem=0
 		self.limit=2
 		self.split_size=None
-	@timing
+	#@timing
 	def link(self,n):
 		chunks = n / self.split_size
 		ind=n - self.split_size * chunks
@@ -150,7 +150,7 @@ class Pool(object):
 		r[:,0]=chunks
 		r[:,1]=ind
 		return r
-	@timing
+	#@timing
 	def get_data(self,key,index):
 		if key in self.loaded:
 			r=self.loaded[key][index,:]
@@ -174,13 +174,12 @@ class Pool(object):
 				r=f['genotype'][index,:]
 				f.close()
 		return r
-	@timing
+	#@timing
 	def get_chunk(self,indices, impute):
 		indices=self.link(indices)
 		indices=np.array(indices)
 		keys, ind = np.unique(indices[:,0], return_inverse=True)
 		result=None
-		#gc.collect()
 		for i,k in enumerate(keys):
 			r=None
 			if k in self.loaded:
@@ -195,10 +194,11 @@ class Pool(object):
 
 			l=r.shape[1]
 			if result is None:
+				print indices.shape[0], l
 				result=np.empty((indices.shape[0],l))
 
 			result[(ind==i),:]=r
-		if not impute:
+		if impute: # default False
 			if np.sum(result==9)!=0:
 				print ('Imputing missing genotype to mean...')
 				result[np.where(result == 9)]=np.nanmean(result[np.where(result==9)[0], :], axis=1)
@@ -333,7 +333,7 @@ class ParData(Data):
 class MetaPhenotype(object):
 
 	def __init__(self, phen, protocol=None, include=None, exclude=None):
-		@timing
+		#@timing
 		def _check(map,keys,index=None):
 			values=np.array(map.dic.values() )
 			result={}
@@ -403,26 +403,29 @@ class MetaPhenotype(object):
 			start=self.processed
 			finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<=self.n_phenotypes else self.n_phenotypes
 			self.processed=finish
-
+			phenotype = np.zeros( (   np.sum([ len(self.pool[i].folder._data.id) for i in self.pool ] ) , len(range(start,finish))      )  )
 		for i,j in enumerate(self.keys):
 
 			if i==0:
-				phenotype=self.pool[j].get_chunk(self.order[j][start:finish])
+				a,b=0,self.pool[j].folder._data.id.shape[0]
+				phenotype[a:b,:]=self.pool[j].get_chunk(self.order[j][start:finish])
+				a=b
 				N = np.random.randint(0, phenotype.shape[1], 10)
 				print phenotype.mean(axis=0)[N]
 			else:
 				ph_tmp=self.pool[j].get_chunk(self.order[j][start:finish])
 				print ph_tmp.mean(axis=0)[N]
-				with Timer() as t:
-					phenotype=np.vstack((phenotype,ph_tmp))
-				print 'vstack takes {}s'.format(t.secs)
+				b+=ph_tmp.shape[0]
+				phenotype[a:b,:]=ph_tmp
+				a=b
+
 
 		return phenotype, self.phen_names[start:finish]
 
 class MetaParData(object):
 
 	def __init__(self,pd,study_names,protocol=None):
-
+		#@timing
 		def _check(map,keys):
 			values=np.array(map.dic.values() )
 			result={}
@@ -437,19 +440,20 @@ class MetaParData(object):
 		self.study_names=study_names
 		self.phen_mapper=Mapper()
 		self.cov_mapper=Mapper()
+		self.covariates = OrderedDict()
 		self.pd =OrderedDict()
 		for i in pd:
 			self.pd[i.folder.name]=i
 		keys=[]
 		if protocol is None:
 			for i,k in enumerate(pd):
-				k.folder._data.metadata['names']=[n.split(self.study_names[i]+'_')[1] for n in k.folder._data.metadata['names']]
+				self.covariates[k]=[n.split(self.study_names[i]+'_')[1] for n in k.folder._data.metadata['names']]
 				if i==0:
 					self.phen_mapper.fill(k.folder._data.metadata['phenotype'],k.folder.name, reference=False)
-					self.cov_mapper.fill(k.folder._data.metadata['names'],k.folder.name, reference=False)
+					self.cov_mapper.fill(self.covariates[k],k.folder.name, reference=False)
 				else:
 					self.phen_mapper.push(k.folder._data.metadata['phenotype'],name=k.folder.name,new_id=False)
-					self.cov_mapper.push(k.folder._data.metadata['names'],name=k.folder.name, new_id=False)
+					self.cov_mapper.push(self.covariates[k],name=k.folder.name, new_id=False)
 				keys.append(k.folder.name)
 
 			self.phen_order =_check(self.phen_mapper,keys)
@@ -476,6 +480,17 @@ class MetaParData(object):
 		print np.array(new[1][0, :] / new[3][0, 0])[M]
 		print ("****************")
 
+	#@timing
+	def check_maf(self, SNPs_index):
+		maf=np.zeros( ( SNPs_index[0].shape[0], len(self.pd)) )
+
+		for i,j in enumerate(self.pd):
+			maf[:,i]=np.array(self.pd[j].folder._data.metadata['MAF'])[ SNPs_index[i].astype(np.int64) ]
+
+		if (np.std(maf,axis=1)>0.1).any():
+			raise ValueError('MAF is not consistent between PD data!')
+
+
 	def get(self, SNPs_index=None, B4=False, regression_model=None,random_effect_intercept=False ):
 
 		if self.pd is None:
@@ -496,6 +511,8 @@ class MetaParData(object):
 			b4=self.pd[k[0]].folder._data.b4[SNPs_index[0],:]
 			b4=b4[:,self.phen_order[k[0]]]
 
+		#self.check_maf(SNPs_index)
+
 		for i in range(1, len(self.pd)):
 			a,b,c,a_c=self.pd[k[i]].get(gen_order=SNPs_index[i], phen_order=self.phen_order[k[i]], cov_order=self.cov_order[k[i]])
 			self.check_pd([a_test, b_cov, C, a_cov], [a,b,c,a_c])
@@ -503,7 +520,7 @@ class MetaParData(object):
 			b_cov=b_cov + b
 			C=C+c
 			a_cov=a_cov + a_c
-			if random_effect_intercept and len(self.pd)>1:# TODO (high) check -> and i<len(self.pd)-1:
+			if random_effect_intercept and i<(len(self.pd)-1) :
 				a_test_effect=np.hstack((a_test_effect,a[:,0:1]))
 				b_cov_effect=np.vstack((b_cov_effect,b[0:1,:]))
 				a_cov_effect=np.vstack((a_cov_effect,a_c[0:1,:]))
@@ -512,7 +529,7 @@ class MetaParData(object):
 				b4=b4+b4_tmp[:,  self.phen_order[k[i]]]
 
 		if random_effect_intercept and len(self.pd)>1:
-				a_cov_I=np.zeros((len(self.pd),len(self.pd)))
+				a_cov_I=np.zeros((len(self.pd)-1,len(self.pd)-1))
 				np.fill_diagonal(a_cov_I,a_cov_effect[:,0])
 				a_effect=np.hstack((a_cov_I,a_cov_effect))
 				a_test=np.hstack((a_test_effect,a_test))
@@ -683,7 +700,7 @@ class PLINKHDF5Folder(HDF5Folder):
 		else:
 			return d[:,index]
 
-	def get(self, index, impute=True):
+	def get(self, index, impute=False):
 		self.processed+=len(index)
 		result=[]
 		if True:
@@ -803,7 +820,7 @@ class NPFolder(Folder):
 		try:
 			file_path=os.path.dirname(path)
 			self.data_info=np.load(os.path.join(file_path, 'info_dic.npy')).item()
-			self._data.id=self.data_info['id']
+			self._data.id=np.array(self.data_info['id'])
 			self.files=[k for k in self.data_info.keys() if k!='id']
 
 		except Exception, e:
@@ -814,7 +831,7 @@ class NPFolder(Folder):
 			self.read(self.next())
 		except Exception, e:
 			raise ValueError("Failed to init NPFolder;" + str(e))
-	@timing
+	#@timing
 	def read(self,file):
 
 		if self.folder_cache_flag and self.folder_cache.get(file) is not None and len(self.folder_cache)<self.cache_buffer_size:
@@ -828,7 +845,7 @@ class NPFolder(Folder):
 			self._data.names=np.array(self.data_info[file])
 		#print 'end cache'
 		else:
-			print 'reading file {}'.format(file)
+			#print 'reading file {}'.format(file)
 			d=np.load(os.path.join(self.path,file))
 			if not isinstance(d, np.ndarray):
 				raise ValueError('File {} saved not as numpy array'.format(file))

@@ -93,7 +93,7 @@ class HaseAnalyser(Analyser):
 		self.DF=None
 		self.n_studies=None
 		self.probes_path={}
-		self.results={}
+		self.results=OrderedDict()
 		self.split_size=None
 		self.threshold=None
 		self.result_path=None
@@ -137,7 +137,11 @@ class HaseAnalyser(Analyser):
 		if len(files)!=0:
 			for i in files:
 				print i
-				d=np.load(i).item()
+				try:
+					d=np.load(i).item()
+				except:
+					print "Can't read {}".format(i)
+					continue
 				p_value=self.get_p_value(d['t-stat'],df=self.DF)
 				self.results['t-stat']=np.append(self.results['t-stat'],d['t-stat'].flatten())
 				self.results['SE']=np.append(self.results['SE'],d['SE'].flatten())
@@ -374,12 +378,16 @@ class Mapper(object):
 					self.chunk_pool.append([self.chunk_pool[-1][1],self.n_keys])
 			self.chunk_pool=self.chunk_pool[::-1]
 
+			print self.chunk_pool
+
 		if len(self.chunk_pool)!=0:
-			return self.chunk_pool.pop()
+			ch=self.chunk_pool.pop()
+			print ch
+			return ch
 		else:
 			return None
 
-	@timing
+	#@timing
 	def fill(self, keys, name ,repeats=False, reference=False):#TODO (middle) remove
 		self.reference=reference
 		self.reference_name=name
@@ -403,7 +411,7 @@ class Mapper(object):
 					break
 				self.dic[j]=[i]
 
-	@timing
+	#@timing
 	def push(self, new_keys,name=None, new_id=True):#TODO (middle) remove
 		if not self.reference and len(self.dic)==0:
 			raise ValueError('You should fill mapper first with ref panel or your own rsids!')
@@ -441,7 +449,7 @@ class Mapper(object):
 			if len(self.dic[k])<self.n_study+1:
 				self.dic[k]=self.dic[k] + [-1]
 
-	@timing
+	#@timing
 	def load_flip(self,folder,encode=None):
 
 		if folder is None:
@@ -466,7 +474,7 @@ class Mapper(object):
 			else:
 				self.flip[i] = np.load(os.path.join(folder, 'flip_' + self.reference_name + '_' + i + '.npy'))
 
-	@timing
+	#@timing
 	def load (self, folder):
 		if folder is None:
 			raise ValueError('Mapper is not defined!')
@@ -493,24 +501,16 @@ class Mapper(object):
 		if self.genotype_names is None:
 			raise ValueError('Genotype names are not defined!')
 
+		self.values=np.zeros(( self.n_keys , len(self.genotype_names)  ))
 		for j,i in enumerate(self.genotype_names):
-			self.values.append(np.load(os.path.join(folder, 'values_'+self.reference_name+'_'+i+'.npy')))
-			if j==0:
-				len_value=self.values[0].shape[0]
-			else:
-				if len_value!=self.values[j].shape[0]:
-					raise ValueError('Different length of values array between studies; used different ref panel!')
-
-		self.values=np.array(self.values).T
-
-		if self.n_keys<self.n_study:
-			print ('WARNING!!! Normally should be more test values that studies! Check your saved data for Mapper')
-
+			self.values[:,j]=np.load(os.path.join(folder, 'values_'+self.reference_name+'_'+i+'.npy'))
 
 		if self.n_keys!=self.values.shape[0]:
 			raise ValueError('Number of indexes {} in mapper values is different from keys length {}!'.format(self.values.shape[0],self.n_keys ))
 
 		self.n_study=self.values.shape[1]
+		if self.n_keys<self.n_study:
+			print ('WARNING!!! Normally should be more test values that studies! Check your saved data for Mapper')
 
 		print ('You loaded values for {} studies and {} test values'.format(self.n_study, self.n_keys))
 
@@ -519,7 +519,7 @@ class Mapper(object):
 			self.reference.name=self.reference_name
 			self.reference.load_index()
 
-	@timing
+	#@timing
 	def get(self,chunk_number=None):
 
 		if isinstance(self.keys, type(None)) and isinstance(self.values, type(None)):
@@ -531,24 +531,6 @@ class Mapper(object):
 		if self.processed==self.n_keys:
 			return None, None
 
-		if self.include is not None:
-			if len(self.include_ind)==0:
-				if 'ID' in self.include.columns:
-					self.query_include=self.reference.index.select('reference',where='ID=self.include.ID')
-					self.include_ind=self.query_include.index
-				elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
-					self.query_include=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp')
-					self.include_ind=self.query_include.index
-
-		if self.exclude is not None:
-			if len(self.exclude_ind)==0:
-					if 'ID' in self.exclude.columns:
-						self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
-						self.exclude_ind=self.query_exclude.index
-					elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
-						self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
-						self.exclude_ind=self.query_exclude.index
-
 		if chunk_number is not None:
 			start=chunk_number[0]
 			finish=chunk_number[1]
@@ -556,35 +538,74 @@ class Mapper(object):
 			start=self.processed
 			finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
 			self.processed=finish
-		self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
-		if len(self.include_ind)>0:
-			ind=self.include_ind
-			self.processed=self.n_keys #TODO (low) dirty hack
+
+		with Timer() as t_q:
+			if self.include is not None:
+				if len(self.include_ind)==0:
+					if 'ID' in self.include.columns:
+						self.include_ind = np.in1d(self.keys, self.include.ID)
+						self.include_ind = np.where(self.include_ind == True)[0]
+						#self.query_include=self.reference.index.select('reference',where='ID=self.include.ID')
+						#self.include_ind=self.query_include.index
+					elif 'CHR' in self.include.columns and 'bp' in self.include.columns:
+						self.query_include=self.reference.index.select('reference',where='CHR=self.include.CHR & bp=self.include.bp')
+						self.include_ind=self.query_include.index
+
+			if self.exclude is not None:
+				if len(self.exclude_ind)==0:
+						if 'ID' in self.exclude.columns:
+							self.exclude_ind = np.in1d(self.keys, self.exclude.ID)
+							self.exclude_ind = np.where(self.exclude_ind == True)[0]
+							#self.query_exclude=self.reference.index.select('reference',where='ID=self.exclude.ID')
+							#self.exclude_ind=self.query_exclude.index
+						elif 'CHR' in self.exclude.columns and 'bp' in self.exclude.columns:
+							self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
+							self.exclude_ind=self.query_exclude.index
+
+		print "Time to select SNPs {}s".format(t_q.secs)
+
+
+		if self.exclude is not None or self.include is not None:
+			self.include_ind=np.setxor1d(self.include_ind,self.exclude_ind)
+			if len(self.include_ind)==0:
+				print ('None of included ID found in genotype data!')
+				return None, None
+			else:
+				ind = np.intersect1d(np.arange(start, finish), self.include_ind)
 		else:
-			ind=np.arange(start,finish)
+			ind = np.arange(start, finish)
 
-		if chunk_number is not None and len(ind)==0:
+		while len(ind)<=self.chunk_size:
+			if self.processed == self.n_keys:
+				break
+			if chunk_number is None:
+				start = self.processed
+				finish = self.processed + self.chunk_size if (self.processed + self.chunk_size) < self.n_keys else self.n_keys
+				self.processed = finish
+			else:
+				ch = self.chunk_pop()
+				if ch is not None:
+					start = ch[0]
+					finish = ch[1]
+				else:
+					break
+			if len(np.append( ind, np.intersect1d(np.arange(start, finish), self.include_ind)  ))>1.5*self.chunk_size:
+				print 'Added back chunk {}'.format(ch)
+				self.chunk_pool.append(ch)
+				break
+			else:
+				ind=np.append( ind, np.intersect1d(np.arange(start, finish), self.include_ind)  )
+				ind=ind.astype('int')
+				indexes=self.values[ind,:]
+				r=(indexes==-1).any(axis=1)
+				ind=ind[~r]
+
+		if len(ind)==0:
 			return None,None
-		else:
-			while len(ind)==0:
-				start=self.processed
-				finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<self.n_keys else self.n_keys
-				self.processed=finish
-				ind=np.intersect1d(np.arange(start,finish),self.include_ind)
-				if self.processed==self.n_keys:
-					return None, None
 
-		if self.include is not None and len(self.include_ind)==0:
-			print ('None of included ID found in genotype data!')
-			return None,None
-
-		ind=ind.astype('int')
-		indexes=self.values[ind,:]
 		keys=self.keys[ind]
-		r=(indexes==-1).any(axis=1)
-		indexes=indexes[~r]
 		keys=keys[~r]
-		return [indexes[:,i] for i in range(self.n_study)], keys
+		return [indexes[:,i].astype(np.int64) for i in range(self.n_study)], keys
 
 
 
@@ -738,7 +759,7 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 
 	return [index_g,index_p,index_c], np.array(common_id)
 
-@timing
+#@timing
 def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 
 	if SNPs_index is None:
@@ -750,7 +771,10 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 	else:
 		if len(genotype)!=len(SNPs_index):
 			raise ValueError('There are not equal number of genotypes and SNPs indexes {}!={}'.format(len(genotype), len(SNPs_index)))
-		gen=genotype[0].get(SNPs_index[0],impute=mapper.encoded.get(genotype[0].folder.name,0) )
+		gen=np.zeros( ( len(SNPs_index[0]), np.sum( [i.folder._data.id.shape[0] for i in genotype]  )  )  )
+		a,b=0,genotype[0].folder._data.id.shape[0]
+		gen[:,a:b]=genotype[0].get(SNPs_index[0],impute=mapper.encoded.get(genotype[0].folder.name,0) )
+		a=b
 		print gen.shape
 		if flip_flag:
 			if not mapper.encoded.get(genotype[0].folder.name, 0):
@@ -760,14 +784,16 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 		for i in range(1, len(genotype)):
 			g=genotype[i].get(SNPs_index[i],impute=mapper.encoded.get(genotype[i].folder.name,0))
 			print g.shape
+			b+=g.shape[1]
 			if flip_flag:
 				if not mapper.encoded.get(genotype[i].folder.name,0):
 					flip=mapper.flip[genotype[i].folder.name][SNPs_index[i]]
 					flip_index=(flip==-1)
 					g=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,g)
-			with Timer() as t:
-				gen=np.hstack( (gen,g ) )
-			print 'time to G hstack {}'.format(t.secs)
+
+			gen[:,a:b]=g
+			a=b
+
 		return gen
 
 

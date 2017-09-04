@@ -11,6 +11,7 @@ from hdgwas.tools import Timer,HaseAnalyser, Reference
 import argparse
 import pandas as pd
 import numpy as np
+from collections import OrderedDict
 
 
 if __name__=="__main__":
@@ -28,7 +29,7 @@ if __name__=="__main__":
 	Analyser.DF=args.df
 	Analyser.result_path=args.r
 
-	results={}
+	results=OrderedDict()
 	results['RSID']=np.array([])
 	results['p_value']=np.array([])
 	results['t-stat']=np.array([])
@@ -44,9 +45,9 @@ if __name__=="__main__":
 		print('Saving data...')
 		if not os.path.exists(os.path.join(args.out,'results'+'.csv')):
 			df=pd.DataFrame.from_dict(results)
-			df.to_csv( os.path.join(args.out,'results'+'.csv'), sep=" "  )
+			df.to_csv( os.path.join(args.out,'results'+'.csv'), sep=" ", index=None  )
 		df=pd.DataFrame.from_dict(Analyser.results)
 		with open(os.path.join(args.out,'results'+'.csv'), 'a') as f:
-			df.to_csv(f, sep=" ",header=False)
+			df.to_csv(f, sep=" ",header=False,index=None)
 
 

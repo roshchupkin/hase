@@ -23,6 +23,7 @@ mkdir -p ${OUT}/summary_MA_encode_10/
 mkdir -p ${OUT}/summary_MA_without_b4_reverse/
 mkdir -p ${OUT}/summary_MA_encode_reverse/
 mkdir -p ${OUT}/summary_MA_encode_01/
+mkdir -p ${OUT}/summary_MA_without_b4_effect/
 
 ln -s ${ROOTPATH}${STUDYNAME1}/mapper/* ${OUT}/mapper/
 ln -s ${ROOTPATH}${STUDYNAME2}/mapper/values_ref_ES_${STUDYNAME2}.npy ${OUT}/mapper/
@@ -127,6 +128,21 @@ python  ${HASEROOT}/hase.py -mode meta-stage \
 -encoded 0 1
 
 
+python  ${HASEROOT}/hase.py -mode meta-stage \
+-th 0 \
+-o ${OUT}/MA_without_b4_effect/ \
+-g ${ROOTPATH}${STUDYNAME1}/${STUDYNAME1} ${ROOTPATH}${STUDYNAME2}/${STUDYNAME2} \
+-ph ${ROOTPATH}${STUDYNAME1}/phenotype/ ${ROOTPATH}${STUDYNAME2}/phenotype/ \
+-derivatives ${ROOTPATH}/OUTPUT/${STUDYNAME1}/PD_without_b4/ ${ROOTPATH}/OUTPUT/${STUDYNAME2}/PD_without_b4/  \
+-study_name ${STUDYNAME1} ${STUDYNAME2} \
+-maf 0 \
+-ref_name ref_ES \
+-mapper ${OUT}/mapper/ \
+-effect_intercept \
+-encoded 0 0
+
+
+
 if [ -e "${ROOTPATH}/OUTPUT/${STUDYNAME1}/PD_with_b4/${STUDYNAME1}_b4.npy" ] && [ -e "${ROOTPATH}/OUTPUT/${STUDYNAME2}/PD_with_b4/${STUDYNAME2}_b4.npy" ]
 then
 python  ${HASEROOT}/tools/analyzer.py -r ${OUT}/MA_with_b4/ -o ${OUT}/summary_MA_with_b4/
@@ -137,6 +153,7 @@ python  ${HASEROOT}/tools/analyzer.py -r ${OUT}/MA_encode_10/ -o ${OUT}/summary_
 python  ${HASEROOT}/tools/analyzer.py -r ${OUT}/MA_encode_reverse/ -o ${OUT}/summary_MA_encode_reverse/
 python  ${HASEROOT}/tools/analyzer.py -r ${OUT}/MA_without_b4_reverse/ -o ${OUT}/summary_MA_without_b4_reverse/
 python  ${HASEROOT}/tools/analyzer.py -r ${OUT}MA_encode_01/ -o ${OUT}/summary_MA_encode_01/
+python  ${HASEROOT}/tools/analyzer.py -r ${OUT}MA_without_b4_effect/ -o ${OUT}/summary_MA_without_b4_effect/
 
 
 python -c "
@@ -158,6 +175,7 @@ df_MA_test['MA_encode_10']=pd.read_csv('{}/results.csv'.format('${OUT}/summary_M
 df_MA_test['MA_encode_reverse']=pd.read_csv('{}/results.csv'.format('${OUT}/summary_MA_encode_reverse/'),sep=' ')
 df_MA_test['MA_without_b4_reverse']=pd.read_csv('{}/results.csv'.format('${OUT}/summary_MA_without_b4_reverse/'),sep=' ')
 df_MA_test['MA_encode_01']=pd.read_csv('{}/results.csv'.format('${OUT}/summary_MA_encode_01/'),sep=' ')
+df_MA_test['MA_effect']=pd.read_csv('{}/results.csv'.format('${OUT}/summary_MA_without_b4_effect/'),sep=' ')
 if os.path.isfile(  '{}/results.csv'.format('${OUT}/summary_MA_with_b4/')  ):
     df_MA_test['MA_with_b4']=pd.read_csv( '{}/results.csv'.format('${OUT}/summary_MA_with_b4/'),sep=' ')
 

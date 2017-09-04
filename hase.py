@@ -133,7 +133,7 @@ if __name__=='__main__':
 			if args.node[1]>args.node[0]:
 				raise ValueError('Node # {} > {} total number of nodes'.format(args.node[1], args.node[0] ))
 
-	################################### CONVERTING ##############################
+
 
 	if not os.path.isdir(args.out):
 		print "Creating output folder {}".format(args.out)
@@ -142,6 +142,7 @@ if __name__=='__main__':
 	if args.np:
 		check_np()
 
+	################################### CONVERTING ##############################
 	if args.mode=='converting':
 
 		#ARG_CHECKER.check(args,mode='converting')
@@ -303,11 +304,13 @@ if __name__=='__main__':
 
 		pard=[]
 
+		with Timer() as t:
+			for i,j in enumerate(args.derivatives):
+				pard.append(Reader('partial') )
+				pard[i].start(j, study_name=args.study_name[i])
+				pard[i].folder.load()
 
-		for i,j in enumerate(args.derivatives):
-			pard.append(Reader('partial') )
-			pard[i].start(j, study_name=args.study_name[i])
-			pard[i].folder.load()
+		print "time to set PD is {}s".format(t.secs)
 
 
 		PD=[False if isinstance(i.folder._data.b4, type(None) ) else True for i in pard]
@@ -324,19 +327,22 @@ if __name__=='__main__':
 
 		if np.sum(PD)==0:
 			phen=[]
-			for i,j in enumerate(args.phenotype):
-				phen.append(Reader('phenotype'))
-				phen[i].start(j)
 
+			with Timer() as t:
+				for i,j in enumerate(args.phenotype):
+					phen.append(Reader('phenotype'))
+					phen[i].start(j)
+			print "Time to set pheno {} s".format(t.secs)
 			meta_phen=MetaPhenotype(phen,include=args.ph_id_inc,exclude=args.ph_id_exc)
 
 			N_studies=len(args.genotype)
 
 			gen=[]
-			for i,j in enumerate(args.genotype):
-				gen.append(Reader('genotype'))
-				gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
-
+			with Timer() as t:
+				for i,j in enumerate(args.genotype):
+					gen.append(Reader('genotype'))
+					gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
+			print "Time to set gen {}s".format(t.secs)
 
 			row_index, ids =  study_indexes(phenotype=tuple(i.folder._data for i in phen),genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
 			if row_index[2].shape[0]!=np.sum([i.folder._data.metadata['id'].shape[0] for i in pard]) :
@@ -350,7 +356,6 @@ if __name__=='__main__':
 				if ch is None:
 					SNPs_index=None
 					break
-				print ch
 				SNPs_index, keys=mapper.get(chunk_number=ch)
 
 			if isinstance(SNPs_index, type(None)):
