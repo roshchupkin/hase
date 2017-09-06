@@ -575,7 +575,14 @@ class Mapper(object):
 		else:
 			ind = np.arange(start, finish)
 
-		while len(ind)<=self.chunk_size:
+		ind = ind.astype('int')
+		indexes = self.values[ind, :]
+		r = (indexes == -1).any(axis=1)
+		ind = ind[~r]
+		indexes = indexes[~r]
+		keys = self.keys[ind]
+
+		while len(ind)<self.chunk_size:
 			if self.processed == self.n_keys:
 				break
 			if chunk_number is None:
@@ -599,12 +606,13 @@ class Mapper(object):
 				indexes=self.values[ind,:]
 				r=(indexes==-1).any(axis=1)
 				ind=ind[~r]
+				indexes = indexes[~r]
+				keys = self.keys[ind]
 
 		if len(ind)==0:
 			return None,None
 
-		keys=self.keys[ind]
-		keys=keys[~r]
+
 		return [indexes[:,i].astype(np.int64) for i in range(self.n_study)], keys
 
 
