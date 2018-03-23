@@ -574,6 +574,7 @@ class Mapper(object):
 				ind = np.intersect1d(np.arange(start, finish), self.include_ind)
 		else:
 			ind = np.arange(start, finish)
+			self.include_ind=np.arange(len(self.values))
 
 		ind = ind.astype('int')
 		indexes = self.values[ind, :]
@@ -597,9 +598,14 @@ class Mapper(object):
 				else:
 					break
 			if len(np.append( ind, np.intersect1d(np.arange(start, finish), self.include_ind)  ))>1.5*self.chunk_size:
-				print 'Added back chunk {}'.format(ch)
-				self.chunk_pool.append(ch)
-				break
+
+				if chunk_number is None:
+					self.processed = self.processed - len(np.arange(start,finish))
+					break
+				else:
+					print 'Added back chunk {}'.format(ch)
+					self.chunk_pool.append(ch)
+					break
 			else:
 				ind=np.append( ind, np.intersect1d(np.arange(start, finish), self.include_ind)  )
 				ind=ind.astype('int')

@@ -198,14 +198,21 @@ class Pool(object):
 				result=np.empty((indices.shape[0],l))
 
 			result[(ind==i),:]=r
-		if impute: # default False
+		if impute: # default True
 			if np.sum(result==9)!=0:
 				print ('Imputing missing genotype to mean...')
-				result[np.where(result == 9)]=np.nanmean(result[np.where(result==9)[0], :], axis=1)
+				m=np.where(result == 9)
+				result[m] = np.nan
+				result[m] = np.take(np.nanmean(result, axis=1), m[0])
+				#result[m]=np.nanmean(result[m[0], :], axis=1)
+				print result
 
 			if np.sum( np.isnan(result) )!=0:
 				print ('Imputing missing genotype to mean...')
-				result[np.where(np.isnan(result))]=np.nanmean(result[np.where(np.isnan(result))[0], :], axis=1)
+				m=np.where(np.isnan(result))
+				result[m] = np.take(np.nanmean(result, axis=1), m[0])
+				#print result
+				#result[np.where(np.isnan(result))]=np.nanmean(result[np.where(np.isnan(result))[0], :], axis=1)
 
 		return result
 
@@ -414,6 +421,7 @@ class MetaPhenotype(object):
 				print phenotype.mean(axis=0)[N]
 			else:
 				ph_tmp=self.pool[j].get_chunk(self.order[j][start:finish])
+				print self.pool[j].folder.path
 				print ph_tmp.mean(axis=0)[N]
 				b+=ph_tmp.shape[0]
 				phenotype[a:b,:]=ph_tmp
@@ -700,7 +708,7 @@ class PLINKHDF5Folder(HDF5Folder):
 		else:
 			return d[:,index]
 
-	def get(self, index, impute=False):
+	def get(self, index, impute=True):
 		self.processed+=len(index)
 		result=[]
 		if True:
@@ -786,7 +794,7 @@ class CSVFolder(Folder):
 
 
 			self._data=Data()
-			self._data.chunk_size=5000
+			self._data.chunk_size=1000
 			self._data._data=df[df.columns[1:]].as_matrix()
 			self._data.id=np.array(df[df.columns[0]])
 			if self._id is None:
@@ -812,7 +820,7 @@ class NPFolder(Folder):
 	def __init__(self,path, protected=[]):
 		super(NPFolder, self).__init__(path)
 		self._data=Data()
-		self._data.chunk_size=5000
+		self._data.chunk_size=1000
 		self._data.type=np.ndarray
 		self._data.format='npy'
 		self.protected=protected
@@ -1010,7 +1018,7 @@ class PLINKFolder(Folder):
 		self.n_probes_dic[file]=N
 
 		self.bim = pd.read_table(os.path.join(self.path,file +'.bim'), sep='\t', header=None, names=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2'],
-								 dtype={'CHR':int, 'ID':'S16','distance':int,'bp':int,'allele1':'S','allele2':'S'}, iterator=True)
+								 iterator=True)
 
 
 	def get_bed(self,chunk_size):

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 ROW=$SGE_TASK_ID
 TASK_FILE=$1

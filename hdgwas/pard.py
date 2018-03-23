@@ -4,10 +4,12 @@ from hdgwas.hdregression import HASE, A_covariates, A_tests, B_covariates, C_mat
 from hdgwas.tools import study_indexes, Timer
 import numpy as np
 import os
+import time
 
 def merge_PD(path, max_node, study_name):
     print ('Merging PD...')
     while True:
+        time.sleep(10)
         if np.sum( [ os.path.isfile(os.path.join(path,'node_{}_{}_metadata.npy'.format(i,study_name)   )) for i in range(1,max_node+1)  ] )==max_node:
             if np.sum( [ os.path.isfile(os.path.join(path,'node_{}_{}_a_test.npy'.format(i,study_name)   )) for i in range(1,max_node+1)  ] )==max_node:
                 break
