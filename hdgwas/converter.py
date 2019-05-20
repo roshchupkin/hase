@@ -109,7 +109,7 @@ class GenotypePLINK(GenotypeHDF5):
 			chunk.allele2=hash_2
 			# WARNING!!! doesn't work on windows
 			chunk.to_hdf(os.path.join(self.out,'probes',self.h5_name), key='probes',format='table',data_columns=True, append=True,
-						 complib='zlib',complevel=9, min_itemsize = 25)
+						 complib='zlib',complevel=9, min_itemsize = 45)
 			gc.collect()
 			i+=1
 		pd.DataFrame.from_dict(hash_table).to_csv(os.path.join(self.out,'probes',self.file_name+'_hash_table.csv.gz'),index=False,compression='gzip', sep='\t')

@@ -491,6 +491,11 @@ if __name__=='__main__':
 		cov=Reader('covariates')
 		cov.start(args.covariates)
 
+		interaction=None
+		if args.interaction is not None:
+			interaction=Reader('interaction')
+			interaction.start(args.interaction)
+
 		if (cov.folder.n_files>1 and cov.folder.format!='.npy') or (cov.folder.n_files>2 and cov.folder.format=='.npy'): #TODO (middle) test
 			raise ValueError('In covariates folder should be only one file!')
 
@@ -543,7 +548,7 @@ if __name__=='__main__':
 		Analyser=HaseAnalyser()
 		Analyser.threshold=args.thr
 		Analyser.out=args.out
-		haseregression(phen,gen,cov, mapper, Analyser,args.maf,intercept=args.intercept)
+		haseregression(phen,gen,cov, mapper, Analyser,args.maf,intercept=args.intercept, interaction=interaction)
 
 end = time.time()
 

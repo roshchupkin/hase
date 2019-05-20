@@ -24,7 +24,7 @@ if __name__=='__main__':
 	parser.add_argument('-mismatch_table',action='store_true',default=False, help='Save table with mismatch IDs')
 	parser.add_argument('-flipped_table',action='store_true',default=False, help='Save table with mismatch IDs')
 	parser.add_argument('-probe_chunk',type=int,default=10000, help='Probes chunk')
-	parser.add_argument('-ref_chunk',type=int,default=10000, help='Probes chunk')
+	parser.add_argument('-ref_chunk',type=int,default=10000, help='Reference chunk')
 	parser.add_argument('-chunk',type=int,default=2000000, help='Chunk size')
 	args = parser.parse_args()
 	print args
@@ -121,7 +121,7 @@ if __name__=='__main__':
 
 		reference=Reference()
 		reference.name=args.ref_name
-		reference.chunk=chunk_size
+		reference.chunk=args.ref_chunk
 		reference.load()
 		counter_ref=0
 		if hashing:

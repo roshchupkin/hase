@@ -107,6 +107,7 @@ class HaseAnalyser(Analyser):
 		self.rsid_dic={}
 		self.result_folder=None
 		self.result_dump_size=3
+		self.file_number=None
 
 
 	def summary(self):
@@ -129,29 +130,47 @@ class HaseAnalyser(Analyser):
 		self.results['BETA'] = np.array([])
 
 		files=[]
-		for i in range(self.result_dump_size):
+
+		if self.file_number is not None:
 			try:
-				files.append(self.result_folder.pop())
+				d = np.load(os.path.join(self.result_path, '{}result.npy'.format(self.file_number))).item()
 			except:
-				break
-		if len(files)!=0:
-			for i in files:
-				print i
-				try:
-					d=np.load(i).item()
-				except:
-					print "Can't read {}".format(i)
-					continue
-				p_value=self.get_p_value(d['t-stat'],df=self.DF)
-				self.results['t-stat']=np.append(self.results['t-stat'],d['t-stat'].flatten())
-				self.results['SE']=np.append(self.results['SE'],d['SE'].flatten())
-				self.results['RSID']=np.append(self.results['RSID'],d['index'])
-				self.results['phenotype']=np.append(self.results['phenotype'],d['phenotype'])
-				self.results['MAF']=np.append(self.results['MAF'],d['MAF'])
-				self.results['p_value']=np.append(self.results['p_value'],p_value.flatten())
-				self.results['BETA'] = np.append(self.results['BETA'],  d['t-stat'].flatten() *  d['SE'].flatten() )
+				print "Can't read {}".format(i)
+
+			p_value = self.get_p_value(d['t-stat'], df=self.DF)
+			self.results['t-stat'] = np.append(self.results['t-stat'], d['t-stat'].flatten())
+			self.results['SE'] = np.append(self.results['SE'], d['SE'].flatten())
+			self.results['RSID'] = np.append(self.results['RSID'], d['index'])
+			self.results['phenotype'] = np.append(self.results['phenotype'], d['phenotype'])
+			self.results['MAF'] = np.append(self.results['MAF'], d['MAF'])
+			self.results['p_value'] = np.append(self.results['p_value'], p_value.flatten())
+			self.results['BETA'] = np.append(self.results['BETA'], d['t-stat'].flatten() * d['SE'].flatten())
+
 		else:
-			self.results=None
+
+			for i in range(self.result_dump_size):
+				try:
+					files.append(self.result_folder.pop())
+				except:
+					break
+			if len(files)!=0:
+				for i in files:
+					print i
+					try:
+						d=np.load(i).item()
+					except:
+						print "Can't read {}".format(i)
+						continue
+					p_value=self.get_p_value(d['t-stat'],df=self.DF)
+					self.results['t-stat']=np.append(self.results['t-stat'],d['t-stat'].flatten())
+					self.results['SE']=np.append(self.results['SE'],d['SE'].flatten())
+					self.results['RSID']=np.append(self.results['RSID'],d['index'])
+					self.results['phenotype']=np.append(self.results['phenotype'],d['phenotype'])
+					self.results['MAF']=np.append(self.results['MAF'],d['MAF'])
+					self.results['p_value']=np.append(self.results['p_value'],p_value.flatten())
+					self.results['BETA'] = np.append(self.results['BETA'],  d['t-stat'].flatten() *  d['SE'].flatten() )
+			else:
+				self.results=None
 
 	def get_p_value(self,t_stat,df=None):
 		if df is None:

@@ -20,8 +20,10 @@ cd $GENOTYPE_DIR
 rm -f ${SAVE_DIR}/${SUBJECT_ID_FILE}
 rm -f ${SAVE_DIR}/${SNPs_INFO}
 
+count=1
 for file in *; do
-files_order[`zcat -f ${file} | awk 'BEGIN{FS="\t"}/^[^#]/{print $1; exit}'`]=${file}
+files_order[${count}]=${file}
+((count++))
 done
 
 echo ${files_order[*]}

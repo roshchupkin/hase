@@ -21,6 +21,7 @@ if __name__=="__main__":
 	parser.add_argument("-r", required=True,help="path to hase results")
 	parser.add_argument("-o", "--out", type=str, required=True,help="path to save result folder")
 	parser.add_argument("-df", type=float,default=None, help="degree of freedom = ( #subjects in study  - #covariates - 1 )")
+	parser.add_argument("-N", type=int,default=None, help="file number to read")
 	#TODO (low) add reference panel
 	args = parser.parse_args()
 	Analyser=HaseAnalyser()
@@ -28,6 +29,7 @@ if __name__=="__main__":
 
 	Analyser.DF=args.df
 	Analyser.result_path=args.r
+	Analyser.file_number = args.N
 
 	results=OrderedDict()
 	results['RSID']=np.array([])

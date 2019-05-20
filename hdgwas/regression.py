@@ -15,7 +15,7 @@ import tables
 
 
 
-def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True):
+def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True, interaction=None):
 
 	g=tuple( [i.folder._data for i in gen ] )
 
@@ -63,6 +63,7 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True):
 
 
 		MAF=np.mean(genotype, axis=1)/2
+		STD=np.std(genotype, axis=1)
 
 		if maf!=0:
 
@@ -94,6 +95,11 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True):
 			b_cov=B_covariates(covariates,phenotype,intercept=intercept)
 
 			C=C_matrix(phenotype)
+
+			if interaction is not None:
+				pass
+
+
 			a_test=A_tests(covariates,genotype,intercept=intercept)
 			a_inv=A_inverse(a_cov,a_test)
 
