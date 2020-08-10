@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 import sys
-from tools import study_indexes
+from .tools import study_indexes
 import gc
 from hdgwas.hdregression import A_inverse
 from numpy import genfromtxt
@@ -34,11 +34,11 @@ class MINIMACPool(object):
 			sample=h5py.File(self.paths[self.id[0]], 'r')[self.id[0]][...]
 			self.max_index=np.max(sample.shape)
 
-		print self.finish
+		print(self.finish)
 		result=[]
 		if indices is None:
 			if self.finish!=self.max_index:
-				n=range(self.finish, self.finish + self.chunk_size) if (self.finish + self.chunk_size)<self.max_index else range(self.finish,self.max_index)
+				n=list(range(self.finish, self.finish + self.chunk_size)) if (self.finish + self.chunk_size)<self.max_index else list(range(self.finish,self.max_index))
 				n=np.array(n)
 				n_s=np.argsort(n)
 				n_s_s=np.argsort(n_s)
@@ -194,7 +194,7 @@ class Pool(object):
 
 			l=r.shape[1]
 			if result is None:
-				print indices.shape[0], l
+				print(indices.shape[0], l)
 				result=np.empty((indices.shape[0],l))
 
 			result[(ind==i),:]=r
@@ -205,7 +205,7 @@ class Pool(object):
 				result[m] = np.nan
 				result[m] = np.take(np.nanmean(result, axis=1), m[0])
 				#result[m]=np.nanmean(result[m[0], :], axis=1)
-				print result
+				print(result)
 
 			if np.sum( np.isnan(result) )!=0:
 				print ('Imputing missing genotype to mean...')
@@ -239,11 +239,11 @@ class Data(object):
 			N,M=self._data.shape
 			uniq_id=np.unique(self.id)
 			if len(uniq_id)!=N:
-				print uniq_id
+				print(uniq_id)
 				raise ValueError('Should be uniq ID, but there are {} only uniq from {}'.format(len(uniq_id),N))
 			uniq_names=np.unique(self.names)
 			if len(uniq_names)!=M:
-				print uniq_names
+				print(uniq_names)
 				raise ValueError('Should be uniq NAMES, but there are {} only uniq from {}'.format(len(uniq_id),M))
 
 
@@ -309,7 +309,7 @@ class Hdf5Data(Data):
 			except:
 				self.gen_split_size =a
 
-		print ('There are %d ids' %(self.shape[0]))
+		print(('There are %d ids' %(self.shape[0])))
 
 
 class ParData(Data):
@@ -324,7 +324,7 @@ class ParData(Data):
 		self.b4=None
 
 	def check(self): #TODO (middle) place to implement the check of analysis protocol and log summary from PD
-		print ('Number of subjects {}'.format(int(self.a_cov[0,0])))
+		print(('Number of subjects {}'.format(int(self.a_cov[0,0]))))
 
 	def get(self,gen_order=None, phen_order=None,cov_order=None):
 
@@ -342,7 +342,7 @@ class MetaPhenotype(object):
 	def __init__(self, phen, protocol=None, include=None, exclude=None):
 		#@timing
 		def _check(map,keys,index=None):
-			values=np.array(map.dic.values() )
+			values=np.array(list(map.dic.values()) )
 			result={}
 			r=(values==-1).any(axis=1)
 			if index is not None:
@@ -351,7 +351,7 @@ class MetaPhenotype(object):
 				raise ValueError('There is no common names between studies')
 			for i,k in enumerate(keys):
 				result[k]=values[~r,i]
-			return result, np.array(map.dic.keys())[~r]
+			return result, np.array(list(map.dic.keys()))[~r]
 		self.chunk_size=10000
 		self.exclude=None
 		self.include=None
@@ -361,14 +361,14 @@ class MetaPhenotype(object):
 		self.keep_index=None
 		if include is not None:
 			self.include = pd.DataFrame.from_csv(include, index_col=None)
-			print 'Include:'
-			print self.include.head()
+			print('Include:')
+			print(self.include.head())
 			if 'ID' not in self.include.columns:
 				raise ValueError('{} table does not have ID column for phenotypes'.format(include))
 		if exclude is not None:
 			self.exclude = pd.DataFrame.from_csv(exclude, index_col=None)
-			print 'Exclude:'
-			print self.exclude.head()
+			print('Exclude:')
+			print(self.exclude.head())
 			if 'ID' not in self.exclude.columns:
 				raise ValueError('{} table does not have ID column for phenotypes'.format(exclude))
 		if protocol is None:
@@ -387,14 +387,14 @@ class MetaPhenotype(object):
 
 				self.keys.append(i)
 			if self.exclude is not None or self.include is not None:
-				phen_names=pd.Series(self.mapper.dic.keys())
+				phen_names=pd.Series(list(self.mapper.dic.keys()))
 				phen_names=phen_names[phen_names.isin(self.include.ID)] if self.include is not None else phen_names
 				phen_names = phen_names[~phen_names.isin(self.exclude.ID)] if self.exclude is not None else phen_names
-				self.keep_index=pd.Series(self.mapper.dic.keys()).isin(phen_names)
-			print np.sum(self.keep_index)
+				self.keep_index=pd.Series(list(self.mapper.dic.keys())).isin(phen_names)
+			print(np.sum(self.keep_index))
 			self.order, self.phen_names =_check(self.mapper,self.keys,index=self.keep_index)
 			self.n_phenotypes=len(self.order[self.keys[0]])
-			print ('Loaded {} common phenotypes for meta-analysis'.format( self.n_phenotypes  ))
+			print(('Loaded {} common phenotypes for meta-analysis'.format( self.n_phenotypes  )))
 			self.processed=0
 		else:
 			if not protocol.enable:
@@ -410,7 +410,7 @@ class MetaPhenotype(object):
 			start=self.processed
 			finish=self.processed+self.chunk_size if (self.processed+self.chunk_size)<=self.n_phenotypes else self.n_phenotypes
 			self.processed=finish
-			phenotype = np.zeros( (   np.sum([ len(self.pool[i].folder._data.id) for i in self.pool ] ) , len(range(start,finish))      )  )
+			phenotype = np.zeros( (   np.sum([ len(self.pool[i].folder._data.id) for i in self.pool ] ) , len(list(range(start,finish)))      )  )
 		for i,j in enumerate(self.keys):
 
 			if i==0:
@@ -418,11 +418,11 @@ class MetaPhenotype(object):
 				phenotype[a:b,:]=self.pool[j].get_chunk(self.order[j][start:finish])
 				a=b
 				N = np.random.randint(0, phenotype.shape[1], 10)
-				print phenotype.mean(axis=0)[N]
+				print(phenotype.mean(axis=0)[N])
 			else:
 				ph_tmp=self.pool[j].get_chunk(self.order[j][start:finish])
-				print self.pool[j].folder.path
-				print ph_tmp.mean(axis=0)[N]
+				print(self.pool[j].folder.path)
+				print(ph_tmp.mean(axis=0)[N])
 				b+=ph_tmp.shape[0]
 				phenotype[a:b,:]=ph_tmp
 				a=b
@@ -435,7 +435,7 @@ class MetaParData(object):
 	def __init__(self,pd,study_names,protocol=None):
 		#@timing
 		def _check(map,keys):
-			values=np.array(map.dic.values() )
+			values=np.array(list(map.dic.values()) )
 			result={}
 			r=(values==-1).any(axis=1)
 			if np.sum(r)==values.shape[0]:
@@ -476,16 +476,16 @@ class MetaParData(object):
 		np.set_printoptions(precision=3, suppress=True)
 		print ("*******PD CHECK*********")
 		print ('A covariates...')
-		print old[3] / old[3][0, 0]
-		print new[3] / new[3][0, 0]
+		print(old[3] / old[3][0, 0])
+		print(new[3] / new[3][0, 0])
 		print ('FREQ TESTs')
 		N=np.random.randint(0, np.min( (old[0].shape[0],new[0].shape[0]) )  ,10)
-		print np.array(old[0][:, 0] / old[3][0, 0]/ 2)[N]
-		print np.array(new[0][:, 0] / new[3][0, 0] / 2)[N]
+		print(np.array(old[0][:, 0] / old[3][0, 0]/ 2)[N])
+		print(np.array(new[0][:, 0] / new[3][0, 0] / 2)[N])
 		print ('FREQ PHENO')
 		M=np.random.randint(0, np.min( (old[1].shape[1],new[1].shape[1]) )  ,10)
-		print np.array(old[1][0, :] / old[3][0, 0])[M]
-		print np.array(new[1][0, :] / new[3][0, 0])[M]
+		print(np.array(old[1][0, :] / old[3][0, 0])[M])
+		print(np.array(new[1][0, :] / new[3][0, 0])[M])
 		print ("****************")
 
 	#@timing
@@ -503,7 +503,7 @@ class MetaParData(object):
 
 		if self.pd is None:
 			raise ValueError('Data not defined!')
-		k=self.pd.keys()
+		k=list(self.pd.keys())
 		if SNPs_index is not None:
 			if len(self.pd)!=len(SNPs_index):
 				raise ValueError('There are not equal number od PD and SNPs indexes {}!={}'.format(len(self.pd), len(SNPs_index)))
@@ -612,7 +612,7 @@ class Folder(object):
 	def get_next(self,**kwargs):
 		d=self._data.get_next(**kwargs)
 		if isinstance(d,type(None)):
-			file=self.next()
+			file=next(self)
 			if isinstance(file,type(None)):
 				return None
 			self.read(file)
@@ -624,11 +624,11 @@ class Folder(object):
 	def read(self,*args,**kwargs):
 		pass
 
-	def next(self):
+	def __next__(self):
 		while True:
 			try:
 				if self.processed==self.n_files:
-					print 'read all', self.path
+					print('read all', self.path)
 					return None
 				f=self.files[self.processed]
 				self.processed+=1
@@ -697,7 +697,7 @@ class PLINKHDF5Folder(HDF5Folder):
 		return self.read(file,**kwargs)
 
 	def read(self, file, index=None, MAF=None):
-		print 'reading file {}'.format(file)
+		print('reading file {}'.format(file))
 
 		f=h5py.File(file, 'r')
 
@@ -764,8 +764,8 @@ class CSVFolder(Folder):
 	def __init__(self,path):
 		super(CSVFolder,self).__init__(path)
 		try:
-			self.read(self.next())
-		except Exception,e:
+			self.read(next(self))
+		except Exception as e:
 			raise (e)
 		self.data_info={}
 		for i in self.files:
@@ -781,10 +781,10 @@ class CSVFolder(Folder):
 		if self.folder_cache_flag and self.folder_cache.get(file) is not None and len(self.folder_cache)<self.cache_buffer_size:
 			self._data=self.folder_cache[file]
 			self._data.processed=0
-			print ('There are samples and columns {} in cache {}'.format(self._data.shape, file))
+			print(('There are samples and columns {} in cache {}'.format(self._data.shape, file)))
 
 		else:
-			print 'reading file {}'.format(file)
+			print('reading file {}'.format(file))
 			for i in ['\t', ' ']:
 					df=pd.read_csv(os.path.join(self.path,file), sep=i, index_col=None)
 					if df.shape[1]>1:
@@ -813,7 +813,7 @@ class CSVFolder(Folder):
 			if self.folder_cache_flag and len(self.folder_cache)<self.cache_buffer_size:
 				self.folder_cache[file]=self._data
 
-			print ('There are %d ids and %d columns ' %(self._data.shape))
+			print(('There are %d ids and %d columns ' %(self._data.shape)))
 
 class NPFolder(Folder):
 
@@ -829,21 +829,21 @@ class NPFolder(Folder):
 			file_path=os.path.dirname(path)
 			self.data_info=np.load(os.path.join(file_path, 'info_dic.npy')).item()
 			self._data.id=np.array(self.data_info['id'])
-			self.files=[k for k in self.data_info.keys() if k!='id']
+			self.files=[k for k in list(self.data_info.keys()) if k!='id']
 
-		except Exception, e:
+		except Exception as e:
 			raise ValueError('in directory {} should be data info file info_dic.npy!'.format(self.path) + str(e)  )
 
 
 		try:
-			self.read(self.next())
-		except Exception, e:
+			self.read(next(self))
+		except Exception as e:
 			raise ValueError("Failed to init NPFolder;" + str(e))
 	#@timing
 	def read(self,file):
 
 		if self.folder_cache_flag and self.folder_cache.get(file) is not None and len(self.folder_cache)<self.cache_buffer_size:
-			print 'start cache {}'.format(file)
+			print('start cache {}'.format(file))
 			self._data._data=self.folder_cache[file]
 			self._data.processed=0
 			self._data.type=np.ndarray
@@ -985,7 +985,7 @@ class PLINKFolder(Folder):
 				individuals=np.append(individuals,ind)
 			self.n_ind_dic[i]=len(ind)
 		self.N_ind=len(individuals)
-		print('Number of Individuals: %d' % self.N_ind)
+		print(('Number of Individuals: %d' % self.N_ind))
 
 		return individuals
 
@@ -993,13 +993,13 @@ class PLINKFolder(Folder):
 	def get_bim(self, chunk_size):
 
 		if isinstance(self.bim,type(None)):
-			file=self.next()
+			file=next(self)
 			self.read_bim(file)
 		try:
 			d=self.bim.get_chunk(chunk_size)
 			return d
 		except:
-			file=self.next()
+			file=next(self)
 			if isinstance(file,type(None)):
 
 				return None
@@ -1008,11 +1008,17 @@ class PLINKFolder(Folder):
 			return d
 
 
+
 	def read_bim(self,file):
 
-		N=int(Popen(['wc','-l',os.path.join(self.path,file +'.bim')], stdout=PIPE).communicate()[0].split(' ')[0])
+		# bim_lines= Popen(['wc','-l',os.path.join(self.path,file +'.bim')], stdout=PIPE)
+		# bim_lines_com = bim_lines.communicate()
+		# print("------------------------------------------")
+		# print(bim_lines_com[0])
+		# N=int(bim_lines_com[0].split(' ')[0])
+		N = int(sum(1 for line in open(self.path,file +'.bim')))
 
-		print('Number of Probes {} in {}'.format(N,file+'.bim'))
+		print(('Number of Probes {} in {}'.format(N,file+'.bim')))
 		self.N_probes+=N
 
 		self.n_probes_dic[file]=N
@@ -1026,7 +1032,7 @@ class PLINKFolder(Folder):
 		d=self.nextSNPs(chunk_size)
 
 		if isinstance(d, type(None)):
-			file=self.next()
+			file=next(self)
 			if isinstance(file,type(None)):
 				return None
 			else:
@@ -1083,7 +1089,7 @@ class PLINKFolder(Folder):
 		if self._currentSNP + b > self.n_probes:
 			b=(self.n_probes-self._currentSNP)
 
-		print('next {} SNPs, from {}, need to convert {}'.format(b, self.n_probes, (self.n_probes-self._currentSNP-b)))
+		print(('next {} SNPs, from {}, need to convert {}'.format(b, self.n_probes, (self.n_probes-self._currentSNP-b))))
 
 		c = self._currentSNP
 		n = self.n_ind
