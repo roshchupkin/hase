@@ -1,5 +1,6 @@
 # HASE
 Framework for efficient high-dimensional association analyses.
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/roshchupkin/hase)
 
 ## Speed test
 `run_ExampleStudy.sh` script runs example of association study with **20.000** SNPs, **1000** phenotypes and **1000** subjects.
