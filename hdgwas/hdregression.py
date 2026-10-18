@@ -2,7 +2,7 @@
 import numpy as np
 import os
 import sys
-from tools import Timer, timer, timing,save_parameters
+from .tools import Timer, timer, timing,save_parameters
 import scipy.linalg.blas as FB
 import h5py
 import gc
@@ -72,7 +72,7 @@ def A_inverse(a_covariates, a_test): #TODO (low) extend for any number of tests 
 	A_inv=[]
 	n,m=a_covariates.shape
 	k=n+1
-	for i in xrange(a_test.shape[0]): #TODO (low) not in for loop
+	for i in range(a_test.shape[0]): #TODO (low) not in for loop
 		inv=np.zeros(k*k).reshape(k,k)
 		inv[ 0:k-1,0:k-1 ]=a_covariates
 		inv[k-1,:]=a_test[i,:]
@@ -123,9 +123,9 @@ def HASE(b4, A_inverse, b_cov, C, N_con, DF):
 		SE =  a44_C_BTA1B/np.sqrt(DF)
 
 
-	print "time to compute GWAS for {} phenotypes and {} SNPs .... {} sec".format(b4.shape[1],
+	print("time to compute GWAS for {} phenotypes and {} SNPs .... {} sec".format(b4.shape[1],
 																				  A_inverse.shape[0],
-																				  t.secs)
+																				  t.secs))
 	return t_stat, SE
 
 

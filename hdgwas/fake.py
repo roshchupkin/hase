@@ -27,7 +27,7 @@ class Encoder(object):
 			os.mkdir(os.path.join(self.out,'encode_individuals'))
 
 		except:
-			print('Directories "encode_genotype","encode_phenotype","encode_individuals" are already exist in {}...'.format(self.out))
+			print(('Directories "encode_genotype","encode_phenotype","encode_individuals" are already exist in {}...'.format(self.out)))
 
 
 	def matrix(self,N, save=False):
@@ -36,7 +36,7 @@ class Encoder(object):
 		self.F_inv=np.linalg.inv(self.F)
 		self.F=np.array(self.F,dtype=np.float)
 		if save:
-			print ('Saving decoders Matrices to...{}'.format(self.out))
+			print(('Saving decoders Matrices to...{}'.format(self.out)))
 			np.save(os.path.join(self.out,'F.npy'),self.F)
 			np.save(os.path.join(self.out,'F_inv.npy'),self.F_inv)
 
@@ -86,7 +86,7 @@ class Encoder(object):
 
 	def save_hdf5(self,data, save_path=None,info=None, index=None):
 		#only for genetics data
-		print ('Saving data to ... {}'.format(os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name+'_encoded.h5')))
+		print(('Saving data to ... {}'.format(os.path.join(save_path,str(self.hdf5_iter)+'_'+self.study_name+'_encoded.h5'))))
 
 		if not os.path.isfile(os.path.join(self.out,'encode_individuals',self.study_name + '.h5'  )):
 			chunk = pd.DataFrame.from_dict({"individual": info._data.id[index] })

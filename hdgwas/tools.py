@@ -9,7 +9,7 @@ import gc
 from collections import OrderedDict
 import os
 from scipy import stats
-from hash import *
+from .hash import *
 import glob
 import inspect, itertools
 
@@ -33,14 +33,14 @@ class Timer(object):
 		self.secs = self.end - self.start
 		self.msecs = self.secs * 1000  # millisecs
 		if self.verbose:
-			print 'elapsed time: %f ms' % self.msecs
+			print('elapsed time: %f ms' % self.msecs)
 
 def timing(f):
 	def wrap(*args,**kwargs):
 		time1 = time.time()
 		ret = f(*args,**kwargs)
 		time2 = time.time()
-		print '%s function took %0.3f s' % (f.func_name, (time2 - time1) )
+		print('%s function took %0.3f s' % (f.__name__, (time2 - time1) ))
 		return ret
 
 	return wrap
@@ -48,28 +48,21 @@ def timing(f):
 
 def save_parameters(f):
 	def wrap(*args, **kwargs):
-		args_name = inspect.getargspec(f)[0]
-		args_dict = dict(itertools.izip(args_name, args))
-		np.save('{}.npy'.format(f.func_name),args_dict )
+		args_name = inspect.getfullargspec(f).args
+		args_dict = dict(zip(args_name, args))
+		np.save('{}.npy'.format(f.__name__),args_dict )
 		ret = f(*args, **kwargs)
 		return ret
 
 	return wrap
 
 def check_np():
-
-	for i in ['atlas_blas_info', 'openblas_info', 'lapack_opt_info',
-			  'atlas_info', 'lapack_mkl_info', 'blas_mkl_info',
-			  'atlas_blas_info', 'mkl_info']:
-		try:
-			if len(getattr(np.__config__, i)) >0:
-				print('Numpy linked to {}'.format(i))
-				return 0
-		except:
-			continue
-
-	raise ValueError('NO BLAS/LAPACK/MKL found!'
-					 'To restart with slow speed use -np False')
+	# NumPy 2 exposes build information through the public structured API.
+	blas = np.show_config(mode='dicts').get('Build Dependencies', {}).get('blas', {})
+	if blas.get('found', False):
+		print('Numpy linked to {}'.format(blas.get('name', 'BLAS')))
+		return 0
+	raise ValueError('NO BLAS/LAPACK/MKL found in NumPy build configuration!')
 
 
 ########################################################################
@@ -135,7 +128,7 @@ class HaseAnalyser(Analyser):
 			try:
 				d = np.load(os.path.join(self.result_path, '{}result.npy'.format(self.file_number))).item()
 			except:
-				print "Can't read {}".format(i)
+				print("Can't read {}".format(i))
 
 			p_value = self.get_p_value(d['t-stat'], df=self.DF)
 			self.results['t-stat'] = np.append(self.results['t-stat'], d['t-stat'].flatten())
@@ -155,11 +148,11 @@ class HaseAnalyser(Analyser):
 					break
 			if len(files)!=0:
 				for i in files:
-					print i
+					print(i)
 					try:
 						d=np.load(i).item()
 					except:
-						print "Can't read {}".format(i)
+						print("Can't read {}".format(i))
 						continue
 					p_value=self.get_p_value(d['t-stat'],df=self.DF)
 					self.results['t-stat']=np.append(self.results['t-stat'],d['t-stat'].flatten())
@@ -191,7 +184,7 @@ class HaseAnalyser(Analyser):
 			mask = np.where(np.abs(self.t_stat) > 0)
 
 		if (len(mask[0]) != 0):
-			print ('Saving results to {}'.format(save_path))
+			print(('Saving results to {}'.format(save_path)))
 			t_save = self.t_stat[mask[0],mask[1],mask[2]]
 			se=self.SE[mask[0],mask[1],mask[2]]
 			result = {'phenotype': phen_names[mask[2]], 't-stat': t_save,'index':self.rsid[mask[0]],'SE':se, 'MAF':self.MAF[mask[0]]}
@@ -397,11 +390,11 @@ class Mapper(object):
 					self.chunk_pool.append([self.chunk_pool[-1][1],self.n_keys])
 			self.chunk_pool=self.chunk_pool[::-1]
 
-			print self.chunk_pool
+			print(self.chunk_pool)
 
 		if len(self.chunk_pool)!=0:
 			ch=self.chunk_pool.pop()
-			print ch
+			print(ch)
 			return ch
 		else:
 			return None
@@ -449,7 +442,7 @@ class Mapper(object):
 					self.dic[j]=self.dic[j] + [i]
 				else:
 					if new_id:
-						print ('WARNING! You are pushing ID {} which is not present in reference panel!'.format(j))
+						print(('WARNING! You are pushing ID {} which is not present in reference panel!'.format(j)))
 						self.dic[j]=[-1]*(self.n_study+1)
 						self.dic[j][self.n_study]=i
 					else:
@@ -531,7 +524,7 @@ class Mapper(object):
 		if self.n_keys<self.n_study:
 			print ('WARNING!!! Normally should be more test values that studies! Check your saved data for Mapper')
 
-		print ('You loaded values for {} studies and {} test values'.format(self.n_study, self.n_keys))
+		print(('You loaded values for {} studies and {} test values'.format(self.n_study, self.n_keys)))
 
 		if self.include is not None or self.exclude is not None:
 			self.reference=Reference()
@@ -581,7 +574,7 @@ class Mapper(object):
 							self.query_exclude=self.reference.index.select('reference',where='CHR=self.exclude.CHR & bp=self.exclude.bp')
 							self.exclude_ind=self.query_exclude.index
 
-		print "Time to select SNPs {}s".format(t_q.secs)
+		print("Time to select SNPs {}s".format(t_q.secs))
 
 
 		if self.exclude is not None or self.include is not None:
@@ -622,7 +615,7 @@ class Mapper(object):
 					self.processed = self.processed - len(np.arange(start,finish))
 					break
 				else:
-					print 'Added back chunk {}'.format(ch)
+					print('Added back chunk {}'.format(ch))
 					self.chunk_pool.append(ch)
 					break
 			else:
@@ -707,7 +700,7 @@ class Reference(object):
 				raise ValueError('There is {} no index file {}'.format(self.path_default, self.name))
 
 
-	def next(self):
+	def __next__(self):
 		df=self.dataframe.get_chunk()
 		self.read+=df.shape[0]
 		return df
@@ -733,10 +726,10 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 
 	def _get_id(notype):
 		if isinstance(notype,type(None)):
-			id_p=np.array([],dtype=np.str)
+			id_p=np.array([],dtype=str)
 		else:
 			if isinstance(notype,tuple):
-				id_p=np.array([],dtype=np.str)
+				id_p=np.array([],dtype=str)
 				for i in notype:
 					if isinstance(i,dict):
 						id_p=np.append(id_p,i['id'])
@@ -744,7 +737,7 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 						id_p=np.append(id_p,i.get_id())
 			else:
 				id_p=notype.get_id()
-		return id_p.astype(np.str)
+		return id_p.astype(str)
 
 	id_c=_get_id(covariates)
 	id_p=_get_id(phenotype)
@@ -782,7 +775,7 @@ def study_indexes( args=None, genotype=None,phenotype=None,covariates=None):
 		index_g=np.array([np.where(id_g==i)[0][0] for i in common_id])
 		index_c=np.array([np.where(id_c==i)[0][0] for i in common_id])
 
-	print ('There are {} common ids'.format(len(common_id)))
+	print(('There are {} common ids'.format(len(common_id))))
 	np.savetxt(os.path.join(os.environ['HASEOUT'],'study_common_id.txt'),common_id, fmt='%s')
 	np.savetxt(os.path.join(os.environ['HASEOUT'], 'gen_id.txt'), index_g, fmt='%s')
 	np.savetxt(os.path.join(os.environ['HASEOUT'], 'phen_id.txt'), index_p, fmt='%s')
@@ -808,7 +801,7 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 		a,b=0,genotype[0].folder._data.id.shape[0]
 		gen[:,a:b]=genotype[0].get(SNPs_index[0],impute=mapper.encoded.get(genotype[0].folder.name,0) )
 		a=b
-		print gen.shape
+		print(gen.shape)
 		if flip_flag:
 			if not mapper.encoded.get(genotype[0].folder.name, 0):
 				flip=mapper.flip[genotype[0].folder.name][SNPs_index[0]]
@@ -816,7 +809,7 @@ def merge_genotype(genotype, SNPs_index , mapper, flip_flag=True):
 				gen=np.apply_along_axis(lambda x: flip*(x-2*flip_index) ,0,gen)
 		for i in range(1, len(genotype)):
 			g=genotype[i].get(SNPs_index[i],impute=mapper.encoded.get(genotype[i].folder.name,0))
-			print g.shape
+			print(g.shape)
 			b+=g.shape[1]
 			if flip_flag:
 				if not mapper.encoded.get(genotype[i].folder.name,0):
@@ -854,13 +847,13 @@ def check_converter(converted_folder, study_name):
 	else:
 		df_ind = pd.read_hdf(os.path.join(converted_folder, 'individuals',study_name + '.h5'),'individuals')
 		if df_tmp is not None and int(df_tmp[0][0])!=df_ind.shape[0]:
-			print ('Converted number of IDs {} != {} original number'.format( df_ind.shape[0] , df_tmp[0][0] ))
+			print(('Converted number of IDs {} != {} original number'.format( df_ind.shape[0] , df_tmp[0][0] )))
 		else:
-			print ('Number of individuals {} '.format(df_ind.shape[0]))
-			print df_ind.head()
+			print(('Number of individuals {} '.format(df_ind.shape[0])))
+			print(df_ind.head())
 
 	if len(l_probes)!=2:
-		print ('There should be 2 files in probes folder, you have {}!'.format(len(l_probes)))
+		print(('There should be 2 files in probes folder, you have {}!'.format(len(l_probes))))
 		probes = pd.HDFStore(os.path.join(converted_folder, 'probes', study_name + '.h5'), 'r')
 		N_probs = probes.get_storer('probes').nrows
 
@@ -869,12 +862,12 @@ def check_converter(converted_folder, study_name):
 		N_probs=probes.get_storer('probes').nrows
 
 	if df_tmp is not None and int(df_tmp[0][1])!=N_probs:
-		print ("Converted number of variants {} diff from  original number {}".format(N_probs,df_tmp[0][1] ))
+		print(("Converted number of variants {} diff from  original number {}".format(N_probs,df_tmp[0][1] )))
 
 	else:
-		print ('Converted number of variants {}'.format(N_probs))
+		print(('Converted number of variants {}'.format(N_probs)))
 
-		print probes.select('probes', start=0, stop=10)
+		print(probes.select('probes', start=0, stop=10))
 		probes.close()
 
 	if len(l_genotype)==0:
@@ -886,15 +879,15 @@ def check_converter(converted_folder, study_name):
 			index += n
 
 		if index!=N_probs:
-			print('Number of variants in genotype folder {} != {} number in probes file'.format(index, N_probs))
+			print(('Number of variants in genotype folder {} != {} number in probes file'.format(index, N_probs)))
 
 		else:
-			print ('Number of variants in genotype folder {}'.format(index))
+			print(('Number of variants in genotype folder {}'.format(index)))
 
-		print h5py.File(os.path.join(converted_folder, 'genotype',l_genotype[0]), 'r')['genotype'][...]
+		print(h5py.File(os.path.join(converted_folder, 'genotype',l_genotype[0]), 'r')['genotype'][...])
 
 
 if __name__=='__main__':
-	print 'tools'
+	print('tools')
 
 

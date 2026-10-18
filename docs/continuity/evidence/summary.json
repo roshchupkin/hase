@@ -1,0 +1,53 @@
+{
+  "export_kind": "sanitized_derivative",
+  "original_sha256": "a1d4bd9d3317fb5b2489fd8f6ede3459c1026580c7682efaffe3859d7fe2f208",
+  "engineering_status": "passed_for_declared_scope",
+  "scientific_review": "not_assessed",
+  "source_base_sha": "32b6e0a838a8691b41b7d4db9b13af0fe6cb0d5d",
+  "tested_runtime_patch_sha256": "ed54a16ea844370aa6effd7d0a50096675de4388269e9065b21cd94abf9faf49",
+  "image": "sha256:c006446d193bfa1a817daed5a4bcb651d90592337ee2c398ea3a6fe4ad659b08",
+  "associations_compared": 20000000,
+  "maximum_absolute_errors": {
+    "MAF": 0.0,
+    "SE": 1.6209256159527285e-14,
+    "t-stat": 8.393286066166183e-14,
+    "beta": 8.570921750106208e-14
+  },
+  "runs": {
+    "help": {
+      "manifest": "evidence/20261018T120208Z-help-c473bda2/run.json",
+      "manifest_sha256": "cf642a9c9acb5b517f5bf3d1485f58015b7ad5b5aa9faad19cf7cadb7d1c434d"
+    },
+    "reference_producer": {
+      "manifest": "evidence/20261018T120210Z-python3-reference-produce-77fe77fe/run.json",
+      "manifest_sha256": "38174373d36bf65fae6c06c64d0d7369040663bef56b870262aa8134b3d9e665"
+    },
+    "reference_verifier": {
+      "manifest": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/run.json",
+      "manifest_sha256": "ad6cf9d611e29eb4f38a93f76f4a5fcb5859441af7caf7505bd3f303064df98b"
+    },
+    "example": {
+      "manifest": "evidence/20261018T120252Z-example-b6fb52ac/run.json",
+      "manifest_sha256": "d62dfbc1770681bf99487f45933f77666ea3b0be2b77ed85627666004c57b4d2"
+    },
+    "comparison": {
+      "manifest": "evidence/20261018T120346Z-python3-example-comparison-96edd05a/run.json",
+      "manifest_sha256": "6c0d82f309cd32faeacb0fd958a0ae393c4c98286c7b4ddf2d801bf358b51432"
+    }
+  },
+  "retained_failed_attempts": [
+    "evidence/20261018T115853Z-python3-pilot-d755ef74/summary.json",
+    "evidence/20261018T120208Z-python3-pilot-548a7314/summary.json"
+  ],
+  "scope": "Python 3 CLI, independent kernel reference with negative control, and complete bundled regression example/legacy consistency. Other modes, scientific approval, publication and SPACE remain outside scope.",
+  "small_reference": {
+    "scalar_comparisons": 18,
+    "failures": 0
+  },
+  "negative_control": {
+    "coefficient_delta": 0.01,
+    "scalar_comparisons": 18,
+    "failures": 1
+  },
+  "note": "Runs and retained_failed_attempts are archive identifiers, not public links. No original manifests or raw large arrays included."
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "HASE synthetic regression reference pilot",
+  "maintainers": ["Gennady Roshchupkin (pilot initiator; operational and release roles unconfirmed)"],
+  "scientific_reviewer": "",
+  "reference_description": "Deterministic integer fixture and independent exact rational OLS. Engineering proposal; scientific review pending.",
+  "tolerance_description": "Provisional abs 1e-12 and rel 1e-10, restricted to the declared small full-rank fixture; not scientifically approved.",
+  "reference_files": [
+    "checks/continuity/fixture.json",
+    "checks/continuity/contract.json",
+    "checks/continuity/independent_ols.py",
+    "checks/continuity/compare_reference.py",
+    "checks/continuity/hase_probe.py",
+    "hdgwas/hdregression.py",
+    ".continuity/observations/observed.json"
+  ],
+  "checks": [
+    {
+      "id": "hase-ols-reference",
+      "argv": ["{python}", "checks/continuity/compare_reference.py", "--output", ".continuity/comparisons/reference.json"],
+      "timeout_seconds": 30
+    }
+  ]
+}

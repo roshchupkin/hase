@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scientific_review": "not_assessed",
+  "associations": 20000000,
+  "absolute_tolerance": 1e-12,
+  "relative_tolerance": 1e-10,
+  "legacy_manifest_sha256": "2d6b5c305f78d73387a8b4ca01c799da1d477a0ac6d325682474eb95c56df567",
+  "modern_manifest_sha256": "d62dfbc1770681bf99487f45933f77666ea3b0be2b77ed85627666004c57b4d2",
+  "input_files_matched": 6,
+  "files": [
+    {
+      "name": "1result.npy",
+      "associations": 5000000,
+      "sha256": [
+        "9781158ae2ef29744afd48b0d7a40f3276fc4a214f4a3eda95a47f706f010cb7",
+        "be836ea84212a718885944f2ce7b90856c1212436d022309eed15ab1a4b61c9c"
+      ],
+      "identity_mismatches": 0,
+      "metrics": {
+        "MAF": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 0.0,
+          "max_error_to_allowance": 0.0
+        },
+        "SE": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 1.6209256159527285e-14,
+          "max_error_to_allowance": 0.0001468669832727001
+        },
+        "t-stat": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.282263763703668e-14,
+          "max_error_to_allowance": 0.04926143604846109
+        },
+        "beta": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.548717289613705e-14,
+          "max_error_to_allowance": 0.054897426407801375
+        }
+      }
+    },
+    {
+      "name": "2result.npy",
+      "associations": 5000000,
+      "sha256": [
+        "77712dc4eb50311baafda2fad38a6c0b41b8f96f503d20c5fc0871a1d20981a4",
+        "e4c16ccb4728b6c20a1ee19983aa8ecb4f1b9f16a128ff5cf0368ec4bc376ca7"
+      ],
+      "identity_mismatches": 0,
+      "metrics": {
+        "MAF": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 0.0,
+          "max_error_to_allowance": 0.0
+        },
+        "SE": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 1.6209256159527285e-14,
+          "max_error_to_allowance": 0.0001431413687287414
+        },
+        "t-stat": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.393286066166183e-14,
+          "max_error_to_allowance": 0.05121165434445043
+        },
+        "beta": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.570921750106208e-14,
+          "max_error_to_allowance": 0.05574248991471157
+        }
+      }
+    },
+    {
+      "name": "3result.npy",
+      "associations": 5000000,
+      "sha256": [
+        "5c0b10d2eaa330cfdbd92d779dab1379083ffa272cc1f5d613d1dcb5d1160e42",
+        "6bd6e5f53a8ac32073e25e725218857f3c77449eb8cc059ae31b6b18866d0a69"
+      ],
+      "identity_mismatches": 0,
+      "metrics": {
+        "MAF": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 0.0,
+          "max_error_to_allowance": 0.0
+        },
+        "SE": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 1.5987211554602254e-14,
+          "max_error_to_allowance": 0.00014291104139080776
+        },
+        "t-stat": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 7.838174553853605e-14,
+          "max_error_to_allowance": 0.055941444570377856
+        },
+        "beta": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.548717289613705e-14,
+          "max_error_to_allowance": 0.06180382177787396
+        }
+      }
+    },
+    {
+      "name": "4result.npy",
+      "associations": 5000000,
+      "sha256": [
+        "f54ff8541b97b2e936b499ebb18e5a2402906f12168bf72f708ebb0f16318fff",
+        "e359331c5f1df8b1209ec5bc564124e333dc6e8c6563fac6d107cfcf1a889ee6"
+      ],
+      "identity_mismatches": 0,
+      "metrics": {
+        "MAF": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 0.0,
+          "max_error_to_allowance": 0.0
+        },
+        "SE": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 1.4210854715202004e-14,
+          "max_error_to_allowance": 0.0001260710299514906
+        },
+        "t-stat": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.171241461241152e-14,
+          "max_error_to_allowance": 0.049576639363245495
+        },
+        "beta": {
+          "compared": 5000000,
+          "nonfinite": 0,
+          "outside_tolerance": 0,
+          "max_absolute_error": 8.532063944244328e-14,
+          "max_error_to_allowance": 0.055536512357356654
+        }
+      }
+    }
+  ],
+  "failures": [],
+  "scope": "Full saved ExampleStudy output consistency with the archived legacy run, using unchanged provisional numerical tolerances. Not an independent validation of the large study."
+}

@@ -1,5 +1,5 @@
 import numpy as np
-import cPickle as pickle
+import pickle as pickle
 import os
 
 
@@ -18,14 +18,14 @@ class HashTablePOS(object):
         if self.hash_dic[id.CHR].get(id.bp) is not None:
             if isinstance(self.hash_dic[id.CHR][id.bp], tuple):
                 if self._print:
-                    print(
+                    print((
                     "Collision! You are trying to fill {} again with A1_{}/A2_{},"
                     " it is already inserted with A1_{}/A2_{}. "
                     "".format(
                         "CHR "+str(id.CHR) + " bp "+ str(id.bp),
                         id.allele1,id.allele2,
                         self.hash_dic[id.CHR][id.bp][1],self.hash_dic[id.CHR][id.bp][2])
-                                           )
+                                           ))
 
                 self.hash_dic[id.CHR][id.bp]=[self.hash_dic[id.CHR][id.bp],(self.n_keys,id.allele1, id.allele2)   ]
                 self.n_keys+=1
@@ -47,14 +47,14 @@ class HashTablePOS(object):
             if self.hash_dic[i[1].CHR].get(i[1].bp) is not None:
                 if isinstance(self.hash_dic[i[1].CHR][i[1].bp], tuple):
                     if self._print:
-                        print(
+                        print((
                         "Collision! You are trying to fill {} again with A1_{}/A2_{},"
                         " it is already inserted with A1_{}/A2_{}. "
                         "".format(
                             "CHR "+str(i[1].CHR) + " bp "+ str(i[1].bp),
                             i[1].allele1,i[1].allele2,
                             self.hash_dic[i[1].CHR][i[1].bp][1],self.hash_dic[i[1].CHR][i[1].bp][2])
-                                                   )
+                                                   ))
 
                     self.hash_dic[i[1].CHR][i[1].bp]=[self.hash_dic[i[1].CHR][i[1].bp],(i[0],i[1].allele1, i[1].allele2)   ]
                 else:
@@ -115,7 +115,7 @@ class HashTableRSID(object):
                 if id.ID[:2]=='rs':
                     m=int(id.ID[2:])
                     if self.hash_table[m]!=0:
-                        print 'collision {}!'.format(id)
+                        print('collision {}!'.format(id))
                         if isinstance(self.list[self.hash_table[m]],tuple):
                             self.list[self.hash_table[m]]=[self.list[self.hash_table[m]], (self.n_keys,id['allele1'],id['allele2'])         ]
                             self.n_keys+=1
@@ -133,7 +133,7 @@ class HashTableRSID(object):
                     else:
                         if isinstance(self.hash_dic[id.ID],tuple):
                             if self._print:
-                                print(
+                                print((
                                 "Collision! You are trying to fill {} again with A1_{}/A2_{},"
                                 " it is already inserted with A1_{}/A2_{}. "
                                     "You can resolve the collisions, use genotype data with CHR and bp info".format(
@@ -141,7 +141,7 @@ class HashTableRSID(object):
                                     id['allele1'],id['allele2'],
                                     self.hash_dic[id.ID][1],self.hash_dic[id.ID][2])
 
-                                            )
+                                            ))
                             self.hash_dic[id.ID]=[self.hash_dic[id.ID], (self.n_keys,id['allele1'],id['allele2'])]
                             self.n_keys+=1
                         else:
@@ -155,7 +155,7 @@ class HashTableRSID(object):
                 else:
                     if isinstance(self.hash_dic[id[1].ID],tuple):
                         if self._print:
-                            print(
+                            print((
                             "Collision! You are trying to fill {} again with A1_{}/A2_{},"
                             " it is already inserted with A1_{}/A2_{}. "
                                 "You can resolve the collisions, use genotype data with CHR and bp info".format(
@@ -163,7 +163,7 @@ class HashTableRSID(object):
                                 id['allele1'],id['allele2'],
                                 self.hash_dic[id.ID][1],self.hash_dic[id.ID][2])
 
-                                        )
+                                        ))
                         self.hash_dic[id.ID]=[self.hash_dic[id.ID], (self.n_keys,id['allele1'],id['allele2'])]
                         self.n_keys+=1
                     else:
@@ -181,7 +181,7 @@ class HashTableRSID(object):
                     if i[1].ID[:2]=='rs':
                         m=int(i[1].ID[2:])
                         if self.hash_table[m]!=0:
-                            print 'collision {}!'.format(i)
+                            print('collision {}!'.format(i))
                             if isinstance(self.list[self.hash_table[m]],tuple):
                                 self.list[self.hash_table[m]]=[self.list[self.hash_table[m]], (i[0],i[1]['allele1'],i[1]['allele2'])         ]
                             else:
@@ -194,7 +194,7 @@ class HashTableRSID(object):
                             self.hash_dic[i[1].ID]=(i[0],i[1]['allele1'],i[1]['allele2'])
                         else:
                             if isinstance(self.hash_dic[i],tuple):
-                                print(
+                                print((
                                 "Collision! You are trying to fill {} again with A1_{}/A2_{},"
                                 " it is already inserted with A1_{}/A2_{}. "
                                     "You can resolve the collisions, use genotype data with CHR and bp info".format(
@@ -202,7 +202,7 @@ class HashTableRSID(object):
                                     i[1]['allele1'],i['allele2'],
                                     self.hash_dic[i[1].ID][1],self.hash_dic[i[1].ID][2])
 
-                                            )
+                                            ))
                                 self.hash_dic[i[1].ID]=[self.hash_dic[i[1].ID], (i[0],i[1]['allele1'],i[1]['allele2'])]
                             else:
                                 self.hash_dic[i[1].ID].append((i[0],i[1]['allele1'],i[1]['allele2']))
@@ -211,7 +211,7 @@ class HashTableRSID(object):
                         self.hash_dic[i[1].ID]=[i[0],i[1]['allele1'],i[1]['allele2']]
                     else:
                         if isinstance(self.hash_dic[i[1].ID],tuple):
-                            print(
+                            print((
                             "Collision! You are trying to fill {} again with A1_{}/A2_{},"
                             " it is already inserted with A1_{}/A2_{}. "
                                 "You can resolve the collisions, use genotype data with CHR and bp info".format(
@@ -219,7 +219,7 @@ class HashTableRSID(object):
                                 i[1]['allele1'],i[1]['allele2'],
                                 self.hash_dic[i[1].ID][1],self.hash_dic[i[1].ID][2])
 
-                                        )
+                                        ))
                             self.hash_dic[i[1].ID]=[self.hash_dic[i[1].ID], (i[0],i[1]['allele1'],i[1]['allele2'])]
                         else:
                             self.hash_dic[i[1].ID].append((i[0],i[1]['allele1'],i[1]['allele2']))
@@ -272,6 +272,6 @@ class HashTableRSID(object):
             pickle.dump(self, output, -1)
 
 if __name__=="__main__":
-    print 'Hash'
+    print('Hash')
 
 
