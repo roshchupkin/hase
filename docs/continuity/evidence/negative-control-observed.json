@@ -1,0 +1,77 @@
+{
+  "cells": [
+    [
+      {
+        "beta": 4.631650437131279,
+        "standard_error": 0.4360103096818482,
+        "t_statistic": 10.599865036456697
+      },
+      {
+        "beta": 0.8350273651290046,
+        "standard_error": 0.551718424390789,
+        "t_statistic": 1.5135027728157657
+      }
+    ],
+    [
+      {
+        "beta": -4.026778242677824,
+        "standard_error": 1.2441955357250554,
+        "t_statistic": -3.236451286839908
+      },
+      {
+        "beta": -1.9230125523012591,
+        "standard_error": 0.47466623044154904,
+        "t_statistic": -4.05129421259316
+      }
+    ],
+    [
+      {
+        "beta": 0.6601955813111182,
+        "standard_error": 1.4040759586967633,
+        "t_statistic": 0.4701993344604371
+      },
+      {
+        "beta": 0.38681637088011733,
+        "standard_error": 0.5974633517761293,
+        "t_statistic": 0.6474311264953674
+      }
+    ]
+  ],
+  "covariate_ids": [
+    "centered-trend",
+    "binary-covariate"
+  ],
+  "degrees_of_freedom": 12,
+  "fixture_sha256": "9a09a32cf9ae0ff6116fbf40b2f03adf823b9c655c57b032d40c02904d21a55d",
+  "intercept": true,
+  "kernel_sha256": "ee3d9660996e3410b00ea7dd53d1995918133c546bfc6f6e259874b12c7e36f8",
+  "phenotype_ids": [
+    "phenotype-a",
+    "phenotype-b"
+  ],
+  "schema_version": 1,
+  "scope": "Regression matrix kernel only; no CLI, file alignment, conversion or meta-analysis claim.",
+  "subject_ids": [
+    "s01",
+    "s02",
+    "s03",
+    "s04",
+    "s05",
+    "s06",
+    "s07",
+    "s08",
+    "s09",
+    "s10",
+    "s11",
+    "s12",
+    "s13",
+    "s14",
+    "s15",
+    "s16"
+  ],
+  "variant_ids": [
+    "variant-a",
+    "variant-b",
+    "variant-c"
+  ]
+}

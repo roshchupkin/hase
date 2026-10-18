@@ -125,7 +125,7 @@ if __name__=='__main__':
 	if args.mapper_chunk:
 		MAPPER_CHUNK_SIZE=args.mapper_chunk
 	ARG_CHECKER=Checker()
-	print args
+	print(args)
 	os.environ['HASEOUT']=args.out
 
 	if args.cluster=='y':
@@ -136,7 +136,7 @@ if __name__=='__main__':
 
 
 	if not os.path.isdir(args.out):
-		print "Creating output folder {}".format(args.out)
+		print("Creating output folder {}".format(args.out))
 		os.mkdir(args.out)
 
 	if args.np:
@@ -173,7 +173,7 @@ if __name__=='__main__':
 				raise ValueError('Genotype data should be in PLINK/MINIMAC/VCF format and alone in folder')
 
 		check_converter(args.out,args.study_name[0])
-		print ('Time to convert all data: {} sec'.format(t.secs))
+		print(('Time to convert all data: {} sec'.format(t.secs)))
 
 	################################### ENCODING ##############################
 
@@ -217,7 +217,7 @@ if __name__=='__main__':
 					encode_genotype=None
 					gc.collect()
 
-				print ('Time to create fake genotype is {}sec'.format(t_gen.secs))
+				print(('Time to create fake genotype is {}sec'.format(t_gen.secs)))
 
 			while True:
 				with Timer() as t_phen:
@@ -233,9 +233,9 @@ if __name__=='__main__':
 					gc.collect()
 			if phen.folder.format=='.npy':
 				np.save(os.path.join(os.path.join(args.out, 'encode_phenotype', 'info_dic.npy')),e.phen_info_dic )
-			print ('Time to create fake phenotype is {}sec'.format(t_phen.secs))
+			print(('Time to create fake phenotype is {}sec'.format(t_phen.secs)))
 
-		print ('Time to encode all data: {} sec'.format(t.secs))
+		print(('Time to encode all data: {} sec'.format(t.secs)))
 
 	################################### SINGLE META STAGE ##############################
 
@@ -268,7 +268,7 @@ if __name__=='__main__':
 			partial_derivatives(save_path=args.out,COV=cov,PHEN=phen, GEN=gen,
 								MAP=mapper, MAF=args.maf, R2=None, B4_flag=args.pd_full,
 								study_name=args.study_name[0], intercept=args.intercept)
-		print ('Time to compute partial derivatives : {} sec'.format(t.secs))
+		print(('Time to compute partial derivatives : {} sec'.format(t.secs)))
 
 	################################### MULTI META STAGE ##############################
 
@@ -285,15 +285,15 @@ if __name__=='__main__':
 		mapper.reference_name=args.ref_name
 		if args.snp_id_inc is not None:
 			mapper.include = pd.DataFrame.from_csv(args.snp_id_inc, index_col=None)
-			print 'Include:'
-			print mapper.include.head()
+			print('Include:')
+			print(mapper.include.head())
 			if 'ID' not in mapper.include.columns and (
 					'CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
 				raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_inc))
 		if args.snp_id_exc is not None:
 			mapper.exclude = pd.DataFrame.from_csv(args.snp_id_exc, index_col=None)
-			print 'Exclude:'
-			print mapper.exclude.head()
+			print('Exclude:')
+			print(mapper.exclude.head())
 			if 'ID' not in mapper.exclude.columns and (
 					'CHR' not in mapper.exclude.columns or 'bp' not in mapper.exclude.columns):
 				raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_exc))
@@ -312,7 +312,7 @@ if __name__=='__main__':
 				pard[i].start(j, study_name=args.study_name[i])
 				pard[i].folder.load()
 
-		print "time to set PD is {}s".format(t.secs)
+		print("time to set PD is {}s".format(t.secs))
 
 
 		PD=[False if isinstance(i.folder._data.b4, type(None) ) else True for i in pard]
@@ -334,7 +334,7 @@ if __name__=='__main__':
 				for i,j in enumerate(args.phenotype):
 					phen.append(Reader('phenotype'))
 					phen[i].start(j)
-			print "Time to set pheno {} s".format(t.secs)
+			print("Time to set pheno {} s".format(t.secs))
 			meta_phen=MetaPhenotype(phen,include=args.ph_id_inc,exclude=args.ph_id_exc)
 
 			N_studies=len(args.genotype)
@@ -344,7 +344,7 @@ if __name__=='__main__':
 				for i,j in enumerate(args.genotype):
 					gen.append(Reader('genotype'))
 					gen[i].start(j,hdf5=args.hdf5, study_name=args.study_name[i], ID=False)
-			print "Time to set gen {}s".format(t.secs)
+			print("Time to set gen {}s".format(t.secs))
 
 			row_index, ids =  study_indexes(phenotype=tuple(i.folder._data for i in phen),genotype=tuple(i.folder._data for i in gen),covariates=tuple(i.folder._data.metadata for i in pard))
 			if row_index[2].shape[0]!=np.sum([i.folder._data.metadata['id'].shape[0] for i in pard]) :
@@ -369,7 +369,7 @@ if __name__=='__main__':
 				with Timer() as t_g:
 					genotype=merge_genotype(gen, SNPs_index, mapper)
 					genotype=genotype[:,row_index[0]]
-				print "Time to get G {}s".format(t_g.secs)
+				print("Time to get G {}s".format(t_g.secs))
 			#TODO (low) add interaction
 
 			a_test=np.array([])
@@ -390,7 +390,7 @@ if __name__=='__main__':
 				else:
 					a_test, b_cov, C, a_cov, b4 = meta_pard.get( SNPs_index=SNPs_index, B4=True, regression_model=regression_model, random_effect_intercept=args.effect_intercept)
 
-			print "Time to get PD {}s".format(t_pd.secs)
+			print("Time to get PD {}s".format(t_pd.secs))
 
 			MAF=meta_pard.maf_pard(SNPs_index=SNPs_index)
 
@@ -404,14 +404,14 @@ if __name__=='__main__':
 					b4=b4[filter,:]
 				Analyser.rsid=Analyser.rsid[filter]
 				if a_test.shape[0]==0:
-					print 'NO SNPs > MAF'
+					print('NO SNPs > MAF')
 					continue
 			else:
 				Analyser.MAF=MAF
 
 			a_inv=A_inverse(a_cov, a_test)
 			N_con=a_inv.shape[1] - 1
-			print 'There are {} subjects in study.'.format(meta_pard.get_n_id())
+			print('There are {} subjects in study.'.format(meta_pard.get_n_id()))
 			DF=( meta_pard.get_n_id()- a_inv.shape[1]  )
 
 			if np.sum(PD)==0:
@@ -420,29 +420,29 @@ if __name__=='__main__':
 					phenotype=np.array([])
 					with Timer() as t_ph:
 						phenotype, phen_names = meta_phen.get()
-					print "Time to get PH {}s".format(t_ph.secs)
+					print("Time to get PH {}s".format(t_ph.secs))
 
 					if isinstance(phenotype, type(None)):
 						meta_phen.processed=0
-						print 'All phenotypes processed!'
+						print('All phenotypes processed!')
 						break
-					print ("Merged phenotype shape {}".format(phenotype.shape))
+					print(("Merged phenotype shape {}".format(phenotype.shape)))
 					#TODO (middle) select phen from protocol
 					phenotype=phenotype[row_index[1],:]
-					print ("Selected phenotype shape {}".format(phenotype.shape))
-					keys=meta_pard.phen_mapper.dic.keys()
+					print(("Selected phenotype shape {}".format(phenotype.shape)))
+					keys=list(meta_pard.phen_mapper.dic.keys())
 					phen_ind_dic = { k:i for i,k in enumerate(keys) }
 					phen_ind=np.array([phen_ind_dic.get(i,-1) for i in phen_names] )
 					if np.sum(phen_ind==-1)==len(phen_ind):
-						print 'There is no common ids in phenotype files and PD data!'
+						print('There is no common ids in phenotype files and PD data!')
 						break
 					else:
-						print 'There are {} common ids in phenotype files and PD data!'.format( np.sum(phen_ind!=-1)  )
+						print('There are {} common ids in phenotype files and PD data!'.format( np.sum(phen_ind!=-1)  ))
 					C_test=C[phen_ind]
 					b_cov_test=b_cov[:,phen_ind]
 
 					b4 = B4(phenotype,genotype)
-					print ("B4 shape is {}".format(b4.shape))
+					print(("B4 shape is {}".format(b4.shape)))
 					t_stat,SE =HASE(b4, a_inv, b_cov_test, C_test, N_con, DF)
 
 					if mapper.cluster=='y':
@@ -466,7 +466,7 @@ if __name__=='__main__':
 				Analyser.SE=SE
 				Analyser.threshold=args.thr
 				Analyser.out=args.out
-				Analyser.save_result(  np.array(meta_pard.phen_mapper.dic.keys()) )
+				Analyser.save_result(  np.array(list(meta_pard.phen_mapper.dic.keys())) )
 
 				t_stat=None
 				Analyser.t_stat=None
@@ -512,14 +512,14 @@ if __name__=='__main__':
 			mapper.reference_name=args.ref_name
 			if args.snp_id_inc is not None:
 				mapper.include=pd.DataFrame.from_csv(args.snp_id_inc,index_col=None)
-				print 'Include:'
-				print mapper.include.head()
+				print('Include:')
+				print(mapper.include.head())
 				if 'ID' not in mapper.include.columns and ('CHR' not in mapper.include.columns or 'bp' not in mapper.include.columns):
 					raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_inc))
 			if args.snp_id_exc is not None:
 				mapper.exclude=pd.DataFrame.from_csv(args.snp_id_exc,index_col=None)
-				print 'Exclude:'
-				print mapper.exclude.head()
+				print('Exclude:')
+				print(mapper.exclude.head())
 				if 'ID' not in mapper.exclude.columns and ('CHR' not in mapper.exclude.columns or 'bp' not in mapper.exclude.columns):
 					raise ValueError('{} table does not have ID or CHR,bp columns'.format(args.snp_id_exc))
 			mapper.load(args.mapper)
@@ -537,7 +537,7 @@ if __name__=='__main__':
 				mapper.n_study=1
 				mapper.n_keys=gen[0].folder._data.names.shape[0]
 				mapper.keys=np.array(gen[0].folder._data.names.tolist())
-				mapper.values=np.array(range(mapper.n_keys)).reshape(-1,1)
+				mapper.values=np.array(list(range(mapper.n_keys))).reshape(-1,1)
 				mapper.flip[args.study_name[0]]=np.array([1]*mapper.n_keys)
 				if args.snp_id_exc is not None or args.snp_id_inc is not None:
 					raise ValueError('You can not exclude or include variants to analysis without mapper!')
@@ -552,4 +552,4 @@ if __name__=='__main__':
 
 end = time.time()
 
-print ('experiment finished in {} s'.format((end-start)))
+print(('experiment finished in {} s'.format((end-start))))

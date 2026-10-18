@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scientific_review": "not_assessed",
+  "contract_status": "provisional_engineering_reference",
+  "fixture_sha256": "9a09a32cf9ae0ff6116fbf40b2f03adf823b9c655c57b032d40c02904d21a55d",
+  "observed_sha256": "1916172e353f54994bd11cf6690afc509a954a189591434b9b20db1939a79f97",
+  "expected_exact": {
+    "degrees_of_freedom": 12,
+    "cells": [
+      [
+        {
+          "beta": 4.621650437131281,
+          "standard_error": 0.4360103096818338,
+          "t_statistic": 10.59986503645705,
+          "beta_exact": "65022/14069",
+          "variance_exact": "37628766/197936761",
+          "residual_sum_squares_exact": "696829/28138"
+        },
+        {
+          "beta": 0.835027365129007,
+          "standard_error": 0.5517184243907948,
+          "t_statistic": 1.5135027728157544,
+          "beta_exact": "1068/1279",
+          "variance_exact": "5477328/17994251",
+          "residual_sum_squares_exact": "50716/1279"
+        }
+      ],
+      [
+        {
+          "beta": -4.026778242677825,
+          "standard_error": 1.2441955357250534,
+          "t_statistic": -3.236451286839914,
+          "beta_exact": "-4812/1195",
+          "variance_exact": "17684919/11424200",
+          "residual_sum_squares_exact": "654997/4780"
+        },
+        {
+          "beta": -1.9230125523012553,
+          "standard_error": 0.47466623044155776,
+          "t_statistic": -4.051294212593078,
+          "beta_exact": "-2298/1195",
+          "variance_exact": "643491/2856050",
+          "residual_sum_squares_exact": "23833/1195"
+        }
+      ],
+      [
+        {
+          "beta": 0.6601955813111191,
+          "standard_error": 1.4040759586967635,
+          "t_statistic": 0.4701993344604376,
+          "beta_exact": "9114/13805",
+          "variance_exact": "375711102/190578025",
+          "residual_sum_squares_exact": "6957613/27610"
+        },
+        {
+          "beta": 0.3868163708801159,
+          "standard_error": 0.5974633517761262,
+          "t_statistic": 0.6474311264953683,
+          "beta_exact": "1068/2761",
+          "variance_exact": "2721168/7623121",
+          "residual_sum_squares_exact": "125980/2761"
+        }
+      ]
+    ]
+  },
+  "comparisons": [
+    {
+      "variant": "variant-a",
+      "phenotype": "phenotype-a",
+      "metric": "beta",
+      "actual": 4.621650437131279,
+      "expected": 4.621650437131281,
+      "absolute_error": 1.7763568394002505e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-a",
+      "phenotype": "phenotype-a",
+      "metric": "standard_error",
+      "actual": 0.4360103096818482,
+      "expected": 0.4360103096818338,
+      "absolute_error": 1.4377388168895777e-14,
+      "passed": true
+    },
+    {
+      "variant": "variant-a",
+      "phenotype": "phenotype-a",
+      "metric": "t_statistic",
+      "actual": 10.599865036456697,
+      "expected": 10.59986503645705,
+      "absolute_error": 3.5349501104064984e-13,
+      "passed": true
+    },
+    {
+      "variant": "variant-a",
+      "phenotype": "phenotype-b",
+      "metric": "beta",
+      "actual": 0.8350273651290046,
+      "expected": 0.835027365129007,
+      "absolute_error": 2.4424906541753444e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-a",
+      "phenotype": "phenotype-b",
+      "metric": "standard_error",
+      "actual": 0.551718424390789,
+      "expected": 0.5517184243907948,
+      "absolute_error": 5.773159728050814e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-a",
+      "phenotype": "phenotype-b",
+      "metric": "t_statistic",
+      "actual": 1.5135027728157657,
+      "expected": 1.5135027728157544,
+      "absolute_error": 1.1324274851176597e-14,
+      "passed": true
+    },
+    {
+      "variant": "variant-b",
+      "phenotype": "phenotype-a",
+      "metric": "beta",
+      "actual": -4.026778242677824,
+      "expected": -4.026778242677825,
+      "absolute_error": 8.881784197001252e-16,
+      "passed": true
+    },
+    {
+      "variant": "variant-b",
+      "phenotype": "phenotype-a",
+      "metric": "standard_error",
+      "actual": 1.2441955357250554,
+      "expected": 1.2441955357250534,
+      "absolute_error": 1.9984014443252818e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-b",
+      "phenotype": "phenotype-a",
+      "metric": "t_statistic",
+      "actual": -3.236451286839908,
+      "expected": -3.236451286839914,
+      "absolute_error": 5.773159728050814e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-b",
+      "phenotype": "phenotype-b",
+      "metric": "beta",
+      "actual": -1.9230125523012591,
+      "expected": -1.9230125523012553,
+      "absolute_error": 3.774758283725532e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-b",
+      "phenotype": "phenotype-b",
+      "metric": "standard_error",
+      "actual": 0.47466623044154904,
+      "expected": 0.47466623044155776,
+      "absolute_error": 8.715250743307479e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-b",
+      "phenotype": "phenotype-b",
+      "metric": "t_statistic",
+      "actual": -4.05129421259316,
+      "expected": -4.051294212593078,
+      "absolute_error": 8.260059303211165e-14,
+      "passed": true
+    },
+    {
+      "variant": "variant-c",
+      "phenotype": "phenotype-a",
+      "metric": "beta",
+      "actual": 0.6601955813111182,
+      "expected": 0.6601955813111191,
+      "absolute_error": 8.881784197001252e-16,
+      "passed": true
+    },
+    {
+      "variant": "variant-c",
+      "phenotype": "phenotype-a",
+      "metric": "standard_error",
+      "actual": 1.4040759586967633,
+      "expected": 1.4040759586967635,
+      "absolute_error": 2.220446049250313e-16,
+      "passed": true
+    },
+    {
+      "variant": "variant-c",
+      "phenotype": "phenotype-a",
+      "metric": "t_statistic",
+      "actual": 0.4701993344604371,
+      "expected": 0.4701993344604376,
+      "absolute_error": 4.996003610813204e-16,
+      "passed": true
+    },
+    {
+      "variant": "variant-c",
+      "phenotype": "phenotype-b",
+      "metric": "beta",
+      "actual": 0.38681637088011733,
+      "expected": 0.3868163708801159,
+      "absolute_error": 1.4432899320127035e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-c",
+      "phenotype": "phenotype-b",
+      "metric": "standard_error",
+      "actual": 0.5974633517761293,
+      "expected": 0.5974633517761262,
+      "absolute_error": 3.1086244689504383e-15,
+      "passed": true
+    },
+    {
+      "variant": "variant-c",
+      "phenotype": "phenotype-b",
+      "metric": "t_statistic",
+      "actual": 0.6474311264953674,
+      "expected": 0.6474311264953683,
+      "absolute_error": 8.881784197001252e-16,
+      "passed": true
+    }
+  ],
+  "failures": [],
+  "scope": "Three full-rank variants, two phenotypes, intercept and two covariates; provisional tolerances."
+}

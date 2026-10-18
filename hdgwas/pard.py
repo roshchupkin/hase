@@ -16,7 +16,7 @@ def merge_PD(path, max_node, study_name):
     print('All files found...')
     b4_flag=os.path.isfile(os.path.join(path,'node_{}_{}_b4.npy'.format(1,study_name) ) )
     for i in range(1,max_node+1):
-        print 'node_{}'.format(i)
+        print('node_{}'.format(i))
         if i==1:
             metadata=np.load(os.path.join(path,'node_{}_{}_metadata.npy'.format(i,study_name)) ).item()
             a_test=np.load( os.path.join(path,'node_{}_{}_a_test.npy'.format(i,study_name)  ))
@@ -94,14 +94,14 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
                 b_cov.append(B_covariates(covariates,phenotype,intercept=intercept))
                 C.append(C_matrix(phenotype))
 
-        print ('Time to PD phenotype {} is {} s'.format(np.array(C).shape, t_phen.secs))
+        print(('Time to PD phenotype {} is {} s'.format(np.array(C).shape, t_phen.secs)))
 
     if MAP.cluster == 'y':
         f_max=np.max([ int(f.split('_')[0]) for f in GEN.folder.files  ])
-        files2read=[ '{}_{}.h5'.format(i,study_name) for i in np.array_split(range(f_max+1),MAP.node[0])[MAP.node[1] -1  ]  ][::-1]
+        files2read=[ '{}_{}.h5'.format(i,study_name) for i in np.array_split(list(range(f_max+1)),MAP.node[0])[MAP.node[1] -1  ]  ][::-1]
         filesdone=[]
         for i in range(MAP.node[1] -1):
-            filesdone=filesdone + [ '{}_{}.h5'.format(i,study_name) for i in np.array_split(range(f_max+1),MAP.node[0])[ i  ]  ]
+            filesdone=filesdone + [ '{}_{}.h5'.format(i,study_name) for i in np.array_split(list(range(f_max+1)),MAP.node[0])[ i  ]  ]
 
         N_snps_read=0
         for f in filesdone:
@@ -152,14 +152,14 @@ def partial_derivatives(save_path=None,COV=None,PHEN=None, GEN=None,
                 #works only when all phenotypes in one chunk, if not, do not use this option!
                 #it would use to much disk space anyway
                 if len([f for f in PHEN.folder.files if f!='info_dic.npy' ])>1:
-                    print 'pd_full flag disabled!'
+                    print('pd_full flag disabled!')
                     B4_flag=False
                     continue
                 PHEN.folder.processed=0
                 phenotype=PHEN.get_next(index=row_index[1])
                 b4.append(B4(phenotype,genotype))
 
-        print ('Time to PD genotype {} is {} s'.format(genotype.shape, t_gen.secs))
+        print(('Time to PD genotype {} is {} s'.format(genotype.shape, t_gen.secs)))
 
 
 

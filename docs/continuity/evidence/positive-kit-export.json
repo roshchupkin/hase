@@ -1,0 +1,59 @@
+{
+  "export_kind": "sanitized_derivative",
+  "original_sha256": "f211bfed60139a254ce5a39259a0e0ca932913b070ad6a246006aad32f60be29",
+  "omitted_fields": "Project label, selection, argv, timings, stream metadata, next actions and report path.",
+  "record": {
+    "schema_version": 1,
+    "kit_version": "0.3.0",
+    "kind": "check_execution",
+    "recorded_at": "2026-10-18T12:02:13.858603+00:00",
+    "python_version": "3.13.16",
+    "platform": "linux",
+    "configuration_sha256": "41f9d58ae3a7ee1e8a39f8d00578f3659888e72d34cc5be76b71e4002ad5222d",
+    "source": {
+      "status": "unavailable",
+      "commit": null,
+      "dirty": null
+    },
+    "reference_files": [
+      {
+        "path": "checks/continuity/fixture.json",
+        "sha256": "9a09a32cf9ae0ff6116fbf40b2f03adf823b9c655c57b032d40c02904d21a55d"
+      },
+      {
+        "path": "checks/continuity/contract.json",
+        "sha256": "96b9b541062b8bece66d6ae39ff514e3899e059f6ccc2ffca9d22131cc92b46e"
+      },
+      {
+        "path": "checks/continuity/independent_ols.py",
+        "sha256": "934971601f2aaf4c78c8b6b4bc0791bfadc0f9e003b3998450d5d54e3b28259c"
+      },
+      {
+        "path": "checks/continuity/compare_reference.py",
+        "sha256": "787c706959b694de3012de3d0fafa08f5ddaa69bfaa47fc32fc4393d4cfadad9"
+      },
+      {
+        "path": "checks/continuity/hase_probe.py",
+        "sha256": "6e8ff70b2a4a67e7bdc966f49ba2389e6bb751d61fc44fee19d81ccc306d53b4"
+      },
+      {
+        "path": "hdgwas/hdregression.py",
+        "sha256": "ee3d9660996e3410b00ea7dd53d1995918133c546bfc6f6e259874b12c7e36f8"
+      },
+      {
+        "path": ".continuity/observations/observed.json",
+        "sha256": "1916172e353f54994bd11cf6690afc509a954a189591434b9b20db1939a79f97"
+      }
+    ],
+    "status": "checks_passed",
+    "scientific_review": "not_assessed",
+    "scope": "Selected commands ran locally in the current environment, without shell expansion. Source identity and declared reference hashes were observed before execution; dirty working-tree contents and submodules are not captured. This is not a sandbox or scientific certification.",
+    "checks": [
+      {
+        "id": "hase-ols-reference",
+        "status": "passed",
+        "exit_code": 0
+      }
+    ]
+  }
+}

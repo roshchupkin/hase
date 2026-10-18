@@ -50,16 +50,16 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True, interacti
 
 		with Timer() as t:
 			genotype=merge_genotype(gen, SNPs_index, mapper)
-		print ('time to read and merge genotype {}s'.format(t.secs))
+		print(('time to read and merge genotype {}s'.format(t.secs)))
 		gc.collect()
 		if genotype is None:
-			print 'All genotype processed!'
+			print('All genotype processed!')
 			break
 		SNP[0]+=genotype.shape[0]
 		genotype=genotype[:,row_index[0]]
 
 		if mapper is None:
-			Analyser.rsid=np.array(range(genotype.shape[0]))
+			Analyser.rsid=np.array(list(range(genotype.shape[0])))
 
 
 		MAF=np.mean(genotype, axis=1)/2
@@ -73,7 +73,7 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True, interacti
 			Analyser.rsid=Analyser.rsid[filter]
 
 			if genotype.shape[0]==0:
-				print 'NO SNPs > MAF'
+				print('NO SNPs > MAF')
 				continue
 
 		else:
@@ -86,7 +86,7 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True, interacti
 
 			if isinstance(phenotype, type(None)):
 				phen.folder.processed=0
-				print 'All phenotypes processed!'
+				print('All phenotypes processed!')
 				break
 
 			if phen.permutation:
@@ -111,7 +111,7 @@ def haseregression(phen,gen,cov, mapper, Analyser, maf,intercept=True, interacti
 
 
 			t_stat, SE=HASE(b4, a_inv, b_cov, C, N_con, DF)
-			print('Read {}, processed {}, total {}'.format(SNP[0],SNP[1],SNP[2] ))
+			print(('Read {}, processed {}, total {}'.format(SNP[0],SNP[1],SNP[2] )))
 			Analyser.t_stat=t_stat
 			Analyser.SE=SE
 			if mapper is not None and mapper.cluster == 'y':

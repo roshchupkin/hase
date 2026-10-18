@@ -6,9 +6,9 @@ import bitarray as ba
 import numpy as np
 import gc
 import subprocess
-from tools import Timer
+from .tools import Timer
 import pandas as pd
-from data import MINIMACHDF5Folder
+from .data import MINIMACHDF5Folder
 import shutil
 import glob
 import signal
@@ -41,7 +41,7 @@ class GenotypeHDF5(Genotype):
 				  'pr':['probes',self.h5_pr_file]}
 
 		if (not overwrite) and os.path.isfile( os.path.join(self.out,type_dic[type][0],self.h5_name) ):
-			print('File %s found. Please remove manually.' % self.h5_name)
+			print(('File %s found. Please remove manually.' % self.h5_name))
 			return
 		else:
 			if type=='pr':
@@ -96,7 +96,7 @@ class GenotypePLINK(GenotypeHDF5):
 			chunk=self.reader.folder.get_bim(chunk_size)
 			if isinstance(chunk,type(None)):
 				break
-			print i
+			print(i)
 			chunk.columns=['CHR', 'ID', 'distance', 'bp', 'allele1', 'allele2']
 			hash_1=chunk.allele1.apply(hash)
 			hash_2=chunk.allele2.apply(hash)
@@ -113,7 +113,7 @@ class GenotypePLINK(GenotypeHDF5):
 			gc.collect()
 			i+=1
 		pd.DataFrame.from_dict(hash_table).to_csv(os.path.join(self.out,'probes',self.file_name+'_hash_table.csv.gz'),index=False,compression='gzip', sep='\t')
-		print('Number of Probes {} converted'.format(self.reader.folder.N_probes))
+		print(('Number of Probes {} converted'.format(self.reader.folder.N_probes)))
 
 	#@profile
 	def convert_genotypes(self):
@@ -130,7 +130,7 @@ class GenotypePLINK(GenotypeHDF5):
 				if isinstance(G,type(None)):
 					break
 
-			print ('Time to read {} SNPs is {} s'.format(G.shape[0], t.secs))
+			print(('Time to read {} SNPs is {} s'.format(G.shape[0], t.secs)))
 
 			self.write_data('gen')
 			atom = tables.Int8Atom()
@@ -140,7 +140,7 @@ class GenotypePLINK(GenotypeHDF5):
 			with Timer() as t:
 				self.genotype[:] = G
 
-			print ('Time to write {} SNPs is {} s'.format(G.shape[0], t.secs))
+			print(('Time to write {} SNPs is {} s'.format(G.shape[0], t.secs)))
 
 			self.h5_gen_file.close()
 			G=None
@@ -156,7 +156,7 @@ class GenotypePLINK(GenotypeHDF5):
 				os.mkdir(os.path.join(out,'individuals') )
 				os.mkdir(os.path.join(out,'probes') )
 			except:
-				print('Directories "genotype","probes","individuals" are already exist in {}...'.format(self.out))
+				print(('Directories "genotype","probes","individuals" are already exist in {}...'.format(self.out)))
 
 		self.out=out
 		self.write_data('ind')
@@ -174,9 +174,9 @@ class GenotypePLINK(GenotypeHDF5):
 	def _summary(self, head=10):
 		pass #TODO (low) rewrite to get statistic not load to memory
 
-		print('Number of Probes: %d' % None)
-		print('Number of Individuals: %d' % None)
-		print('The genotype matrix is of size %d by %d' % None)
+		print(('Number of Probes: %d' % None))
+		print(('Number of Individuals: %d' % None))
+		print(('The genotype matrix is of size %d by %d' % None))
 
 class GenotypeMINIMAC(object):
 
@@ -189,7 +189,7 @@ class GenotypeMINIMAC(object):
 		self.cluster=False
 
 	def save_hdf5_chunk(self,data,out,name):
-		print 'Saving chunk...{}'.format(os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'))
+		print('Saving chunk...{}'.format(os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5')))
 		h5_gen_file = tables.open_file(
 			os.path.join(out,'genotype',str(self.hdf5_iter)+'_'+name+'.h5'), 'w', title=name)
 
@@ -214,13 +214,13 @@ class GenotypeMINIMAC(object):
 			if self.cluster:
 				ind=pd.read_hdf(os.path.join(out,'individuals',self.study_name+'.h5'),'individuals').individual
 				N=ind.shape[0]
-				print 'Submit to cluster!'
+				print('Submit to cluster!')
 				cmd="qsub -sync y -t 1-{} {} {}".format(N,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'id_convert.sh' ))
-				print cmd
+				print(cmd)
 				proc=subprocess.Popen(cmd, shell=True,stderr=subprocess.STDOUT,stdout=subprocess.PIPE).communicate()
 			else:
 				proc=subprocess.Popen(['bash',os.path.join( out,'id_convert.sh' ) ], shell=False,stderr=subprocess.STDOUT)
-				print proc.communicate()
+				print(proc.communicate())
 			self.folder=MINIMACHDF5Folder(out,self.study_name)
 			self.folder.pool.split_size=self.split_size
 			self.folder.pool.chunk_size=self.split_size
@@ -239,7 +239,7 @@ class GenotypeMINIMAC(object):
 				try:
 					os.mkdir(os.path.join(out,'id_genotype') )
 				except:
-					print 'id_genotype folder already exist'
+					print('id_genotype folder already exist')
 
 				self.folder.pool.move(os.path.join(out,'id_genotype'),type='all')
 
@@ -251,7 +251,7 @@ class GenotypeMINIMAC(object):
 			f=open(os.path.join( out,'minimac_convert.sh' ), 'w')
 			probes=pd.HDFStore(os.path.join(out,'probes', self.study_name +'.h5'),'r')
 			N_probes=probes.get_storer('probes').nrows
-			print 'There are {} probes'.format(N_probes)
+			print('There are {} probes'.format(N_probes))
 			chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
 			N_jobs=chunk.shape[1]
 			ch=[0,0]
@@ -285,13 +285,13 @@ class GenotypeMINIMAC(object):
 				N_jobs+=1
 			f.close()
 			if self.cluster:
-				print 'Submit to cluster!'
+				print('Submit to cluster!')
 				cmd="qsub -sync y -t 1-{} {} {}".format(N_jobs,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'minimac_convert.sh' ))
-				print cmd
+				print(cmd)
 				proc=subprocess.Popen(cmd, shell=True,stderr=subprocess.STDOUT,stdout=subprocess.PIPE).communicate()
 			else:
 				proc=subprocess.Popen(['bash',os.path.join( out,'minimac_convert.sh' ) ], shell=False,stderr=FNULL)
-				print proc.communicate()
+				print(proc.communicate())
 
 			shutil.move(os.path.join(out,'minimac_convert.sh'), os.path.join(out,'tmp_files','minimac_convert.sh') )
 			shutil.move(os.path.join(out,'id_convert.sh'), os.path.join(out,'tmp_files','id_convert.sh') )
@@ -326,7 +326,7 @@ class GenotypeVCF(object):
 		f=open(os.path.join( out,'vcf_convert.sh' ), 'w')
 		probes=pd.HDFStore(os.path.join(out,'probes', self.study_name +'.h5'),'r')
 		N_probes=probes.get_storer('probes').nrows
-		print 'There are {} probes'.format(N_probes)
+		print('There are {} probes'.format(N_probes))
 		chunk=np.vstack(((np.arange(0,N_probes,self.split_size)+1)[:-1],np.arange(0,N_probes,self.split_size)[1:]))
 		N_jobs=chunk.shape[1]
 		ch=[0,0]
@@ -360,13 +360,13 @@ class GenotypeVCF(object):
 			N_jobs+=1
 		f.close()
 		if self.cluster:
-			print 'Submit to cluster!'
+			print('Submit to cluster!')
 			cmd="qsub -sync y -t 1-{} {} {}".format(N_jobs,os.path.join(os.environ['HASEDIR'],'tools','qsub_helper.sh'),os.path.join( out,'vcf_convert.sh' ))
-			print cmd
+			print(cmd)
 			proc=subprocess.Popen(cmd, shell=True,stderr=subprocess.STDOUT,stdout=subprocess.PIPE).communicate()
 		else:
 			proc=subprocess.Popen(['bash',os.path.join( out,'vcf_convert.sh' ) ], shell=False,stderr=FNULL)
-			print proc.communicate()
+			print(proc.communicate())
 
 		shutil.move(os.path.join(out,'vcf_convert.sh'), os.path.join(out,'tmp_files','vcf_convert.sh') )
 		shutil.move(os.path.join(out,'SUB_ID.txt'), os.path.join(out,'tmp_files','SUB_ID.txt') )

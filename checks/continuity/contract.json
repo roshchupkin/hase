@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "provisional_engineering_reference",
+  "scientific_reviewer": null,
+  "approved": false,
+  "model": "Separate ordinary least squares for each variant and phenotype, with intercept and both covariates; residual variance uses n minus design rank.",
+  "absolute_tolerance": 1e-12,
+  "relative_tolerance": 1e-10,
+  "tolerance_rationale": "Proposed double-precision rounding allowance for this small full-rank integer fixture against an exact rational calculation. Not approved for production, ill-conditioned inputs or large GWAS.",
+  "reference_method": "Independent rational Gram-Schmidt projections and triangular solution; residual and coefficient variances are exact rational values until final square root.",
+  "excluded": ["rank-deficient designs", "missing data", "constant phenotypes", "subject/file alignment", "chunk invariance", "conversion", "meta-analysis", "p-values"]
+}

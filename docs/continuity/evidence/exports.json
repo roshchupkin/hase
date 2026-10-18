@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "archive_namespace": "hase-pilot",
+  "files": [
+    {
+      "file": "positive-observed.json",
+      "sha256": "1916172e353f54994bd11cf6690afc509a954a189591434b9b20db1939a79f97",
+      "original_record": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/positive/observations/observed.json",
+      "original_sha256": "1916172e353f54994bd11cf6690afc509a954a189591434b9b20db1939a79f97",
+      "export_kind": "byte_identical_selected_record"
+    },
+    {
+      "file": "positive-comparison.json",
+      "sha256": "b3accb63b12b4be3c91a3a357f2e3bd24ff4f180aca2329b7cae6152e811307e",
+      "original_record": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/positive/comparisons/reference.json",
+      "original_sha256": "b3accb63b12b4be3c91a3a357f2e3bd24ff4f180aca2329b7cae6152e811307e",
+      "export_kind": "byte_identical_selected_record"
+    },
+    {
+      "file": "positive-kit-export.json",
+      "sha256": "b753f31f5cd7208c2ca755d119fa3e2c0bc83cf343654f04ee88fe2016c2b778",
+      "original_record": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/positive/reports/check-20261018T120213854751Z-e64740800609.json",
+      "original_sha256": "f211bfed60139a254ce5a39259a0e0ca932913b070ad6a246006aad32f60be29",
+      "export_kind": "sanitized_derivative"
+    },
+    {
+      "file": "negative-control-observed.json",
+      "sha256": "5f8e6e817b32621e4b23ef6b16e4bc5e0e60c85377c821cafa77183dbdfb9ab0",
+      "original_record": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/negative-control/observations/observed.json",
+      "original_sha256": "5f8e6e817b32621e4b23ef6b16e4bc5e0e60c85377c821cafa77183dbdfb9ab0",
+      "export_kind": "byte_identical_selected_record"
+    },
+    {
+      "file": "negative-control-comparison.json",
+      "sha256": "4b5a38e411631a70fa325cf5000a6909c5c508537a4762238a17c59002bbb29f",
+      "original_record": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/negative-control/comparisons/reference.json",
+      "original_sha256": "4b5a38e411631a70fa325cf5000a6909c5c508537a4762238a17c59002bbb29f",
+      "export_kind": "byte_identical_selected_record"
+    },
+    {
+      "file": "negative-control-kit-export.json",
+      "sha256": "e804eca58e6c14e9818f0d016a15fe5f88e161a7c6d5772a55a24e7a390e766f",
+      "original_record": "evidence/20261018T120212Z-python3-reference-verify-06338b1e/negative-control/reports/check-20261018T120214318824Z-bd45aa5809c0.json",
+      "original_sha256": "4c12892941e60041a6cf8db3aa2daca9444977475ca2662babf1166cd95e4cfd",
+      "export_kind": "sanitized_derivative"
+    },
+    {
+      "file": "example-comparison.json",
+      "sha256": "478e3d9dedaa51a7d5b505917da3923b76dcc75a1842dff906567302b392710d",
+      "original_record": "evidence/20261018T120346Z-python3-example-comparison-96edd05a/continuity/comparisons/example.json",
+      "original_sha256": "478e3d9dedaa51a7d5b505917da3923b76dcc75a1842dff906567302b392710d",
+      "export_kind": "byte_identical_selected_record"
+    },
+    {
+      "file": "example-kit-export.json",
+      "sha256": "e19087040243045d42c6fda4abd04e566404f28986ac967760a2fceb0c577ccf",
+      "original_record": "evidence/20261018T120346Z-python3-example-comparison-96edd05a/continuity/reports/check-20261018T120347068002Z-382bb55bdc8e.json",
+      "original_sha256": "770445d7f2ebcc120e5d6b488a267bc7fe1afc09127937b7b8f76f0bf27d4408",
+      "export_kind": "sanitized_derivative"
+    },
+    {
+      "file": "summary.json",
+      "sha256": "b96c04774a7f02a3ccf4c248f64db648f15f18af6ea5e741fc5614242b4b3d75",
+      "original_record": "python3-summary.json",
+      "original_sha256": "a1d4bd9d3317fb5b2489fd8f6ede3459c1026580c7682efaffe3859d7fe2f208",
+      "export_kind": "sanitized_derivative"
+    }
+  ],
+  "note": "Original record paths identify retained local archive entries, not public URLs. Kit source.status=unavailable and scientific_review=not_assessed are retained; outer run manifest hashes in summary supply separate provenance, not a rewrite of Kit context."
+}

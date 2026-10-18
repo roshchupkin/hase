@@ -1,0 +1,47 @@
+{
+  "export_kind": "sanitized_derivative",
+  "original_sha256": "770445d7f2ebcc120e5d6b488a267bc7fe1afc09127937b7b8f76f0bf27d4408",
+  "omitted_fields": "Project label, selection, argv, timings, stream metadata, next actions and report path.",
+  "record": {
+    "schema_version": 1,
+    "kit_version": "0.3.0",
+    "kind": "check_execution",
+    "recorded_at": "2026-10-18T12:03:47.070826+00:00",
+    "python_version": "3.13.16",
+    "platform": "linux",
+    "configuration_sha256": "d93eec50a59e17f9138e9cbc6e1f72b0604bf27132d5553bb67b075041b3ad26",
+    "source": {
+      "status": "unavailable",
+      "commit": null,
+      "dirty": null
+    },
+    "reference_files": [
+      {
+        "path": "checks/continuity/contract.json",
+        "sha256": "96b9b541062b8bece66d6ae39ff514e3899e059f6ccc2ffca9d22131cc92b46e"
+      },
+      {
+        "path": "checks/continuity/compare_example.py",
+        "sha256": "512137af073aaf3574ebbd239c111fa88b87e925fe1d7b9f8b2453b6d51a8aa5"
+      },
+      {
+        "path": ".continuity/observations/legacy-run.json",
+        "sha256": "2d6b5c305f78d73387a8b4ca01c799da1d477a0ac6d325682474eb95c56df567"
+      },
+      {
+        "path": ".continuity/observations/modern-run.json",
+        "sha256": "d62dfbc1770681bf99487f45933f77666ea3b0be2b77ed85627666004c57b4d2"
+      }
+    ],
+    "status": "checks_passed",
+    "scientific_review": "not_assessed",
+    "scope": "Selected commands ran locally in the current environment, without shell expansion. Source identity and declared reference hashes were observed before execution; dirty working-tree contents and submodules are not captured. This is not a sandbox or scientific certification.",
+    "checks": [
+      {
+        "id": "examplestudy-legacy-consistency",
+        "status": "passed",
+        "exit_code": 0
+      }
+    ]
+  }
+}
